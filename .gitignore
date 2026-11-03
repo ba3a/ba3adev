@@ -11,3 +11,10 @@
 .claude/commands/sl-status.md
 .claude/commands/sl-update.md
 # <<< specloop
+
+# Build output, caches and local secrets
+node_modules/
+dist/
+.cache/
+.coffer/
+.env.local

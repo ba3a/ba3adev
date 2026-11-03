@@ -1,0 +1,28 @@
+# Normalise line endings to LF in the repository and in working trees.
+* text=auto eol=lf
+
+# Windows scripts need CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets.
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.heic binary
+*.heif binary
+*.webp binary
+*.avif binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.webm binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
+
+# GPX tracks are XML text and stay text (covered by "* text=auto").

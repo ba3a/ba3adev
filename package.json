@@ -1,0 +1,14 @@
+{
+  "name": "ba3adev",
+  "private": true,
+  "workspaces": [
+    "coffer"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "npm test -w coffer",
+    "typecheck": "npm run typecheck -w coffer"
+  }
+}
