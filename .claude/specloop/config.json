@@ -1,0 +1,9 @@
+{
+  "commandPrefix": "sl-",
+  "phases": {
+    "implement": {
+      "check": null
+    }
+  },
+  "checkTimeoutSec": 1500
+}
