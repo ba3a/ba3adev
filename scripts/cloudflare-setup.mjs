@@ -273,7 +273,7 @@ export function createApi({ token, accountId, fetch = globalThis.fetch }) {
       /** @type {Set<string>} */
       const names = new Set();
       for (let page = 1; page <= MAX_LIST_PAGES; page += 1) {
-        const { result, info } = await call('GET', `${account}/pages/projects`, { query: { page: String(page), per_page: '50' } });
+        const { result, info } = await call('GET', `${account}/pages/projects`, { query: { page: String(page), per_page: '10' } });
         const before = names.size;
         for (const name of namesOf(result)) names.add(name);
         const totalPages = typeof info.total_pages === 'number' ? info.total_pages : undefined;

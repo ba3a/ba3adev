@@ -78,6 +78,8 @@ function fakeCloudflare({ projects = [], domains = {}, buckets = [], failures = 
     const rest = path.slice(prefix.length);
 
     if (rest === '/pages/projects' && method === 'GET') {
+      // The real API rejects a page size above 10 for Pages projects.
+      if (Number(url.searchParams.get('per_page') ?? '10') > 10) return fail(400, 8000024, 'Invalid list options provided. Review the `page` or `per_page` parameter.');
       const page = Number(url.searchParams.get('page') ?? '1');
       const slice = account.projects.slice((page - 1) * pageSize, page * pageSize);
       return ok(
