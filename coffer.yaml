@@ -1,0 +1,38 @@
+# Configuration of the two sites of this repository, built by coffer.
+# Every relative path is resolved against the directory of this file.
+sites:
+  - id: ba3a.dev
+    baseUrl: https://ba3a.dev
+    lang: en
+    timezone: Europe/Samara
+    title: ba3a.dev
+    description: Tools and games I make, and a devlog about making them.
+    contentDir: content/ba3a.dev
+    theme: themes/ba3a
+    contentLicense: All rights reserved
+    links:
+      # TODO: add the LinkedIn profile URL, for example:
+      # - { label: LinkedIn, url: "https://www.linkedin.com/in/<profile>" }
+      - { label: GitHub, url: "https://github.com/ba3a" }
+      # TODO: add the contact address as a mailto: link, for example:
+      # - { label: Email, url: "mailto:<address>" }
+    blogs:
+      - { id: devlog, dir: content/ba3a.dev/devlog, prefix: devlog, title: Devlog, shareSummary: true }
+    urls: { projects: made, docs: docs, tags: tags, series: series }
+    location: { default: strip, camera: strip }
+
+  - id: my.ba3a.dev
+    baseUrl: https://my.ba3a.dev
+    lang: ru
+    timezone: Europe/Samara
+    title: ba3a
+    description: Личный блог о столярном деле и походах.
+    contentDir: content/my.ba3a.dev
+    theme: themes/my
+    contentLicense: Все права защищены
+    # content/my.ba3a.dev is both the content directory and the directory of the
+    # root blog, so only posts may be placed there. Pages, made/ and other
+    # Markdown files would be read as posts.
+    blogs:
+      - { id: blog, dir: content/my.ba3a.dev, prefix: "", title: Блог }
+    location: { default: strip, camera: strip }
