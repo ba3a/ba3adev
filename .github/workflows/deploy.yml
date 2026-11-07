@@ -61,7 +61,7 @@ concurrency:
 env:
   # Refresh this pin deliberately (read the release notes of wrangler, then change the number).
   # npx downloads exactly this version, so a new wrangler release never changes a deployment.
-  WRANGLER_VERSION: 4.20.0
+  WRANGLER_VERSION: 4.158.0
 
 jobs:
   deploy:
