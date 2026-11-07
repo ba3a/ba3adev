@@ -5,7 +5,7 @@ This is the content repository of two static sites, built with the coffer engine
 - **ba3a.dev** (English): projects, project documentation and a devlog.
 - **my.ba3a.dev** (Russian): a personal blog about woodworking and hiking.
 
-The engine, coffer, lives in [coffer/](coffer/README.md) for now and is meant to move to its own repository. Everything else here is configuration, themes and content for the two sites.
+The engine, coffer, is a separate project, [ba3a/coffer](https://github.com/ba3a/coffer), pinned in `package.json`. Everything else here is configuration, themes and content for the two sites.
 
 To write a post, add a project or set up a new computer, read [AUTHORING.md](AUTHORING.md).
 
@@ -24,7 +24,6 @@ To go live, run the sites or upgrade the engine, read [OPERATIONS.md](OPERATIONS
 | `scripts/` | Repository scripts: git hook setup, placeholder pictures, deploy preparation, the Cloudflare setup, the split of the engine into its own repository, and their tests. |
 | `deploy/` | Response headers for Cloudflare Pages. |
 | `.github/workflows/` | Deploy, scheduled refresh and keepalive workflows. |
-| `coffer/` | The engine: source, tests, documentation (`coffer/docs/`) and its example site. |
 
 ## Commands
 
@@ -37,12 +36,11 @@ Install with `npm install` (see [AUTHORING.md](AUTHORING.md#set-up-a-new-compute
 | `npm run build` | Builds both sites into `dist/`. |
 | `npm run check` | Checks the finished build in `dist/`. |
 | `npm test` | Runs the engine tests, the script and generator tests, and builds and checks both sites. |
-| `npm run typecheck` | Type-checks the engine. |
 
-`npm test` needs a network (the roto and specloop documentation is cloned from their public repositories), JDK 21 (the roto API reference is generated with Gradle and Dokka) and the seed photos, which it restores itself. The engine part takes around 13 minutes. Further scripts are `test:scripts`, `test:generators`, `test:sites` and `check:standalone`.
+`npm test` needs a network (the roto and specloop documentation is cloned from their public repositories), JDK 21 (the roto API reference is generated with Gradle and Dokka) and the seed photos, which it restores itself. Further scripts are `test:scripts`, `test:generators`, `test:sites`.
 
 ## Licenses
 
 - The **content** of the sites (texts, photos, project pages) is all rights reserved. The footers of both sites say so.
-- The **engine** in `coffer/` is released under the Apache License 2.0; see [coffer/LICENSE](coffer/LICENSE) and [coffer/NOTICE](coffer/NOTICE).
+- The engine, coffer, is released under the Apache License 2.0; see [LICENSE](https://github.com/ba3a/coffer/blob/v0.1.0/LICENSE) and [NOTICE](https://github.com/ba3a/coffer/blob/v0.1.0/NOTICE).
 - The rest of the repository (themes, scripts, configuration) is not part of the engine and is not covered by its license. This repository has no license file of its own.

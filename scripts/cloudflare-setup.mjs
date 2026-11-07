@@ -42,7 +42,7 @@
 // Exit codes: 0 when done or nothing to do, 1 when something failed, 2 for a usage error.
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { lookUpVariables } from '../coffer/src/media/credentials.js';
+import { lookUpVariables } from '../node_modules/coffer/src/media/credentials.js';
 
 /** The root of this repository, where `coffer.yaml` and `.env.local` live. */
 const repository = fileURLToPath(new URL('..', import.meta.url));

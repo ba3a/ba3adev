@@ -1,9 +1,6 @@
-# Seed declaration, drafted from the site spec (section 14.5).
-# TODO: rewrite the pitch before publishing.
 name: coffer
 pitch: A static site engine for people who make things and write about them.
 kind: tool
-# TODO: confirm the status once the first version is tagged.
 status: in-development
 card: card.png
 cardAlt: "Placeholder card: the name coffer in white letters on a dark brown background."
@@ -11,27 +8,14 @@ featured: true
 order: 4
 tag: coffer
 license: Apache-2.0
-# The repository does not exist yet: this is its declared future address.
 repo: https://github.com/ba3a/coffer
-# The docs are built from the engine's own folder in this repository, because
-# the ba3a/coffer repository does not exist yet. A folder source has no `ref`:
-# links to files outside the guides (../CHANGELOG.md, ../LICENSE, ../README.md)
-# point to https://github.com/ba3a/coffer/blob/main/..., where `github` names
-# the repository and `main` is the default ref of a folder source that is not
-# the root of its own git repository.
-#
-# GO-LIVE: once the ba3a/coffer repository exists and is tagged, replace the
-# source with `{git: https://github.com/ba3a/coffer.git, ref: main}`, so that
-# the docs are pulled the same way as the docs of roto and specloop, and remove
-# `github` (it is taken from the address). The guides stay the same.
-#
-# The guides are the files of coffer/docs/. docs/README.md is the documentation
-# index, and `order` follows the table of contents in that README. There is no
-# reference for now; a later edit of this file can add one.
+# The guides are the files of docs/ in ba3a/coffer. docs/README.md is the
+# documentation index, and `order` follows the table of contents in that README.
+# There is no reference for now; a later edit of this file can add one.
 docs:
   source:
-    path: ../../../../coffer
-  github: ba3a/coffer
+    git: https://github.com/ba3a/coffer.git
+    ref: main
   guides:
     - dir: docs
       order:

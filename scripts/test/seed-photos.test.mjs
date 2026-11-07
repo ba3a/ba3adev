@@ -15,9 +15,9 @@ import { fileURLToPath } from 'node:url';
 import exifr from 'exifr';
 import sharp from 'sharp';
 
-import { loadConfig } from '../../coffer/src/config.js';
-import { matchGlob } from '../../coffer/src/docs/glob.js';
-import { parseLock } from '../../coffer/src/media/lock.js';
+import { loadConfig } from '../../node_modules/coffer/src/config.js';
+import { matchGlob } from '../../node_modules/coffer/src/docs/glob.js';
+import { parseLock } from '../../node_modules/coffer/src/media/lock.js';
 import {
   PHOTO_SIZE,
   SEED_PHOTOS,

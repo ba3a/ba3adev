@@ -1,14 +1,10 @@
 // Assertions about the documentation of coffer at /made/coffer/docs/: the
-// guides built from the engine's own folder (coffer/docs/) and their links.
+// guides of the engine (docs/ in ba3a/coffer) and their links.
 //
 // `npm run test:sites` builds the sites into `.cache/test-dist` and runs
 // `coffer check` on them before these tests start.
 //
-// The docs source of coffer is a folder of this repository (`path: coffer`),
-// because the ba3a/coffer repository does not exist yet. At go-live the source
-// becomes `{git: https://github.com/ba3a/coffer.git, ref: main}`, like the ones
-// of roto and specloop; the guides and these tests stay the same, apart from
-// the first test, which describes the configuration.
+// The docs source of coffer is a git address, like the ones of roto and specloop.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -19,7 +15,7 @@ import { parse as parseYaml } from 'yaml';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist', 'ba3a.dev');
-const engine = join(root, 'coffer');
+const engine = join(root, 'node_modules', 'coffer');
 const docsUrl = '/made/coffer/docs/';
 const github = 'https://github.com/ba3a/coffer';
 
@@ -44,16 +40,13 @@ function tableOfContents() {
   return [...readme.matchAll(/^\s*[-*]\s+\[[^\]]+\]\(([A-Za-z0-9._-]+\.md)(?:#[^)]*)?\)/gm)].map((match) => match[1]);
 }
 
-test('the docs of coffer come from the folder of the engine, with GitHub links to ba3a/coffer and no reference', () => {
-  assert.deepEqual(declaration.docs.source, { path: '../../../../coffer' });
-  assert.equal(declaration.docs.github, 'ba3a/coffer');
+test('the docs of coffer come from the git repository of the engine, with no reference', () => {
+  assert.deepEqual(declaration.docs.source, { git: 'https://github.com/ba3a/coffer.git', ref: 'main' });
+  assert.equal(declaration.docs.github, undefined);
   assert.equal(declaration.docs.guides.length, 1);
   assert.equal(declaration.docs.guides[0].dir, 'docs');
   assert.equal(declaration.docs.reference, undefined, 'there is no reference for now');
-  assert.ok(existsSync(join(root, 'content', 'ba3a.dev', 'projects', 'coffer', declaration.docs.source.path, 'docs', 'README.md')), 'the folder holds the docs');
-  // The comment that says what changes at go-live.
-  assert.match(declarationText, /GO-LIVE/);
-  assert.ok(declarationText.includes('{git: https://github.com/ba3a/coffer.git, ref: main}'), 'the comment names the source that go-live switches to');
+  assert.doesNotMatch(declarationText, /GO-LIVE/);
 });
 
 test('the guides are in the order of the table of contents of docs/README.md', () => {
@@ -62,19 +55,19 @@ test('the guides are in the order of the table of contents of docs/README.md', (
   assert.deepEqual(
     declaration.docs.guides[0].order,
     toc,
-    'the table of contents of coffer/docs/README.md changed: update docs.guides[0].order in content/ba3a.dev/projects/coffer/project.yaml to match',
+    'the table of contents of github.com/ba3a/coffer/blob/v0.1.0/docs/README.md changed: update docs.guides[0].order in content/ba3a.dev/projects/coffer/project.yaml to match',
   );
 });
 
 test('ba3a.dev/made/coffer/docs/ renders every feature page of the engine', () => {
   assert.ok(project?.docs, 'the manifest has the docs of coffer');
-  assert.equal(project.docs.source.type, 'path');
+  assert.equal(project.docs.source.type, 'git');
   assert.equal(project.docs.github, 'ba3a/coffer');
   assert.ok(existsSync(fileOf(docsUrl)), 'the docs index exists');
   const sources = readdirSync(join(engine, 'docs')).filter((name) => name.endsWith('.md'));
   assert.ok(sources.length >= 20, `the engine has feature pages (${sources.length})`);
   const published = project.docs.pages.map((/** @type {{ source: string }} */ entry) => entry.source).sort();
-  assert.deepEqual(published, sources.map((name) => `docs/${name}`).sort(), 'every page of coffer/docs is built, and nothing else');
+  assert.deepEqual(published, sources.map((name) => `docs/${name}`).sort(), 'every page of the docs folder is built, and nothing else');
   assert.equal(project.docs.pages[0].source, 'docs/README.md', 'the README is the docs index');
   assert.equal(project.docs.pages[0].url, docsUrl);
   assert.deepEqual(

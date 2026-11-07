@@ -3,7 +3,7 @@
 The crisp, professional look of `ba3a.dev`: a cool slate palette with one teal
 accent, Manrope for headings and the site name, and a compact header with the
 site name as a wordmark. It changes only what it has to; everything else is
-coffer's default theme (see `coffer/docs/themes.md`).
+coffer's default theme (see `github.com/ba3a/coffer/blob/v0.1.0/docs/themes.md`).
 
 | File | What it does |
 | --- | --- |
@@ -57,7 +57,7 @@ Manrope, weight 700 (Bold), is the only font file of the theme, and the only one
 ## Handjet, the page of Faultory
 
 The page of a game may set its own accent colour and display font (see
-`coffer/docs/projects.md`). Faultory uses Handjet Bold for its headings and
+`github.com/ba3a/coffer/blob/v0.1.0/docs/projects.md`). Faultory uses Handjet Bold for its headings and
 buttons. coffer publishes a project's font file only from the project's own
 folder (a font from the theme is not supported), so the font is **not** in this
 theme: it sits in `content/ba3a.dev/projects/faultory/`, is declared there by

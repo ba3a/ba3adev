@@ -17,9 +17,9 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { loadConfig } from '../coffer/src/config.js';
-import { lookUpVariables } from '../coffer/src/media/credentials.js';
-import { placeholdersOf } from '../coffer/src/media/s3-store.js';
+import { loadConfig } from '../node_modules/coffer/src/config.js';
+import { lookUpVariables } from '../node_modules/coffer/src/media/credentials.js';
+import { placeholdersOf } from '../node_modules/coffer/src/media/s3-store.js';
 
 /** The root of this repository. */
 const repository = fileURLToPath(new URL('..', import.meta.url));
@@ -103,7 +103,7 @@ export async function prepare(options = {}) {
   const root = options.root ?? repository;
   const env = options.env ?? process.env;
   const log = options.log ?? ((line) => console.log(line));
-  const cofferBin = options.cofferBin ?? join(repository, 'coffer', 'bin', 'coffer.js');
+  const cofferBin = options.cofferBin ?? join(repository, 'node_modules', 'coffer', 'bin', 'coffer.js');
   const run = options.run ?? runCoffer;
   const where = { cwd: root, env, cofferBin };
 

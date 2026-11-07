@@ -1,5 +1,0 @@
-# Dependencies, build output and caches.
-node_modules/
-example/dist/
-.cache/
-.coffer/

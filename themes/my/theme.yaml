@@ -1,4 +1,4 @@
-# Colours of the title cards (see coffer/docs/themes.md). The card is a sheet of
+# Colours of the title cards (see github.com/ba3a/coffer/blob/v0.1.0/docs/themes.md). The card is a sheet of
 # paper: it uses the light scheme of the site, with the terracotta accent. The
 # contrast of these colours is checked by scripts/site-test/my-theme.test.mjs.
 accent: "#a4401e"

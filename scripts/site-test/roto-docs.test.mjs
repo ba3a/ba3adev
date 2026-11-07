@@ -16,7 +16,7 @@
 // fails, `coffer build` fails with a message that names the project and the
 // command, and these tests do not start; they never skip. The result is cached
 // by commit and by the contents of the init script (see
-// coffer/docs/project-docs.md), so later runs do not run Gradle again.
+// github.com/ba3a/coffer/blob/v0.1.0/docs/project-docs.md), so later runs do not run Gradle again.
 //
 // The Gradle build itself cannot be tested without Gradle, so the second half
 // of this file builds a small site from a hand-written stand-in for the roto
@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 import { buildSites, checkOutput, loadConfig } from 'coffer';
-import { SymbolIndex, parseDokkaPages } from '../../coffer/src/docs/symbols.js';
+import { SymbolIndex, parseDokkaPages } from '../../node_modules/coffer/src/docs/symbols.js';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist', 'ba3a.dev');

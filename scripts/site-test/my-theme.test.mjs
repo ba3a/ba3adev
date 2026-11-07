@@ -23,7 +23,7 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist');
 const themeDir = join(root, 'themes', 'my');
 const otherThemeDir = join(root, 'themes', 'ba3a');
-const engineDir = join(root, 'coffer');
+const engineDir = join(root, 'node_modules', 'coffer');
 const engineTheme = join(engineDir, 'theme');
 const config = loadConfig({ configPath: join(root, 'coffer.yaml') });
 const site = /** @type {import('coffer').SiteConfig} */ (config.sites.find((candidate) => candidate.id === 'my.ba3a.dev'));

@@ -15,8 +15,8 @@ import { copyFileSync, existsSync, readFileSync, rmSync, statSync } from 'node:f
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { DEPLOY_EXCLUDES } from '../coffer/src/build.js';
-import { loadConfig } from '../coffer/src/config.js';
+import { DEPLOY_EXCLUDES } from '../node_modules/coffer/src/build.js';
+import { loadConfig } from '../node_modules/coffer/src/config.js';
 
 /** The root of this repository. */
 const repository = fileURLToPath(new URL('..', import.meta.url));

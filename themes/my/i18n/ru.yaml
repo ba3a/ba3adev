@@ -1,5 +1,5 @@
 # UI strings of my.ba3a.dev that differ from coffer's Russian defaults
-# (coffer/i18n/ru.yaml). Only the changed keys are listed; every other string
+# (`i18n/ru.yaml` of coffer). Only the changed keys are listed; every other string
 # keeps the engine's text. The copy below is a first draft for the author.
 
 # TODO: rewrite

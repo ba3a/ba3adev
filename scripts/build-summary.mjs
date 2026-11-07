@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { EXACT_LOCATIONS_TITLE } from '../coffer/src/report.js';
+import { EXACT_LOCATIONS_TITLE } from '../node_modules/coffer/src/report.js';
 
 /** The root of this repository. */
 const repository = fileURLToPath(new URL('..', import.meta.url));
@@ -32,7 +32,7 @@ function plain(text) {
 }
 
 /**
- * @param {import('../coffer/src/report.js').ReportIssue} issue
+ * @param {import('../node_modules/coffer/src/report.js').ReportIssue} issue
  * @returns {string}
  */
 function line(issue) {
@@ -43,7 +43,7 @@ function line(issue) {
 /**
  * Renders the summary.
  *
- * @param {Partial<import('../coffer/src/report.js').ReportData>} report
+ * @param {Partial<import('../node_modules/coffer/src/report.js').ReportData>} report
  * @returns {string} Markdown ending in a newline.
  */
 export function renderBuildSummary(report) {

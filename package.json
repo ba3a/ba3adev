@@ -1,9 +1,6 @@
 {
   "name": "ba3adev",
   "private": true,
-  "workspaces": [
-    "coffer"
-  ],
   "engines": {
     "node": ">=24"
   },
@@ -13,15 +10,16 @@
     "dev": "coffer dev",
     "check": "coffer check",
     "new": "coffer new",
-    "test": "npm test -w coffer && npm run test:scripts && npm run test:generators && npm run test:sites",
+    "test": "npm run test:scripts && npm run test:generators && npm run test:sites",
     "test:scripts": "node --test \"scripts/test/**/*.test.mjs\"",
     "test:generators": "node --test \"generators/test/**/*.test.mjs\"",
-    "test:sites": "node scripts/make-placeholders.mjs --restore-photos && node scripts/clean-test-dist.mjs && coffer build --out .cache/test-dist && coffer check --out .cache/test-dist && node --test \"scripts/site-test/**/*.test.mjs\"",
-    "typecheck": "npm run typecheck -w coffer",
-    "check:standalone": "node scripts/check-coffer-standalone.mjs"
+    "test:sites": "node scripts/make-placeholders.mjs --restore-photos && node scripts/clean-test-dist.mjs && coffer build --out .cache/test-dist && coffer check --out .cache/test-dist && node --test \"scripts/site-test/**/*.test.mjs\""
   },
   "devDependencies": {
     "@fontsource/handjet": "5.3.1",
     "opentype.js": "1.3.4"
+  },
+  "dependencies": {
+    "coffer": "git+https://github.com/ba3a/coffer.git#v0.1.0"
   }
 }

@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { parseReferenceJson } from '../../coffer/src/docs/reference.js';
+import { parseReferenceJson } from '../../node_modules/coffer/src/docs/reference.js';
 import {
   InputError,
   LIMITS,

@@ -76,12 +76,6 @@ test('every action is pinned to a version, in the same style as the rest of the 
   for (const reference of uses) {
     assert.match(reference, /^[\w.-]+\/[\w.-]+@(v\d+(\.\d+){0,2}|[0-9a-f]{40})$/, `${reference} is pinned to a version tag or a commit`);
   }
-  const ci = readFileSync(join(root, 'coffer', '.github', 'workflows', 'ci.yml'), 'utf8');
-  for (const action of ['actions/checkout', 'actions/setup-node']) {
-    const own = uses.find((reference) => reference.startsWith(`${action}@`));
-    const theirs = new RegExp(`${action}@(v\\d+)`).exec(ci)?.[1];
-    assert.equal(own, `${action}@${theirs}`, `${action} has the version the engine's CI uses`);
-  }
 });
 
 test('wrangler is pinned to an exact version', () => {

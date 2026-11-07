@@ -203,7 +203,7 @@ describe('the preview build (--drafts)', () => {
     await restoreSeedPhotos({ root });
     const run = spawnSync(
       process.execPath,
-      [join(root, 'coffer', 'bin', 'coffer.js'), 'build', '--drafts', '--config', join(root, 'coffer.yaml'), '--out', preview],
+      [join(root, 'node_modules', 'coffer', 'bin', 'coffer.js'), 'build', '--drafts', '--config', join(root, 'coffer.yaml'), '--out', preview],
       { cwd: root, encoding: 'utf8', timeout: 540_000 },
     );
     assert.equal(run.status, 0, `coffer build --drafts failed:\n${run.stdout}\n${run.stderr}`);
@@ -333,7 +333,7 @@ describe('the preview build (--drafts)', () => {
   });
 
   test('the preview build passes coffer check, and the build report lists no post publishing an exact location', () => {
-    const run = spawnSync(process.execPath, [join(root, 'coffer', 'bin', 'coffer.js'), 'check', '--config', join(root, 'coffer.yaml'), '--out', preview], {
+    const run = spawnSync(process.execPath, [join(root, 'node_modules', 'coffer', 'bin', 'coffer.js'), 'check', '--config', join(root, 'coffer.yaml'), '--out', preview], {
       cwd: root,
       encoding: 'utf8',
     });

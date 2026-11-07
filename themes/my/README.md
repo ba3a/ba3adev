@@ -6,7 +6,7 @@ scheme), the Literata serif for headings and text, and a centred header with the
 site title above a short tagline. It is meant to be told apart from `ba3a.dev`
 (cool slate, teal, Manrope, a compact header with a wordmark) at a glance, not
 only by language. It changes only what it has to; everything else is coffer's
-default theme (see `coffer/docs/themes.md`).
+default theme (see `github.com/ba3a/coffer/blob/v0.1.0/docs/themes.md`).
 
 | File | What it does |
 | --- | --- |

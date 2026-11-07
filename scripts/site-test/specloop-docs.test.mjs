@@ -10,7 +10,7 @@
 // NETWORK. The docs source of specloop is the public repository
 // https://github.com/ba3a/specloop.git (`ref: main`), cloned read-only over
 // HTTPS by the build itself. coffer never reuses a stale checkout (see
-// coffer/docs/docs-sources.md): when the repository cannot be reached,
+// github.com/ba3a/coffer/blob/v0.1.0/docs/docs-sources.md): when the repository cannot be reached,
 // `coffer build` fails with a message that names the project and the address,
 // and the tests do not start. So these tests never skip: either the build
 // delivered the docs, and they are asserted, or the run has already failed.

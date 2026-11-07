@@ -18,7 +18,7 @@ import { contrastRatio, readRules, readSchemes } from './lib/wcag.mjs';
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist');
 const themeDir = join(root, 'themes', 'ba3a');
-const engineTheme = join(root, 'coffer', 'theme');
+const engineTheme = join(root, 'node_modules', 'coffer', 'theme');
 const config = loadConfig({ configPath: join(root, 'coffer.yaml') });
 const site = /** @type {import('coffer').SiteConfig} */ (config.sites.find((candidate) => candidate.id === 'ba3a.dev'));
 

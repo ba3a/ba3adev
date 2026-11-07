@@ -202,9 +202,9 @@ test('node comes from .nvmrc and the scripts the workflows run exist', () => {
 });
 
 test('coffer rebuild-needed has the options and the exit-code contract the workflow relies on', () => {
-  const usage = readFileSync(join(root, 'coffer', 'src', 'cli.js'), 'utf8');
+  const usage = readFileSync(join(root, 'node_modules', 'coffer', 'src', 'cli.js'), 'utf8');
   for (const option of ['--url', '--site', '--json']) assert.ok(usage.includes(option), option);
-  const docs = readFileSync(join(root, 'coffer', 'docs', 'scheduling.md'), 'utf8');
+  const docs = readFileSync(join(root, 'node_modules', 'coffer', 'docs', 'scheduling.md'), 'utf8');
   assert.match(docs, /\| 0 +\| The command gave an answer/);
   assert.match(docs, /\| 1 +\| The command could not give an answer/);
 });

@@ -16,7 +16,7 @@
 //     external reference and no foreignObject, so they pass coffer's own SVG
 //     check (`inspectSvg`), which the press-kit logo is subject to.
 //   * `*.png` is the same picture rendered with sharp. The project fields `card`,
-//     `logo` and `keyArt` accept only JPEG, PNG, WebP and HEIC (coffer/docs/projects.md),
+//     `logo` and `keyArt` accept only JPEG, PNG, WebP and HEIC (github.com/ba3a/coffer/blob/v0.1.0/docs/projects.md),
 //     so the SVG cannot be named there.
 //
 // The script is deterministic: it uses no clock and no random numbers, so
@@ -55,7 +55,7 @@ import opentype from 'opentype.js';
 import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
 
-import { parseLock } from '../coffer/src/media/lock.js';
+import { parseLock } from '../node_modules/coffer/src/media/lock.js';
 
 const defaultRoot = fileURLToPath(new URL('..', import.meta.url));
 

@@ -8,11 +8,11 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { loadConfig } from '../../coffer/src/config.js';
-import { matchGlob } from '../../coffer/src/docs/glob.js';
-import { parseEnvFile } from '../../coffer/src/media/credentials.js';
-import { parseLock, renderLock } from '../../coffer/src/media/lock.js';
-import { gitignoreText, mediaContext } from '../../coffer/src/media/sync.js';
+import { loadConfig } from '../../node_modules/coffer/src/config.js';
+import { matchGlob } from '../../node_modules/coffer/src/docs/glob.js';
+import { parseEnvFile } from '../../node_modules/coffer/src/media/credentials.js';
+import { parseLock, renderLock } from '../../node_modules/coffer/src/media/lock.js';
+import { gitignoreText, mediaContext } from '../../node_modules/coffer/src/media/sync.js';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const config = loadConfig({ configPath: join(root, 'coffer.yaml') });

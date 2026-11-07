@@ -40,7 +40,7 @@ sites:
     location: { default: strip, camera: strip }
 
 # Original photos and videos are kept out of git, in a private Cloudflare R2 bucket, and
-# listed by content hash in media.lock.json (see coffer/docs/media.md). The credentials are
+# listed by content hash in media.lock.json (see github.com/ba3a/coffer/blob/v0.1.0/docs/media.md). The credentials are
 # never written here: coffer reads the variables named below from the environment, or from
 # .env.local next to this file (see .env.local.example).
 media:

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Generates the reference of specloop for coffer, in coffer's `json` reference
-// format (see coffer/docs/project-docs.md, "The output").
+// format (see github.com/ba3a/coffer/blob/v0.1.0/docs/project-docs.md, "The output").
 //
 // Usage: node specloop-reference.mjs <repo> <out>
 //

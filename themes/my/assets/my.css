@@ -1,7 +1,7 @@
 /* The theme of my.ba3a.dev: warm and personal.
 
    It loads after coffer's own stylesheet and changes the engine's custom
-   properties (see coffer/docs/themes.md), plus the rules for the centred header
+   properties (see github.com/ba3a/coffer/blob/v0.1.0/docs/themes.md), plus the rules for the centred header
    and for the 404 page. The palette is paper and ink: a warm off-white page with
    brown text and a terracotta accent, and a dark brown page with a lighter
    terracotta in the dark scheme. Light values are on :root; dark values are

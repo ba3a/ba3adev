@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { loadConfig } from '../../coffer/src/config.js';
+import { loadConfig } from '../../node_modules/coffer/src/config.js';
 import { SITES, languageOf, main, parseArgs, readExpectedBuiltAt, runSmokeTests } from '../smoke-test.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
