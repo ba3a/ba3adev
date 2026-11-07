@@ -1,0 +1,54 @@
+# Once a month, enables the scheduled workflows of this repository again: refresh.yml and this
+# workflow itself. GitHub disables a scheduled workflow of a public repository after 60 days
+# without repository activity, and refresh.yml is what publishes scheduled posts. refresh.yml also
+# has a keepalive job of its own; this workflow is the second line, because a disabled refresh.yml
+# cannot enable itself.
+#
+# It is best effort: enabling an enabled workflow is harmless, but GitHub does not document that
+# the call restarts the 60-day clock. A commit does, for certain. If a workflow was disabled
+# anyway, open the Actions tab and choose "Enable workflow", or push any commit. A workflow that
+# somebody disabled by hand is left alone. Details: scripts/keepalive.mjs.
+#
+# GitHub may start this run late (5 to 15 minutes, sometimes more), which does not matter here.
+name: Keepalive
+
+on:
+  schedule:
+    # 03:17 UTC on the 1st of every month.
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    name: Enable the scheduled workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      # --always: this workflow runs once a month, and a run started by hand should do the same.
+      - name: Enable refresh.yml and keepalive.yml
+        run: node scripts/keepalive.mjs --always refresh.yml keepalive.yml
+        env:
+          GH_TOKEN: ${{ github.token }}

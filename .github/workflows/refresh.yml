@@ -1,0 +1,144 @@
+# Rebuilds and deploys both sites when something they depend on has changed, and keeps itself
+# enabled. This is what publishes a post on the day it is scheduled for, and what picks up a change
+# in the documentation repositories of the projects (roto, coffer and so on).
+#
+# How it works
+#   Every 15 minutes the `decide` job asks `coffer rebuild-needed` about each site. The command
+#   fetches the build-info.json of the live site, reads the current HEAD of every git
+#   documentation source with `git ls-remote`, compares them with the commits the live build used,
+#   and checks whether a scheduled post is due. Only when one of the sites says "yes" does the
+#   `deploy` job call deploy.yml, which builds and publishes both sites. Nothing is stored between
+#   runs: the live build-info.json is the state.
+#
+# Timing
+#   GitHub may start a scheduled run 5 to 15 minutes late (more at peak load, and a run can be
+#   dropped altogether), so "every 15 minutes" means "about every 15 minutes". That fits the aims:
+#   a post appears within about 20 to 30 minutes of its date, and a change in a project's
+#   documentation is on the site within an hour. Scheduled workflows run only on the default branch.
+#
+# No token in the project repositories
+#   The project repositories are public and are read anonymously (`git ls-remote`, and the clone in
+#   the build). They need no webhook, no deploy key and no secret; this repository polls them.
+#
+# Secrets
+#   The `decide` job has none: it only reads public information, and it installs the dependencies
+#   with `--ignore-scripts`, so no repository script runs there. The `deploy` job passes the
+#   repository secrets on to deploy.yml with `secrets: inherit`.
+#
+# A site that cannot be asked
+#   - When a documentation repository cannot be reached (or its branch is gone), `coffer
+#     rebuild-needed` exits with 1. That fails the `decide` job, nothing is deployed and the live
+#     site stays as it is. A failure is never read as "no change" or as "deploy anyway".
+#   - When the live build-info.json is missing, unreachable or invalid (a site that has never been
+#     deployed gets a 404), the engine answers "yes", and so does this workflow. The first
+#     deployment normally comes from the push to main that adds this file, before any refresh run
+#     can see the site. If a first deployment has not happened yet, every refresh run starts a
+#     deployment, which queues behind the one in progress. That also repairs a site whose
+#     build-info.json went missing.
+#
+# Keeping the schedule alive
+#   GitHub disables scheduled workflows of a public repository after 60 days without repository
+#   activity. The `keepalive` job (and the monthly keepalive.yml) call the "enable workflow" API for
+#   this workflow, see scripts/keepalive.mjs for what that can and cannot do. A real commit resets
+#   the clock for certain.
+name: Refresh
+
+on:
+  schedule:
+    # Every 15 minutes, which is the shortest interval GitHub supports comfortably.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One refresh at a time, and the deployment it starts is part of the run. A run is never cancelled
+# (that could stop a deployment half way). While one is busy, GitHub keeps at most one pending run
+# and replaces an older pending run with a newer one, so a long deployment never builds up a queue
+# of polls. This group is not "deploy": deploy.yml owns that one, and a called workflow in the
+# group of its caller would be cancelled.
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  decide:
+    name: Decide whether a deployment is needed
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      contents: read
+    outputs:
+      needed: ${{ steps.decide.outputs.needed }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # --ignore-scripts: no "prepare" script and no git hooks, and nothing of a dependency runs.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # A failing command stops the step (set -e): an error is never turned into an answer.
+      # scripts/refresh-decide.mjs combines the two answers: deploy when either site needs it.
+      - name: Ask both sites
+        id: decide
+        run: |
+          set -euo pipefail
+          answers="$RUNNER_TEMP/refresh-answers"
+          mkdir -p "$answers"
+          for site in ba3a.dev my.ba3a.dev; do
+            npx coffer rebuild-needed --site "$site" --url "https://$site/build-info.json" --json > "$answers/$site.json"
+          done
+          node scripts/refresh-decide.mjs "$answers/ba3a.dev.json" "$answers/my.ba3a.dev.json"
+
+  # The called workflow guards itself (it publishes only from main). It may be skipped, for example
+  # when this workflow is started by hand from another branch, which is fine. The caller grants
+  # the permission deploy.yml asks for, and passes the secrets on.
+  deploy:
+    name: Deploy
+    needs: decide
+    if: needs.decide.outputs.needed == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+
+  # Enables this workflow again when it is old enough, or on the 1st of the month. It does not
+  # depend on the other jobs: a failing poll must not stop it, and it must not stop a deployment.
+  # Only this job may write to Actions, and it runs no code from dependencies (no npm install).
+  keepalive:
+    name: Keep the schedule enabled
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Enable refresh.yml when it is due
+        run: node scripts/keepalive.mjs refresh.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
