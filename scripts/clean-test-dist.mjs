@@ -3,17 +3,17 @@
 // takes no arguments. On Windows an indexer or antivirus can hold a file for a
 // moment, so a failed removal is retried.
 //
-// Besides the output it removes the stored results of the reference generators
-// (`.cache/reference`). coffer keys such a result by the commit of the docs
-// source and the configuration of the command, not by the contents of the
-// generator script, so without this a change to a script in generators/ would
-// not reach the tests until the source repository changed. The generators are
-// fast; the clones of the docs sources (`.cache/repos`) are kept, so the tests
-// fetch each repository once, not on every run.
+// The stored results of the reference generators (`.cache/reference`) and the
+// clones of the docs sources (`.cache/repos`) are kept. coffer keys a stored
+// reference by the commit of the docs source, the configuration of the command
+// and the contents of the scripts the command names through `{site}`, so an edit
+// to a generator or to an init script in this repository is picked up without
+// removing anything. Keeping them matters: the API reference of roto-core is a
+// Gradle build that takes minutes.
 import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-for (const path of ['../.cache/test-dist', '../.cache/reference']) {
+for (const path of ['../.cache/test-dist']) {
   rmSync(fileURLToPath(new URL(path, import.meta.url)), {
     recursive: true,
     force: true,

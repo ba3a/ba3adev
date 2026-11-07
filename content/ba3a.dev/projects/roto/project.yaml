@@ -11,4 +11,50 @@ order: 2
 tag: roto
 license: Apache-2.0
 repo: https://github.com/ba3a/roto
-# Documentation is not configured yet, so the page links no docs.
+# The docs are built from the roto repository itself (nothing is copied here).
+# The build clones it read-only over HTTPS into .cache/repos/roto; a repository
+# that cannot be reached fails the build. `ref: main` is a moving branch, so a
+# push to roto changes the site at the next build. The guides are the files of
+# its docs/ folder; it has no index file, so coffer writes a plain docs index.
+#
+# The reference is the Dokka API reference of the roto-core module. It runs
+# Gradle in the checkout, with an init script from this repository
+# (build-support/dokka/dokka-init.gradle.kts) that configures Dokka for roto-core
+# only and turns on the report of public declarations without KDoc, so the roto
+# repository needs no change. It needs JDK 21 and the network (the Gradle
+# distribution and the Dokka plugin are downloaded on the first run); the Gradle
+# wrapper of roto is part of the build. Gradle prints one "Undocumented: ..."
+# line for every public declaration without KDoc; coffer lists them in the build
+# report and the build still passes. Editing the init script gives a new cache
+# entry (coffer hashes the files a command names through {site}).
+#
+# The command is written for Windows and for every other system, because the
+# wrapper script has another name there. index: dokka lets guides link to the
+# reference pages: inline code that is exactly the name of a roto-core type (for
+# example `ProjectPalette`) becomes a link, and [text](ref:ProjectPalette) does
+# so explicitly.
+docs:
+  source:
+    git: https://github.com/ba3a/roto.git
+    ref: main
+  guides:
+    - dir: docs
+      order:
+        - pipeline.md
+        - filming-guide.md
+  reference:
+    command:
+      default:
+        - ./gradlew
+        - --no-daemon
+        - --init-script
+        - "{site}/build-support/dokka/dokka-init.gradle.kts"
+        - ":roto-core:dokkaGeneratePublicationHtml"
+      windows: '.\gradlew.bat --no-daemon --init-script {site}/build-support/dokka/dokka-init.gradle.kts :roto-core:dokkaGeneratePublicationHtml'
+    format: html
+    output: roto-core/build/dokka/html
+    title: roto-core API reference
+    # Gradle prints "w: [:roto-core:dokkaGeneratePublicationHtml] Undocumented: com.roto.core/Name/..."
+    undocumented:
+      pattern: 'Undocumented: (?<name>\S+)'
+    index: dokka

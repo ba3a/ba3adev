@@ -203,7 +203,7 @@ test('every item without a description is flagged on the page, in the manifest a
     if (!entry.undocumented) assert.ok(entry.description && entry.description.length > 0, `${entry.name} has a description`);
   }
   const report = JSON.parse(readFileSync(join(root, '.coffer', 'report.json'), 'utf8'));
-  const warnings = report.warnings.map((/** @type {{ message: string }} */ warning) => warning.message).filter((/** @type {string} */ message) => message.includes('docs.reference'));
+  const warnings = report.warnings.map((/** @type {{ message: string }} */ warning) => warning.message).filter((/** @type {string} */ message) => message.includes('projects/specloop/project.yaml') && message.includes('docs.reference'));
   for (const name of flagged) {
     assert.ok(
       warnings.some((/** @type {string} */ message) => message.includes(`"${name}"`) && message.includes('has no documentation')),

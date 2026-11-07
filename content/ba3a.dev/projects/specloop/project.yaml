@@ -18,9 +18,9 @@ repo: https://github.com/ba3a/specloop
 # branch, so a push to specloop changes the site at the next build. There is no
 # offline mode: coffer never reuses a stale checkout, so `npm test` (which builds
 # the sites) needs the network, and the first build after a failed fetch clones
-# again. The generated reference is cached by commit and command, not by the
-# contents of the generator: after changing generators/specloop-reference.mjs,
-# remove .cache/reference (npm run test:sites does it). The guides
+# again. The generated reference is cached by commit and command, and by the
+# contents of the generator script the command names, so editing
+# generators/specloop-reference.mjs makes the next build run it again. The guides
 # are the files of its docs/ folder. docs/README.md is the documentation index,
 # and `order` follows the table of contents in that README.
 docs:

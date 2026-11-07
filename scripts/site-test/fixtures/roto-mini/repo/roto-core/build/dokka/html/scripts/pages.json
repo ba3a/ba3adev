@@ -1,0 +1,172 @@
+[
+  {
+    "name": "class ProjectPalette(val palette: Palette, val ramps: RampSet)",
+    "description": "com.roto.core.palette.ProjectPalette",
+    "location": "roto-core/com.roto.core.palette/-project-palette/index.html",
+    "searchKeys": [
+      "ProjectPalette",
+      "class ProjectPalette(val palette: Palette, val ramps: RampSet)",
+      "com.roto.core.palette.ProjectPalette"
+    ]
+  },
+  {
+    "name": "class Undoc",
+    "description": "com.roto.core.Undoc",
+    "location": "roto-core/com.roto.core/-undoc/index.html",
+    "searchKeys": [
+      "Undoc",
+      "class Undoc",
+      "com.roto.core.Undoc"
+    ]
+  },
+  {
+    "name": "constructor()",
+    "description": "com.roto.core.Undoc.Undoc",
+    "location": "roto-core/com.roto.core/-undoc/-undoc.html",
+    "searchKeys": [
+      "Undoc",
+      "constructor()",
+      "com.roto.core.Undoc.Undoc"
+    ]
+  },
+  {
+    "name": "constructor(outline: Int? = null, ramps: List<Ramp>)",
+    "description": "com.roto.core.palette.RampSet.RampSet",
+    "location": "roto-core/com.roto.core.palette/-ramp-set/-ramp-set.html",
+    "searchKeys": [
+      "RampSet",
+      "constructor(outline: Int? = null, ramps: List<Ramp>)",
+      "com.roto.core.palette.RampSet.RampSet"
+    ]
+  },
+  {
+    "name": "constructor(palette: Palette, ramps: RampSet)",
+    "description": "com.roto.core.palette.ProjectPalette.ProjectPalette",
+    "location": "roto-core/com.roto.core.palette/-project-palette/-project-palette.html",
+    "searchKeys": [
+      "ProjectPalette",
+      "constructor(palette: Palette, ramps: RampSet)",
+      "com.roto.core.palette.ProjectPalette.ProjectPalette"
+    ]
+  },
+  {
+    "name": "data class RampSet(val outline: Int? = null, val ramps: List<Ramp>)",
+    "description": "com.roto.core.palette.RampSet",
+    "location": "roto-core/com.roto.core.palette/-ramp-set/index.html",
+    "searchKeys": [
+      "RampSet",
+      "data class RampSet(val outline: Int? = null, val ramps: List<Ramp>)",
+      "com.roto.core.palette.RampSet"
+    ]
+  },
+  {
+    "name": "fun bar()",
+    "description": "com.roto.core.Undoc.bar",
+    "location": "roto-core/com.roto.core/-undoc/bar.html",
+    "searchKeys": [
+      "bar",
+      "fun bar()",
+      "com.roto.core.Undoc.bar"
+    ]
+  },
+  {
+    "name": "fun foo(x: Int): Int",
+    "description": "com.roto.core.Undoc.foo",
+    "location": "roto-core/com.roto.core/-undoc/foo.html",
+    "searchKeys": [
+      "foo",
+      "fun foo(x: Int): Int",
+      "com.roto.core.Undoc.foo"
+    ]
+  },
+  {
+    "name": "fun load(project: Project): ProjectPalette",
+    "description": "com.roto.core.palette.ProjectPalette.Companion.load",
+    "location": "roto-core/com.roto.core.palette/-project-palette/-companion/load.html",
+    "searchKeys": [
+      "load",
+      "fun load(project: Project): ProjectPalette",
+      "com.roto.core.palette.ProjectPalette.Companion.load"
+    ]
+  },
+  {
+    "name": "fun ramp(name: String): Ramp?",
+    "description": "com.roto.core.palette.RampSet.ramp",
+    "location": "roto-core/com.roto.core.palette/-ramp-set/ramp.html",
+    "searchKeys": [
+      "ramp",
+      "fun ramp(name: String): Ramp?",
+      "com.roto.core.palette.RampSet.ramp"
+    ]
+  },
+  {
+    "name": "val ramps: RampSet",
+    "description": "com.roto.core.palette.ProjectPalette.ramps",
+    "location": "roto-core/com.roto.core.palette/-project-palette/ramps.html",
+    "searchKeys": [
+      "ramps",
+      "val ramps: RampSet",
+      "com.roto.core.palette.ProjectPalette.ramps"
+    ]
+  },
+  {
+    "name": "fun topLevelFun()",
+    "description": "com.roto.core.topLevelFun",
+    "location": "roto-core/com.roto.core/top-level-fun.html",
+    "searchKeys": [
+      "topLevelFun",
+      "fun topLevelFun()",
+      "com.roto.core.topLevelFun"
+    ]
+  },
+  {
+    "name": "object Companion",
+    "description": "com.roto.core.palette.ProjectPalette.Companion",
+    "location": "roto-core/com.roto.core.palette/-project-palette/-companion/index.html",
+    "searchKeys": [
+      "Companion",
+      "object Companion",
+      "com.roto.core.palette.ProjectPalette.Companion"
+    ]
+  },
+  {
+    "name": "val outline: Int?",
+    "description": "com.roto.core.palette.RampSet.outline",
+    "location": "roto-core/com.roto.core.palette/-ramp-set/outline.html",
+    "searchKeys": [
+      "outline",
+      "val outline: Int?",
+      "com.roto.core.palette.RampSet.outline"
+    ]
+  },
+  {
+    "name": "val palette: Palette",
+    "description": "com.roto.core.palette.ProjectPalette.palette",
+    "location": "roto-core/com.roto.core.palette/-project-palette/palette.html",
+    "searchKeys": [
+      "palette",
+      "val palette: Palette",
+      "com.roto.core.palette.ProjectPalette.palette"
+    ]
+  },
+  {
+    "name": "val ramps: List<Ramp>",
+    "description": "com.roto.core.palette.RampSet.ramps",
+    "location": "roto-core/com.roto.core.palette/-ramp-set/ramps.html",
+    "searchKeys": [
+      "ramps",
+      "val ramps: List<Ramp>",
+      "com.roto.core.palette.RampSet.ramps"
+    ]
+  },
+  {
+    "name": "val width: Int = 3",
+    "description": "com.roto.core.Undoc.width",
+    "location": "roto-core/com.roto.core/-undoc/width.html",
+    "searchKeys": [
+      "width",
+      "val width: Int = 3",
+      "com.roto.core.Undoc.width"
+    ]
+  }
+]
