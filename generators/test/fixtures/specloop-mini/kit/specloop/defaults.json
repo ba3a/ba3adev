@@ -1,0 +1,19 @@
+{
+  "commandPrefix": "m-",
+  "maxIterations": 15,
+  "documentedLeaf": true,
+  "ghost": "a key that no table mentions",
+  "list": ["a", "b"],
+  "emptyBlock": {},
+  "update": { "mode": "notify", "intervalHours": 24 },
+  "phases": {
+    "plan": { "next": "implement", "check": { "type": "file", "path": "plan.md" } },
+    "review": { "next": "done", "check": null }
+  },
+  "feature": {
+    "branchPrefix": "mini/",
+    "planPhases": { "feature-plan": { "delegate": true } },
+    "inheritedChild": 1
+  },
+  "unicodeKey-é": "ü"
+}
