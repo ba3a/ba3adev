@@ -123,7 +123,7 @@ test('git ignores image originals and the local settings, and keeps the lock fil
 
 test('.env.local.example lists the variables the store reads, with no value', () => {
   const values = parseEnvFile(read('.env.local.example'));
-  assert.deepEqual([...values.keys()].sort(), ['CLOUDFLARE_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY']);
+  assert.deepEqual([...values.keys()].sort(), ['CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_API_TOKEN', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY']);
   for (const [name, value] of values) assert.equal(value, '', `${name} must have no value`);
 });
 
