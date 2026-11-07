@@ -1,0 +1,184 @@
+/* The theme of ba3a.dev: crisp and professional.
+
+   It loads after coffer's own stylesheet and changes the engine's custom
+   properties (see coffer/docs/themes.md), plus the few rules the compact header
+   needs. The palette is cool slate with one teal accent. Light values are on
+   :root; dark values are repeated under the system preference and under
+   [data-theme="dark"], and light is forced under [data-theme="light"], exactly as
+   the engine does it. Every foreground and background pair below is checked for
+   WCAG AA contrast by scripts/site-test/ba3a-theme.test.mjs. */
+
+/* Manrope Bold (SIL OFL 1.1), latin and latin-ext subsets, self-hosted. The
+   files are in fonts/ next to this stylesheet; see themes/ba3a/README.md. */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/manrope-latin-ext-700.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/manrope-latin-700.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --coffer-bg: #ffffff;
+  --coffer-text: #0f1b2d;
+  --coffer-muted: #4a5a70;
+  --coffer-accent: #0a6b80;
+  --coffer-border: #d3dce8;
+  --coffer-code-bg: #eef3f8;
+  --coffer-code-fg: #0f1b2d;
+  /* Borders that identify a control (buttons, the search field) need 3:1. */
+  --ba3a-control-border: #6f8099;
+
+  --coffer-font-heading: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --coffer-bg: #0c1320;
+    --coffer-text: #e6edf6;
+    --coffer-muted: #9fb0c6;
+    --coffer-accent: #4fc8df;
+    --coffer-border: #27354b;
+    --coffer-code-bg: #16202f;
+    --coffer-code-fg: #e6edf6;
+    --ba3a-control-border: #71839d;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --coffer-bg: #0c1320;
+  --coffer-text: #e6edf6;
+  --coffer-muted: #9fb0c6;
+  --coffer-accent: #4fc8df;
+  --coffer-border: #27354b;
+  --coffer-code-bg: #16202f;
+  --coffer-code-fg: #e6edf6;
+  --ba3a-control-border: #71839d;
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --coffer-bg: #ffffff;
+  --coffer-text: #0f1b2d;
+  --coffer-muted: #4a5a70;
+  --coffer-accent: #0a6b80;
+  --coffer-border: #d3dce8;
+  --coffer-code-bg: #eef3f8;
+  --coffer-code-fg: #0f1b2d;
+  --ba3a-control-border: #6f8099;
+
+  color-scheme: light;
+}
+
+/* Typography ------------------------------------------------------------- */
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
+/* Controls --------------------------------------------------------------- */
+
+.theme-switch,
+.search-input,
+.carousel-button {
+  border-color: var(--ba3a-control-border);
+}
+
+/* Header: a wordmark on the left, the navigation and the theme switch to its
+   right, in one row where they fit. -------------------------------------- */
+
+.site-header {
+  gap: 0.25rem 1.25rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+.site-header .site-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1875rem;
+  letter-spacing: -0.02em;
+}
+
+/* The mark in front of the name is decoration only. */
+.site-header .site-title::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  background: var(--coffer-accent);
+}
+
+.site-header nav ul {
+  gap: 0 1rem;
+}
+
+.site-header nav a {
+  padding: 0.375rem 0;
+  border-bottom: 2px solid transparent;
+  color: var(--coffer-muted);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.site-header nav a:hover {
+  color: var(--coffer-text);
+  border-bottom-color: var(--coffer-border);
+}
+
+.site-header nav a[aria-current="page"] {
+  color: var(--coffer-text);
+  border-bottom-color: var(--coffer-accent);
+}
+
+.site-header .theme-switch {
+  padding: 0.1875rem 0.625rem;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 30rem) {
+  .site-header .theme-switch {
+    margin-left: auto;
+  }
+}
+
+/* Print: the engine prints black on white whatever the reader chose, but this
+   stylesheet comes later and would win with its own colours, so the print
+   values are set again here. ---------------------------------------------- */
+
+@media print {
+  :root,
+  :root[data-theme] {
+    --coffer-bg: #ffffff;
+    --coffer-text: #000000;
+    --coffer-muted: #333333;
+    --coffer-accent: #000000;
+    --coffer-border: #999999;
+    --coffer-code-bg: #ffffff;
+    --coffer-code-fg: #000000;
+
+    color-scheme: light;
+  }
+
+  .site-header .site-title::before {
+    display: none;
+  }
+}

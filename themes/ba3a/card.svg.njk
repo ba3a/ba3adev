@@ -1,0 +1,17 @@
+{#- The title card of ba3a.dev: a dark slate card with a teal bar down the left
+    edge and a short rule over the site name. Nothing is drawn in the 80 px
+    margin on the right, where the title wraps. Variables: width, height, padding,
+    background, foreground, muted, accent, fontFamily, siteTitle, siteTitleSize,
+    siteTitleY, titleLines ({ text, y }), titleSize. -#}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ width }}" height="{{ height }}" viewBox="0 0 {{ width }} {{ height }}">
+  <rect width="{{ width }}" height="{{ height }}" fill="{{ background }}"/>
+  <rect width="16" height="{{ height }}" fill="{{ accent }}"/>
+  <rect x="{{ padding }}" y="{{ height - 40 }}" width="{{ width - 2 * padding }}" height="2" fill="{{ muted }}" fill-opacity="0.35"/>
+  <g font-family="{{ fontFamily }}">
+    {% for line in titleLines %}
+    <text x="{{ padding }}" y="{{ line.y }}" font-size="{{ titleSize }}" font-weight="700" letter-spacing="-1" fill="{{ foreground }}">{{ line.text }}</text>
+    {% endfor %}
+    <rect x="{{ padding }}" y="{{ siteTitleY - siteTitleSize - 24 }}" width="64" height="6" rx="3" fill="{{ accent }}"/>
+    <text x="{{ padding }}" y="{{ siteTitleY }}" font-size="{{ siteTitleSize }}" font-weight="700" fill="{{ muted }}">{{ siteTitle }}</text>
+  </g>
+</svg>

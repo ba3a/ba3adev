@@ -1,0 +1,27 @@
+{#
+  The navigation of ba3a.dev. Everything else on the page is coffer's own
+  base.njk, including the wordmark (the site title link) and the theme switch of
+  the header; this file only adds the theme stylesheet and the heading font to
+  the head and replaces the navigation list (see coffer/docs/themes.md).
+#}
+{% extends "coffer:base.njk" %}
+
+{% block head %}
+{{ super() }}
+<link rel="preload" href="{{ '/assets/fonts/manrope-latin-700.woff2' | url }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ '/assets/ba3a.css' | url }}">
+{% endblock %}
+
+{% block nav %}
+<nav aria-label="{{ 'nav.label' | t }}">
+<ul>
+{# The wordmark is the link home, so the home entry of the engine's navigation is left out. The Projects entry is there only when the site has projects. -#}
+{% for item in nav or [] %}
+{% if item.url != '/' %}
+{% set href = item.url | url %}
+<li><a href="{{ href }}"{% if meta and meta.url == site.baseUrl + href %} aria-current="page"{% endif %}>{{ item.label or (item.key | t) }}</a></li>
+{% endif %}
+{% endfor %}
+</ul>
+</nav>
+{% endblock %}

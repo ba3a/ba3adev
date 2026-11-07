@@ -1,0 +1,8 @@
+# Colours of the title cards (see coffer/docs/themes.md). The card is as dark as
+# the dark scheme of the site and uses its accent. The contrast of these colours
+# is checked by scripts/site-test/ba3a-theme.test.mjs.
+accent: "#4fc8df"
+card:
+  background: "#0c1320"
+  text: "#f2f6fb"
+  mutedText: "#a9b9cf"
