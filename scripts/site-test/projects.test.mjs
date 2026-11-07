@@ -26,6 +26,9 @@ const stylesheet = readFileSync(join(root, 'themes', 'ba3a', 'assets', 'ba3a.css
 /** The order of the showcase, as agreed: the lower `order` comes first. */
 const SHOWCASE = ['specloop', 'roto', 'faultory', 'coffer'];
 
+/** The tools whose text is a landing page, checked by their own test files (specloop-landing and coffer-landing). */
+const LANDING = ['specloop', 'coffer'];
+
 /**
  * What the spec (section 14) says about each project, which the seed texts copy.
  *
@@ -71,14 +74,8 @@ const SPEC = {
     name: 'coffer',
     kind: 'tool',
     pitch: 'A static site engine for people who make things and write about them.',
-    points: [
-      'Project pages with docs pulled from their own repositories.',
-      'A devlog that brands posts by project.',
-      'Hierarchical tags and series.',
-      'Photo-heavy posts with carousels, maps and GPX tracks.',
-      'Per-tag location privacy and full-text feeds.',
-      'Everything in git, publishing is a push.',
-    ],
+    // The text of the page is a landing page, checked by coffer-landing.test.mjs.
+    points: [],
     tag: 'coffer',
     license: 'Apache-2.0',
     repo: 'https://github.com/ba3a/coffer',
@@ -187,14 +184,14 @@ test('the featured order is specloop, roto, faultory, coffer, and every number i
 });
 
 test('every seed text is marked "TODO: rewrite" in its source', () => {
-  // The text of specloop is final: it is the landing page.
-  for (const slug of SHOWCASE.filter((name) => name !== 'specloop')) {
+  // The texts of the landing pages are final.
+  for (const slug of SHOWCASE.filter((name) => !LANDING.includes(name))) {
     const page = readText(join(projectsDir, slug, 'index.md'));
     assert.ok(page.startsWith('<!-- TODO: rewrite -->'), `${slug}/index.md starts with the marker`);
-    // The declaration of coffer is final: its pitch and status are settled.
-    if (slug !== 'coffer') {
-      assert.match(readText(join(projectsDir, slug, 'project.yaml')), /^# TODO: rewrite\b/m, `${slug}/project.yaml has the marker`);
-    }
+    assert.match(readText(join(projectsDir, slug, 'project.yaml')), /^# TODO: rewrite\b/m, `${slug}/project.yaml has the marker`);
+  }
+  for (const slug of LANDING) {
+    assert.doesNotMatch(readText(join(projectsDir, slug, 'index.md')), /TODO/, `${slug}/index.md is final`);
   }
   assert.ok(declaration('faultory').pressKit.longDescription.includes('<!-- TODO: rewrite -->'), 'the press kit description');
 });
@@ -285,8 +282,8 @@ test('no seed marker reaches the published HTML, apart from the Faultory press k
 
 // --- the pages of the tools ---------------------------------------------------
 
-// specloop has a landing page of its own, checked by specloop-landing.test.mjs.
-for (const slug of SHOWCASE.filter((name) => SPEC[name].kind === 'tool' && name !== 'specloop')) {
+// specloop and coffer have a landing page of their own, checked by specloop-landing.test.mjs and coffer-landing.test.mjs.
+for (const slug of SHOWCASE.filter((name) => SPEC[name].kind === 'tool' && !LANDING.includes(name))) {
   test(`${slug}: the tool page shows the repository, the license and the text, and no game parts`, () => {
     const expected = SPEC[slug];
     const html = output(`made/${slug}/index.html`);
@@ -512,7 +509,7 @@ function isOriginal(include, path) {
 test('the placeholder art is found: every card, the Faultory pictures and the Handjet font, as PNG, SVG and woff2', () => {
   const artwork = placeholderArtwork();
   for (const slug of SHOWCASE) {
-    for (const extension of slug === 'specloop' ? ['png'] : ['png', 'svg']) {
+    for (const extension of LANDING.includes(slug) ? ['png'] : ['png', 'svg']) {
       assert.ok(artwork.includes(`content/ba3a.dev/projects/${slug}/card.${extension}`), `${slug}/card.${extension}`);
     }
   }

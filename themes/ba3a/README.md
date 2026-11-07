@@ -9,14 +9,14 @@ coffer's default theme (see `github.com/ba3a/coffer/blob/v0.1.0/docs/themes.md`)
 | --- | --- |
 | `assets/ba3a.css` | Overrides coffer's colour and font custom properties for light and dark (`prefers-color-scheme` and the theme switch), declares the web font, and styles the compact header. |
 | `templates/base.njk` | `{% extends "coffer:base.njk" %}`. Overrides the `head` block (with `super()`, to add the stylesheet and the font preload) and the `nav` block of the header. The wordmark and the theme switch are the engine's own markup, restyled by the stylesheet. Only the navigation is replaced here. |
-| `templates/project-tool.njk`, `templates/partials/landing.njk`, `templates/partials/landing-facts.njk`, `assets/landing.css`, `i18n/en.yaml` | The landing layout of a tool page whose text has section markers (specloop). See [A landing page](#a-landing-page). Any other tool page is rendered by the engine as before. |
-| `assets/specloop/` | The brand pictures of specloop for its landing page: `logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, copied unchanged from the specloop brand kit. |
+| `templates/project-tool.njk`, `templates/partials/landing.njk`, `templates/partials/landing-facts.njk`, `assets/landing.css`, `i18n/en.yaml` | The landing layout of a tool page whose text has section markers (specloop and coffer). See [A landing page](#a-landing-page). Any other tool page is rendered by the engine as before. |
+| `assets/specloop/`, `assets/coffer/` | The brand pictures of the two landing pages: `logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, copied unchanged from the brand kit of each project. |
 | `theme.yaml`, `card.svg.njk`, `fonts/` | The title card for link previews: dark slate with the site accent, set in Manrope Bold. |
 | `assets/fonts/` | The self-hosted Manrope web font files, the Inter and JetBrains Mono files of the landing layout, and the license texts of Manrope, Handjet, Inter and JetBrains Mono (`OFL.txt`, `OFL-Handjet.txt`, `OFL-Inter.txt`, `OFL-JetBrains-Mono.txt`). The Handjet font file itself is in the Faultory project folder. |
 
 The stylesheet also turns off synthetic bold on the game page (`.game-page`), which has the display font described under [Handjet](#handjet-the-page-of-faultory).
 
-UI strings are coffer's English defaults, except the few words of the landing layout in `i18n/en.yaml`.
+UI strings are coffer's English defaults, except the few words of the landing layout in `i18n/en.yaml` (shared ones, and one group per landing page under its slug).
 
 ## Colours
 
@@ -100,6 +100,8 @@ placeholders.
 A tool page whose `index.md` has section markers (`<div class="section-marker" id="hero"></div>`) is laid out as a landing page; the two conventions of the text are described in [AUTHORING.md](../../AUTHORING.md#a-landing-page). coffer has no hook between the Markdown and the template, and its renderer drops HTML comments, so `partials/landing.njk` cuts the rendered text at the markers and reshapes each section with regular expressions (the table into cards, the lists into a timeline, a feature grid and stat tiles, the quote into a chat, the `###` questions into `<details>`). `assets/landing.css` is loaded by that page only and every rule is scoped to its `.landing` wrapper, so no other page changes. The wrapper also sets the engine's `--coffer-*` variables to the landing palette, so the facts box and the devlog posts at the end of the page match.
 
 The palette is the one of the style guide of the specloop page, with two additions that WCAG AA asks for and the guide does not have: `--accent-text` (a darker rust for small accent text on the light page, where `--accent` is 4.0:1 on the alternating background) and `--on-accent` (dark text on the orange buttons in the dark scheme, where white is 2.5:1). `scripts/site-test/specloop-landing.test.mjs` reads the tokens from the stylesheet and checks every pairing.
+
+Each landing page has the wrapper class `landing-{slug}`. The coffer page, `.landing-coffer`, replaces only the accent and what is tinted with it (`--accent`, `--accent-text`, `--accent-soft`, `--term-accent`) with the gold of its logo, `#9a6b1f` on light and `#d9a84e` on dark; `scripts/site-test/coffer-landing.test.mjs` checks that they are the colours of the logo files and that the pairings keep AA contrast. What else differs between pages is the `layouts` table at the top of `partials/landing.njk` (which element is the visual of each two-column section, the kind of terminal of the dogfood section, the label of a timeline step, where the name in the top bar is split for its accent) and the strings under `landing.{slug}` in `i18n/en.yaml`. A project that is not in the table is laid out like specloop.
 
 ### Inter and JetBrains Mono
 

@@ -106,7 +106,7 @@ test('the head has the title, the description, the preview image, the stylesheet
 });
 
 test('no other page loads the landing stylesheet, the landing markup or its fonts', () => {
-  for (const file of ['made/roto/index.html', 'made/coffer/index.html', 'made/faultory/index.html', 'made/index.html', 'index.html']) {
+  for (const file of ['made/roto/index.html', 'made/faultory/index.html', 'made/index.html', 'index.html']) {
     const html = output(file);
     assert.doesNotMatch(html, /landing\.css|class="landing"|lp-section|inter-latin/, file);
   }

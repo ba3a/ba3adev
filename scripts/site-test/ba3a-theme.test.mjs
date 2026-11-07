@@ -73,7 +73,7 @@ test('the contrast helper follows WCAG 2.x', () => {
 
 // --- what the theme directory contains ---------------------------------------
 
-test('the theme directory holds only styles, fonts, templates, UI strings, the card, the brand pictures of specloop and documentation', () => {
+test('the theme directory holds only styles, fonts, templates, UI strings, the card, the brand pictures of the landing pages and documentation', () => {
   const allowed = [
     /^README\.md$/,
     /^theme\.yaml$/,
@@ -84,7 +84,7 @@ test('the theme directory holds only styles, fonts, templates, UI strings, the c
     /^templates\/partials\/landing(-facts)?\.njk$/,
     /^i18n\/en\.yaml$/,
     /^assets\/landing\.css$/,
-    /^assets\/specloop\/[a-z-]+\.(svg|ico|png)$/, // the brand pictures of the specloop page, copied from its brand kit
+    /^assets\/(specloop|coffer)\/[a-z-]+\.(svg|ico|png)$/, // the brand pictures of the landing pages, copied from their brand kits
     /^assets\/ba3a\.css$/,
     /^assets\/fonts\/[a-z0-9-]+\.woff2$/,
     /^assets\/fonts\/OFL\.txt$/,

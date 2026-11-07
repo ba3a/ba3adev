@@ -25,7 +25,7 @@
 
 {% block project_body %}
 {% if landing %}
-<div class="landing">
+<div class="landing landing-{{ project.slug }}">
 {% include "partials/landing.njk" %}
 {# What every project page has, below the landing sections: facts, devlog posts. #}
 <div class="lp-section lp-extra">

@@ -1,5 +1,5 @@
 /* The landing layout of ba3a.dev (templates/partials/landing.njk), used by the
-   page of a tool whose text has section markers: today, specloop.
+   page of a tool whose text has section markers: today, specloop and coffer.
 
    It is loaded by that page only, after ba3a.css. Everything is scoped to the
    .landing wrapper, so nothing here can reach another page, and the colours are
@@ -101,6 +101,44 @@
   --accent-soft: #2e1f17;
   --ok: #7fd19b;
   --term-bg: #0b0a0d;
+}
+
+/* coffer: the same page in the gold of its logo (#9a6b1f on light, #d9a84e on
+   dark). Only the accent and what is tinted with it change; the rest of the
+   palette is the one above. These rules come after the dark ones of .landing,
+   with the same specificity, so they win. Contrast is checked for both schemes
+   by scripts/site-test/coffer-landing.test.mjs. */
+
+.landing-coffer {
+  --accent: #9a6b1f;
+  --accent-text: #7c5516;
+  --accent-soft: #f4e8cc;
+  --term-accent: #e0b25c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .landing-coffer {
+    --accent: #d9a84e;
+    --accent-text: #d9a84e;
+    --accent-soft: #2b2214;
+  }
+}
+
+:root[data-theme="dark"] .landing-coffer {
+  --accent: #d9a84e;
+  --accent-text: #d9a84e;
+  --accent-soft: #2b2214;
+}
+
+/* The output of coffer's own commands is wide: give the hero terminal more room. */
+@media (min-width: 960px) {
+  .landing-coffer .lp-s-hero .lp-two {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  }
+}
+
+.landing-coffer .lp-s-hero pre.shiki {
+  font-size: 12.5px;
 }
 
 /* Page frame ------------------------------------------------------------- */
@@ -658,7 +696,8 @@ html:has(.landing) {
   background: var(--accent);
 }
 
-.lp-timeline time {
+.lp-timeline time,
+.lp-timeline .lp-when {
   display: block;
   color: var(--muted);
   font: 600 14px var(--mono);
@@ -676,6 +715,17 @@ html:has(.landing) {
 
 .lp-grid .lp-card p {
   margin: 0;
+  color: var(--muted);
+  font-size: 15.5px;
+}
+
+/* Four kinds of reader in one row where there is room. */
+.lp-s-audience .lp-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.lp-grid + p {
+  margin-top: 24px;
   color: var(--muted);
   font-size: 15.5px;
 }
@@ -728,6 +778,63 @@ html:has(.landing) {
 
 .lp-s-dogfood blockquote p {
   margin: 0;
+}
+
+/* Comparison: a table of what the engine does and what it leaves to you ---- */
+
+.lp-s-compare table {
+  display: block;
+  width: 100%;
+  margin: 40px 0 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 15.5px;
+}
+
+.lp-s-compare thead,
+.lp-s-compare tbody {
+  display: table;
+  width: 100%;
+  min-width: 640px;
+}
+
+.lp-s-compare th,
+.lp-s-compare td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.lp-s-compare th {
+  color: var(--muted);
+  font: 600 13px/1.3 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lp-s-compare td:first-child {
+  width: 18%;
+  font-weight: 600;
+}
+
+.lp-s-compare td:nth-child(3) {
+  color: var(--muted);
+}
+
+.lp-s-compare h3 {
+  margin-top: 40px;
+}
+
+.lp-s-compare ul {
+  max-width: 640px;
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--muted);
+}
+
+.lp-s-compare li {
+  margin-bottom: 6px;
 }
 
 /* FAQ -------------------------------------------------------------------- */

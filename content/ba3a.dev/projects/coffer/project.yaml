@@ -1,9 +1,13 @@
+# The page of coffer is a landing page: index.md holds its text and the section
+# markers that the theme turns into the layout (see AUTHORING.md, "A landing
+# page"). The brand pictures are in themes/ba3a/assets/coffer/; the card is the
+# social preview of the brand kit.
 name: coffer
 pitch: A static site engine for people who make things and write about them.
 kind: tool
 status: in-development
 card: card.png
-cardAlt: "Placeholder card: the name coffer in white letters on a dark brown background."
+cardAlt: "The coffer logo, a treasure chest with a gold lock, beside the name coffer in light letters on a near-black background."
 featured: true
 order: 4
 tag: coffer

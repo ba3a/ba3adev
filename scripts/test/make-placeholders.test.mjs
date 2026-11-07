@@ -26,7 +26,6 @@ const projectsDir = join(root, 'content', 'ba3a.dev', 'projects');
 
 const EXPECTED_FILES = [
   'roto/card',
-  'coffer/card',
   'faultory/card',
   'faultory/logo',
   'faultory/key-art',
@@ -42,11 +41,11 @@ function text(file) {
   return /** @type {string} */ (content);
 }
 
-test('it makes a card for each tool and a card, a wordmark and a key art for Faultory, as SVG and PNG', () => {
+test('it makes a card for each tool that has no real one and a card, a wordmark and a key art for Faultory, as SVG and PNG', () => {
   assert.deepEqual([...generated.keys()].sort(), [...EXPECTED_FILES].sort());
   assert.deepEqual(
     TOOL_CARDS.map((tool) => tool.slug),
-    ['roto', 'coffer'],
+    ['roto'],
   );
 });
 

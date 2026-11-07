@@ -273,14 +273,14 @@ References: [Projects](https://github.com/ba3a/coffer/blob/v0.1.0/docs/projects.
 
 ## A landing page
 
-A tool can have a landing page instead of a README-style page. specloop does: its `index.md` is the text of the page, and the theme turns it into the designed sections. Every other tool page is unchanged.
+A tool can have a landing page instead of a README-style page. specloop and coffer do: the `index.md` of each is the text of its page, and the theme turns it into the designed sections. Every other tool page is unchanged.
 
 The text is ordinary Markdown with two conventions:
 
-- **Sections.** Each section starts with an empty marker, `<div class="section-marker" id="name"></div>`. The `id` is the name of the section and becomes the `id` of the section on the page, so `#name` links work. A page without markers is a normal tool page. The names the layout knows are `hero`, `problem`, `how-it-works`, `timeline`, `spec-example`, `features`, `dogfood`, `quick-start`, `faq` and `final-cta`. (A comment such as `<!-- section: hero -->` would be dropped by the Markdown renderer, which is why the marker is an element.)
+- **Sections.** Each section starts with an empty marker, `<div class="section-marker" id="name"></div>`. The `id` is the name of the section and becomes the `id` of the section on the page, so `#name` links work. A page without markers is a normal tool page. The names the layout knows are `hero`, `problem`, `audience`, `how-it-works`, `timeline`, `spec-example`, `features`, `compare`, `dogfood`, `quick-start`, `faq` and `final-cta`; a page uses the ones it needs (specloop has ten, coffer twelve). The sections with two columns, and what their visual is, are set per project in the `layouts` table of `themes/ba3a/templates/partials/landing.njk`. (A comment such as `<!-- section: hero -->` would be dropped by the Markdown renderer, which is why the marker is an element.)
 - **Eyebrows.** A `######` heading right before the `##` heading of a section (before the `#` of the hero) is the small label above it. It is published as a paragraph, not as a heading.
 
-How each part of the Markdown is shown (a table as three cards, a list as a timeline, a quote as a chat, `###` questions as an accordion, and so on) is in `themes/ba3a/templates/partials/landing.njk`. The look is `themes/ba3a/assets/landing.css`, loaded by landing pages only. All words on the page come from `index.md`; the few words the layout adds are in `themes/ba3a/i18n/en.yaml`. The brand pictures of the project (`logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`) are in `themes/ba3a/assets/{slug}/`; the card picture is the preview image of the page.
+How each part of the Markdown is shown (a table as three cards, a list as a timeline, a quote as a chat, `###` questions as an accordion, and so on) is in `themes/ba3a/templates/partials/landing.njk`. The look is `themes/ba3a/assets/landing.css`, loaded by landing pages only. All words on the page come from `index.md`; the few words the layout adds are in `themes/ba3a/i18n/en.yaml`, under `landing.{slug}`. A new landing page needs an entry in the `layouts` table, its strings, a `landing-{slug}` palette in `landing.css` if its accent differs, and its own test. The brand pictures of the project (`logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`) are in `themes/ba3a/assets/{slug}/`; the card picture is the preview image of the page.
 
 ## If the scheduled workflow stops
 

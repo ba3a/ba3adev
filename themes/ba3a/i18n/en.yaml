@@ -1,12 +1,17 @@
 # UI strings of the landing layout (themes/ba3a/templates/partials/landing.njk).
 # Only the words the layout adds are here; the text of a landing page is in its
-# index.md. Everything else is coffer's English default.
+# index.md. Everything else is coffer's English default. The strings of one page
+# are under its slug; the name in the top bar is the name of the project.
 landing:
   nav: Sections of this page
-  brand_start: spec
-  brand_end: loop
   github: "★ GitHub"
-  terminal_title: "claude — my-project"
-  hero_terminal: A terminal session in Claude Code, running a feature from a spec to reviewed commits.
-  dogfood_terminal: The git log of a feature that specloop built, one commit per step.
-  chat: A typical chat without specloop, in which the person keeps asking Claude to continue.
+  specloop:
+    terminal_title: "claude — my-project"
+    hero_terminal: A terminal session in Claude Code, running a feature from a spec to reviewed commits.
+    dogfood_terminal: The git log of a feature that specloop built, one commit per step.
+    chat: A typical chat without specloop, in which the person keeps asking Claude to continue.
+  coffer:
+    terminal_title: "coffer — example site"
+    hero_terminal: A terminal session that builds and checks the example site of coffer.
+    problem_terminal: A shell script of the tools a photo journal usually needs besides its site generator.
+    dogfood_terminal: The build-info.json that ba3a.dev serves, with the commit of every repository its documentation came from.
