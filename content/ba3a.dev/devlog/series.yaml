@@ -1,0 +1,5 @@
+# Names and descriptions for the series of this blog. A series without an entry
+# is shown by its slug (the value of `series` in the posts).
+devlog-start:
+  name: Starting the devlog
+  description: A two-part placeholder series that shows what a series looks like. Replace it with a real one.

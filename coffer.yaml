@@ -51,6 +51,10 @@ media:
     region: auto
     accessKeyIdEnv: R2_ACCESS_KEY_ID
     secretAccessKeyEnv: R2_SECRET_ACCESS_KEY
+  # The seed photos of the draft posts are generated, byte for byte, by
+  # scripts/make-placeholders.mjs; "npm run test:sites" restores the ones that media.lock.json
+  # lists and the checkout lacks, so tests need neither the store nor credentials.
+  #
   # Raster images and videos below the devlog and the posts of my.ba3a.dev. The patterns spell
   # every case of an extension, because the matcher is case-sensitive and cameras write
   # IMG_0001.JPG. They are also the lines "coffer media gitignore" prints for .gitignore.

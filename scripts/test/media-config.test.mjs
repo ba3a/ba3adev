@@ -127,9 +127,15 @@ test('.env.local.example lists the variables the store reads, with no value', ()
   for (const [name, value] of values) assert.equal(value, '', `${name} must have no value`);
 });
 
-test('media.lock.json is the empty lock the engine writes, and .gitattributes keeps its line ends', () => {
+test('media.lock.json is a lock the engine could have written, every entry is an original, and .gitattributes keeps its line ends', () => {
   const text = read('media.lock.json');
-  assert.equal(text, renderLock([]));
-  assert.deepEqual(parseLock(text), []);
+  const entries = parseLock(text);
+  // The file is exactly what the engine renders: sorted, one line per entry, LF, final newline.
+  assert.equal(text, renderLock(entries));
+  assert.ok(entries.length > 0, 'the seed photos are listed (see scripts/make-placeholders.mjs)');
+  for (const entry of entries) {
+    assert.ok(isOriginal(entry.path), `${entry.path} matches media.include`);
+    assert.match(entry.sha256, /^[0-9a-f]{64}$/);
+  }
   assert.match(read('.gitattributes'), /^media\.lock\.json text eol=lf$/m);
 });

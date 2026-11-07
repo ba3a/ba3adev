@@ -24,13 +24,38 @@
 // changed is not touched. The fonts are the theme's Manrope Bold (cards of the
 // tools) and Handjet Bold from the pinned `@fontsource/handjet` devDependency
 // (the Faultory wordmark); opentype.js reads the outlines.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+//
+// Seed photos
+// -----------
+// The draft posts of both blogs (content/ba3a.dev/devlog/{first,second} and
+// content/my.ba3a.dev/{pervyj,vtoroj}) show a carousel and a captioned picture.
+// Their made-up "photographs" are JPEGs with a made-up camera and a GPS position
+// at a clearly synthetic place (Point Nemo for the devlog, the middle of the
+// North Atlantic for the woodworking blog), so that the location policy has
+// something to strip. They are originals in the sense of the media store: they
+// sit below `media.include`, git ignores them and `media.lock.json` lists them.
+// Because the encoder is deterministic, a clean checkout that has neither the
+// store nor credentials gets the very same bytes back:
+//
+//   node scripts/make-placeholders.mjs --photos          create the seed photos that are missing
+//                                                        (then run `coffer media lock`)
+//   node scripts/make-placeholders.mjs --restore-photos  write the missing seed photos that
+//                                                        media.lock.json lists, and nothing else
+//
+// Neither ever overwrites a file that exists, so a real photograph that replaces
+// a placeholder is safe, and `--restore-photos` leaves out a photo whose lock
+// entry was removed on purpose. A lock entry whose hash the generator no longer
+// reproduces is an error: pull the original from the media store instead.
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import opentype from 'opentype.js';
 import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
+
+import { parseLock } from '../coffer/src/media/lock.js';
 
 const defaultRoot = fileURLToPath(new URL('..', import.meta.url));
 
@@ -360,8 +385,296 @@ export async function writePlaceholders({ root = defaultRoot, projectsDir } = {}
   return { written, unchanged };
 }
 
+// ---------------------------------------------------------------------------
+// Seed photos
+// ---------------------------------------------------------------------------
+
+/** Size of a seed photo, in pixels. */
+export const PHOTO_SIZE = Object.freeze({ width: 1600, height: 1066 });
+
+/** JPEG quality of the seed photos: small files, good enough for a made-up picture. */
+const PHOTO_QUALITY = 70;
+
+const CAMERA = Object.freeze({ Make: 'Placeholder Camera Co.', Model: 'Made-up 1' });
+
+/**
+ * The made-up places of the photos, as degrees, minutes and seconds. Each photo
+ * moves a few arc seconds away from the base so that the positions differ.
+ *
+ * - The devlog: Point Nemo, 48 deg 52' 36" S, 123 deg 23' 36" W, the point of the
+ *   ocean farthest from any land.
+ * - The woodworking blog: 30 deg N, 40 deg W, in the middle of the North Atlantic.
+ */
+const PLACES = Object.freeze({
+  devlog: { latitudeRef: 'S', latitude: [48, 52, 36], longitudeRef: 'W', longitude: [123, 23, 36] },
+  woodworking: { latitudeRef: 'N', latitude: [30, 0, 0], longitudeRef: 'W', longitude: [40, 0, 0] },
+});
+
+/**
+ * @typedef {object} SeedPhoto
+ * @property {string} path Path from the repository root, with forward slashes.
+ * @property {'devlog' | 'woodworking'} place
+ * @property {'window' | 'loop' | 'cards' | 'box'} motif
+ * @property {string} title The words drawn on the picture (Latin letters only: the font has no Cyrillic).
+ * @property {[string, string]} sky Top and bottom colour of the background.
+ * @property {string} ink Colour of the drawing; it must stand out from the background.
+ */
+
+/**
+ * The photos of the four seed posts. Per post: one captioned photo and the three photos of its carousel.
+ *
+ * @type {ReadonlyArray<SeedPhoto>}
+ */
+export const SEED_PHOTOS = Object.freeze(
+  /** @type {SeedPhoto[]} */ ([
+    { path: 'content/ba3a.dev/devlog/first/desk.jpg', place: 'devlog', motif: 'window', title: 'Desk', sky: ['#16365c', '#0b1b30'], ink: '#7fb6ff' },
+    { path: 'content/ba3a.dev/devlog/first/sketch-1.jpg', place: 'devlog', motif: 'loop', title: 'Sketch 1', sky: ['#1c4a3a', '#0d241c'], ink: '#8fd6b0' },
+    { path: 'content/ba3a.dev/devlog/first/sketch-2.jpg', place: 'devlog', motif: 'cards', title: 'Sketch 2', sky: ['#3a2a5c', '#1b1230'], ink: '#c4a8ff' },
+    { path: 'content/ba3a.dev/devlog/first/sketch-3.jpg', place: 'devlog', motif: 'window', title: 'Sketch 3', sky: ['#5c2a3a', '#301219'], ink: '#ffa8bd' },
+    { path: 'content/ba3a.dev/devlog/second/run-1.jpg', place: 'devlog', motif: 'cards', title: 'Run 1', sky: ['#16365c', '#0b1b30'], ink: '#ffd27f' },
+    { path: 'content/ba3a.dev/devlog/second/run-2.jpg', place: 'devlog', motif: 'loop', title: 'Run 2', sky: ['#1c4a3a', '#0d241c'], ink: '#ffd27f' },
+    { path: 'content/ba3a.dev/devlog/second/run-3.jpg', place: 'devlog', motif: 'window', title: 'Run 3', sky: ['#3a2a5c', '#1b1230'], ink: '#ffd27f' },
+    { path: 'content/ba3a.dev/devlog/second/terminal.jpg', place: 'devlog', motif: 'window', title: 'Terminal', sky: ['#222222', '#0c0c0c'], ink: '#9be39b' },
+    { path: 'content/my.ba3a.dev/pervyj/bench.jpg', place: 'woodworking', motif: 'box', title: 'Bench', sky: ['#7a5230', '#46301f'], ink: '#e6c590' },
+    { path: 'content/my.ba3a.dev/pervyj/box-1.jpg', place: 'woodworking', motif: 'box', title: 'Box 1', sky: ['#6e4a22', '#3a2610'], ink: '#f0d9a8' },
+    { path: 'content/my.ba3a.dev/pervyj/box-2.jpg', place: 'woodworking', motif: 'box', title: 'Box 2', sky: ['#5e7a8a', '#2d3d46'], ink: '#ead3a4' },
+    { path: 'content/my.ba3a.dev/pervyj/box-3.jpg', place: 'woodworking', motif: 'box', title: 'Box 3', sky: ['#7b5a46', '#40291c'], ink: '#f4e1bd' },
+    { path: 'content/my.ba3a.dev/vtoroj/hinge-1.jpg', place: 'woodworking', motif: 'box', title: 'Hinge 1', sky: ['#6e4a22', '#3a2610'], ink: '#d9b36d' },
+    { path: 'content/my.ba3a.dev/vtoroj/hinge-2.jpg', place: 'woodworking', motif: 'box', title: 'Hinge 2', sky: ['#5e7a8a', '#2d3d46'], ink: '#d9b36d' },
+    { path: 'content/my.ba3a.dev/vtoroj/hinge-3.jpg', place: 'woodworking', motif: 'box', title: 'Hinge 3', sky: ['#7b5a46', '#40291c'], ink: '#d9b36d' },
+    { path: 'content/my.ba3a.dev/vtoroj/lid.jpg', place: 'woodworking', motif: 'box', title: 'Lid', sky: ['#7a5230', '#46301f'], ink: '#f0d9a8' },
+  ]),
+);
+
+/**
+ * @param {SeedPhoto['motif']} motif
+ * @param {string} ink
+ * @param {number} width
+ * @param {number} height
+ * @returns {string} The drawing of a motif, in the upper two thirds of the picture.
+ */
+function motifShapes(motif, ink, width, height) {
+  const cx = width / 2;
+  const cy = height * 0.4;
+  switch (motif) {
+    case 'window':
+      return (
+        `<rect x="${cx - 380}" y="${cy - 220}" width="760" height="440" rx="18" fill="none" stroke="${ink}" stroke-width="10"/>` +
+        `<path d="M${cx - 380} ${cy - 140}H${cx + 380}" stroke="${ink}" stroke-width="10"/>` +
+        [0, 1, 2, 3]
+          .map((row) => `<rect x="${cx - 330}" y="${cy - 90 + row * 70}" width="${260 + ((row * 97) % 320)}" height="22" rx="6" fill="${ink}" fill-opacity="0.7"/>`)
+          .join('')
+      );
+    case 'loop':
+      return (
+        `<circle cx="${cx}" cy="${cy}" r="190" fill="none" stroke="${ink}" stroke-width="22" stroke-dasharray="900 300"/>` +
+        `<polygon points="${cx + 190},${cy - 70} ${cx + 262},${cy + 30} ${cx + 118},${cy + 30}" fill="${ink}"/>` +
+        `<circle cx="${cx}" cy="${cy}" r="52" fill="${ink}" fill-opacity="0.8"/>`
+      );
+    case 'cards':
+      return [0, 1, 2]
+        .map(
+          (index) =>
+            `<rect x="${cx - 420 + index * 290}" y="${cy - 170 + (index % 2) * 60}" width="250" height="340" rx="16" fill="${ink}" fill-opacity="${0.35 + index * 0.2}" stroke="${ink}" stroke-width="6"/>`,
+        )
+        .join('');
+    case 'box':
+      return (
+        `<rect x="${cx - 330}" y="${cy - 60}" width="660" height="250" rx="10" fill="${ink}" fill-opacity="0.85" stroke="#2b2118" stroke-width="8"/>` +
+        `<polygon points="${cx - 330},${cy - 60} ${cx - 250},${cy - 170} ${cx + 410},${cy - 170} ${cx + 330},${cy - 60}" fill="${ink}" fill-opacity="0.6" stroke="#2b2118" stroke-width="8"/>` +
+        `<polygon points="${cx + 330},${cy - 60} ${cx + 410},${cy - 170} ${cx + 410},${cy + 80} ${cx + 330},${cy + 190}" fill="${ink}" fill-opacity="0.4" stroke="#2b2118" stroke-width="8"/>` +
+        [0, 1, 2, 3]
+          .map(
+            (index) =>
+              `<polygon points="${cx - 330 + index * 165},${cy - 60} ${cx - 290 + index * 165},${cy + 40} ${cx - 250 + index * 165},${cy - 60}" fill="#2b2118" fill-opacity="0.55"/>`,
+          )
+          .join('')
+      );
+    default:
+      return '';
+  }
+}
+
+/**
+ * @param {import('opentype.js').Font} font
+ * @param {SeedPhoto} photo
+ * @returns {string} The picture as SVG: a coloured background, a motif and the title.
+ */
+function seedScene(font, photo) {
+  const { width, height } = PHOTO_SIZE;
+  const label = 'PLACEHOLDER PHOTO';
+  const labelSize = fitSize(font, label, 54, width - 200);
+  const titleSize = fitSize(font, photo.title, 130, width - 200);
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+    `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${photo.sky[0]}"/><stop offset="1" stop-color="${photo.sky[1]}"/></linearGradient></defs>` +
+    `<rect width="${width}" height="${height}" fill="url(#sky)"/>` +
+    motifShapes(photo.motif, photo.ink, width, height) +
+    `<path d="${centeredPath(font, photo.title, titleSize, width / 2, height * 0.74)}" fill="#ffffff"/>` +
+    `<path d="${centeredPath(font, label, labelSize, width / 2, height * 0.88)}" fill="${photo.ink}"/>` +
+    '</svg>'
+  );
+}
+
+/**
+ * @param {number[]} parts Degrees, minutes, seconds.
+ * @param {number} offset Arc seconds to add.
+ * @returns {string} The rational form that the EXIF writer takes.
+ */
+function dms(parts, offset) {
+  return `${parts[0]}/1 ${parts[1]}/1 ${parts[2] + offset}/1`;
+}
+
+/**
+ * @param {SeedPhoto} photo
+ * @param {number} index Place of the photo in the list; it moves the position by a few arc seconds.
+ * @returns {Record<string, Record<string, string>>} The EXIF data to write.
+ */
+function seedExif(photo, index) {
+  const place = PLACES[photo.place];
+  return {
+    IFD0: { ...CAMERA },
+    IFD3: {
+      GPSLatitudeRef: place.latitudeRef,
+      GPSLatitude: dms(place.latitude, index),
+      GPSLongitudeRef: place.longitudeRef,
+      GPSLongitude: dms(place.longitude, index),
+    },
+  };
+}
+
+/**
+ * Makes the seed photos.
+ *
+ * @param {object} [options]
+ * @param {string} [options.root] The repository whose theme font is used.
+ * @returns {Promise<Map<string, Buffer>>} The bytes of each photo, by its path from the repository root.
+ */
+export async function renderSeedPhotos({ root = defaultRoot } = {}) {
+  const font = loadFont(join(root, 'themes', 'ba3a', 'fonts', 'Manrope-Bold.ttf'));
+  /** @type {Map<string, Buffer>} */
+  const photos = new Map();
+  for (const [index, photo] of SEED_PHOTOS.entries()) {
+    const bytes = await sharp(Buffer.from(seedScene(font, photo)), { density: 72 })
+      .jpeg({ quality: PHOTO_QUALITY, mozjpeg: false, progressive: false, chromaSubsampling: '4:2:0', optimiseCoding: false })
+      .withExif(seedExif(photo, index))
+      .toBuffer();
+    photos.set(photo.path, bytes);
+  }
+  return photos;
+}
+
+/**
+ * @param {Buffer} bytes
+ * @returns {string}
+ */
+function sha256Of(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+/**
+ * Writes a file through a temporary name, so that an interrupted run leaves no half file.
+ *
+ * @param {string} target
+ * @param {Buffer} bytes
+ */
+function writeNew(target, bytes) {
+  mkdirSync(dirname(target), { recursive: true });
+  const temporary = join(dirname(target), '.seed-photo.part');
+  writeFileSync(temporary, bytes);
+  renameSync(temporary, target);
+}
+
+/**
+ * Writes the seed photos that do not exist yet. A file that exists is left alone, whatever it contains,
+ * so a real photograph that took the place of a placeholder is never overwritten.
+ *
+ * @param {object} [options]
+ * @param {string} [options.root] The repository root.
+ * @returns {Promise<{ written: string[], present: string[] }>}
+ */
+export async function createSeedPhotos({ root = defaultRoot } = {}) {
+  /** @type {string[]} */
+  const written = [];
+  /** @type {string[]} */
+  const present = [];
+  for (const [path, bytes] of await renderSeedPhotos()) {
+    const target = join(root, ...path.split('/'));
+    if (existsSync(target)) {
+      present.push(path);
+      continue;
+    }
+    writeNew(target, bytes);
+    written.push(path);
+  }
+  return { written, present };
+}
+
+/**
+ * Brings back the seed photos that a clean checkout lacks, as far as the lock file lists them: a photo is
+ * written only when it is missing, the lock lists its path, and the generated bytes are exactly what the
+ * lock says (hash and size). A photo whose entry is not in the lock was deleted on purpose and stays
+ * deleted. Nothing is written when any photo that has to be restored does not match its entry.
+ *
+ * @param {object} [options]
+ * @param {string} [options.root] The repository root; its media.lock.json is read.
+ * @returns {Promise<{ written: string[], present: string[], skipped: string[] }>}
+ */
+export async function restoreSeedPhotos({ root = defaultRoot } = {}) {
+  const lockPath = join(root, 'media.lock.json');
+  const entries = new Map(existsSync(lockPath) ? parseLock(readFileSync(lockPath, 'utf8')).map((entry) => [entry.path, entry]) : []);
+  /** @type {string[]} */
+  const written = [];
+  /** @type {string[]} */
+  const present = [];
+  /** @type {string[]} */
+  const skipped = [];
+  /** @type {Array<[string, Buffer]>} */
+  const pending = [];
+  for (const [path, bytes] of await renderSeedPhotos()) {
+    const entry = entries.get(path);
+    if (entry === undefined) {
+      skipped.push(path);
+    } else if (existsSync(join(root, ...path.split('/')))) {
+      present.push(path);
+    } else if (entry.sha256 !== sha256Of(bytes) || entry.size !== bytes.length) {
+      throw new Error(
+        `${path} does not match the lock: media.lock.json says ${entry.sha256} (${entry.size} bytes) but the generator makes ${sha256Of(bytes)} (${bytes.length} bytes). Pull the original with "coffer media pull" instead.`,
+      );
+    } else {
+      pending.push([path, bytes]);
+    }
+  }
+  for (const [path, bytes] of pending) {
+    writeNew(join(root, ...path.split('/')), bytes);
+    written.push(path);
+  }
+  return { written, present, skipped };
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const { written, unchanged } = await writePlaceholders();
-  for (const file of written) console.log(`wrote ${file}`);
-  console.log(`${written.length} written, ${unchanged.length} unchanged`);
+  const flags = process.argv.slice(2);
+  if (flags.some((flag) => flag !== '--photos' && flag !== '--restore-photos')) {
+    console.error('Usage: node scripts/make-placeholders.mjs [--photos | --restore-photos]');
+    process.exit(2);
+  }
+  if (flags.includes('--restore-photos')) {
+    try {
+      const { written, present, skipped } = await restoreSeedPhotos();
+      for (const file of written) console.log(`restored ${file}`);
+      console.log(`seed photos: ${written.length} restored, ${present.length} present, ${skipped.length} not in the lock`);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  } else {
+    const { written, unchanged } = await writePlaceholders();
+    for (const file of written) console.log(`wrote ${file}`);
+    console.log(`${written.length} written, ${unchanged.length} unchanged`);
+    if (flags.includes('--photos')) {
+      const photos = await createSeedPhotos();
+      for (const file of photos.written) console.log(`wrote ${file}`);
+      console.log(`seed photos: ${photos.written.length} written, ${photos.present.length} already present (run "coffer media lock" to record them)`);
+    }
+  }
 }

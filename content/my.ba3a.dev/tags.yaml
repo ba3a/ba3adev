@@ -1,0 +1,17 @@
+# Display names, descriptions and image metadata policies for the tags of this blog.
+# A tag without an entry is shown by the last segment of its path.
+#
+# The site default (coffer.yaml) strips the location from every published photo. A tag
+# can change that for its whole subtree: photos of walks may publish where they were
+# taken. The tag has no post yet, so the build lists the entry as a warning until one
+# appears.
+woodworking:
+  name: Столярное дело
+  description: Вещи, сделанные на верстаке, и приёмы, на которых они держатся.
+woodworking/boxes:
+  name: Шкатулки
+  description: Небольшие коробки с крышками и петлями.
+hiking:
+  name: Походы
+  description: Пешие дни в горах и лесу.
+  location: keep
