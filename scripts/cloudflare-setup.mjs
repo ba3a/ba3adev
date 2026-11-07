@@ -517,7 +517,7 @@ export function nextStepsLines() {
     '     The deploy workflow needs at least Account > Cloudflare Pages > Edit; one token with all the permissions above works for both.',
     '  4. Upload the photo originals to the bucket: "npx coffer media push" (the pre-push git hook does the same on every push).',
     '  5. Run the deploy workflow, then check https://ba3a.dev and https://my.ba3a.dev.',
-    'The exact commands, in order, are in OPERATIONS.md (written in the final step of the plan).',
+    'The exact commands, in order, are in OPERATIONS.md (step 5 is this script and what follows it).',
   ];
 }
 

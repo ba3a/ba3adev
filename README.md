@@ -9,6 +9,8 @@ The engine, coffer, lives in [coffer/](coffer/README.md) for now and is meant to
 
 To write a post, add a project or set up a new computer, read [AUTHORING.md](AUTHORING.md).
 
+To go live, run the sites or upgrade the engine, read [OPERATIONS.md](OPERATIONS.md).
+
 ## Structure
 
 | Path | What it holds |
@@ -19,7 +21,7 @@ To write a post, add a project or set up a new computer, read [AUTHORING.md](AUT
 | `media.lock.json` | The list, by content hash, of the original photos and videos, which are kept in a private R2 bucket and not in git. |
 | `generators/` | Scripts that generate project references (for specloop). |
 | `build-support/` | Files the project reference builds need (the Dokka setup for roto). |
-| `scripts/` | Repository scripts: git hook setup, placeholder pictures, deploy preparation, the Cloudflare setup, and their tests. |
+| `scripts/` | Repository scripts: git hook setup, placeholder pictures, deploy preparation, the Cloudflare setup, the split of the engine into its own repository, and their tests. |
 | `deploy/` | Response headers for Cloudflare Pages. |
 | `.github/workflows/` | Deploy, scheduled refresh and keepalive workflows. |
 | `coffer/` | The engine: source, tests, documentation (`coffer/docs/`) and its example site. |

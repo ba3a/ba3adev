@@ -25,7 +25,7 @@
 #   leaves drafts out, so the pull is not needed to build them, but the check keeps the rule simple:
 #   what the lock file lists must exist in the store before anything is published. Before the first
 #   deployment run "git push" from a working copy that has the originals (the pre-push hook uploads
-#   them), see OPERATIONS.md (written in the final step of the plan).
+#   them), see OPERATIONS.md.
 #
 # Test suite
 #   `npm test` is not run here: it takes about ten minutes and the same commit is tested by the

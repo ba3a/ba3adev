@@ -216,6 +216,7 @@ test('--dry-run without credentials prints the whole plan and makes no network c
   assert.match(stdout, /Workers R2 Storage > Edit/);
   assert.match(stdout, /DNS > Edit/);
   assert.match(stdout, /OPERATIONS\.md/);
+  assert.doesNotMatch(stdout, /final step|written in the/i, 'OPERATIONS.md exists; the script does not promise it for later');
   assert.match(stdout, /proxied CNAME record/, 'the DNS record to check is described');
   assert.match(stdout, /pages\.dev/);
   assert.doesNotMatch(stdout, /created by Pages|Pages adds the DNS/, 'no promise that Pages creates the DNS records');

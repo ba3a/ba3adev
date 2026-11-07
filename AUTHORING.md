@@ -1,6 +1,6 @@
 # Authoring
 
-A short, practical guide to writing for ba3a.dev (English: projects, project docs, devlog) and my.ba3a.dev (Russian: personal blog). Publishing is a `git push` to `main`. The engine, coffer, has a page per feature in [coffer/docs](coffer/docs/README.md); this file links there instead of repeating it. Operations and go-live are in OPERATIONS.md (the go-live and operations runbook).
+A short, practical guide to writing for ba3a.dev (English: projects, project docs, devlog) and my.ba3a.dev (Russian: personal blog). Publishing is a `git push` to `main`. The engine, coffer, has a page per feature in [coffer/docs](coffer/docs/README.md); this file links there instead of repeating it. Operations and go-live are in [OPERATIONS.md](OPERATIONS.md) (the go-live and operations runbook).
 
 ## Set up a new computer
 
@@ -273,7 +273,7 @@ References: [Projects](coffer/docs/projects.md), [Where a project's documentatio
 
 ## If the scheduled workflow stops
 
-GitHub disables scheduled workflows of a public repository after 60 days without activity, and Refresh is what publishes scheduled posts and picks up project docs. The Keepalive workflow and a job inside Refresh try to prevent it (see `scripts/keepalive.mjs`), but a real commit is the only sure way to restart the 60-day clock. If GitHub disabled Refresh anyway, a commit does not turn it back on: enable it by hand. Open the Actions tab, choose Refresh, then "Enable workflow" (or run `gh workflow enable refresh.yml`). Make a real commit afterwards so that it does not happen again. A workflow disabled by hand is left alone by the keepalive. More in OPERATIONS.md (the go-live and operations runbook).
+GitHub disables scheduled workflows of a public repository after 60 days without activity, and Refresh is what publishes scheduled posts and picks up project docs. The Keepalive workflow and a job inside Refresh try to prevent it (see `scripts/keepalive.mjs`), but a real commit is the only sure way to restart the 60-day clock. If GitHub disabled Refresh anyway, a commit does not turn it back on: enable it by hand. Open the Actions tab, choose Refresh, then "Enable workflow" (or run `gh workflow enable refresh.yml`). Make a real commit afterwards so that it does not happen again. A workflow disabled by hand is left alone by the keepalive. More in [OPERATIONS.md](OPERATIONS.md#things-to-know) (the go-live and operations runbook).
 
 ## Analytics
 

@@ -1,6 +1,9 @@
 # Normalise line endings to LF in the repository and in working trees.
 * text=auto eol=lf
 
+# Shell scripts must keep LF, or sh reads the carriage return as part of every command.
+*.sh text eol=lf
+
 # Windows scripts need CRLF.
 *.cmd text eol=crlf
 *.bat text eol=crlf
