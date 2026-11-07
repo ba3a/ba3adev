@@ -1,0 +1,174 @@
+# Builds both sites and deploys them to Cloudflare Pages: ba3a.dev -> project ba3a-dev,
+# my.ba3a.dev -> project my-ba3a-dev, both as the production branch (main).
+#
+# Triggers
+#   - push to main: every commit is published.
+#   - workflow_dispatch: a manual run from the Actions tab. The job only runs on main (see its `if`).
+#   - workflow_call: used by the scheduled refresh workflow. The caller must pass the secrets with
+#     `secrets: inherit` (the four secrets below are declared, so a caller that lists them one by
+#     one works too), must grant at least `contents: read`, and must not put itself in the
+#     concurrency group "deploy", which this workflow owns (a called workflow in the same group as
+#     its caller is cancelled).
+#
+# Secrets (created by hand in the repository settings, only ever referenced by name here):
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID  Cloudflare Pages deployment, and the R2 endpoint.
+#   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY        read access to the private bucket of the photo originals.
+# Each secret is passed in the `env` of the one step that needs it and nowhere else. No step prints
+# an environment variable, uses `set -x` or asks a tool for verbose output.
+#
+# The photo originals
+#   The checkout has no originals (they are not in git); `coffer media pull` fetches the ones that
+#   media.lock.json lists from R2 before the build. When the pull fails, for example because the
+#   bucket does not exist or is empty, the job fails right there with the message of the command,
+#   and nothing is deployed. That is deliberate: the live site stays as it was instead of getting
+#   pages with missing pictures. Only the draft seed posts use photos today and a production build
+#   leaves drafts out, so the pull is not needed to build them, but the check keeps the rule simple:
+#   what the lock file lists must exist in the store before anything is published. Before the first
+#   deployment run "git push" from a working copy that has the originals (the pre-push hook uploads
+#   them), see OPERATIONS.md (written in the final step of the plan).
+#
+# Test suite
+#   `npm test` is not run here: it takes about ten minutes and the same commit is tested by the
+#   author before the push. The build, `coffer check` (links, anchors, metadata, feeds, sitemap,
+#   image metadata against the location policy) and the smoke test of the live sites gate the deploy.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        required: true
+      CLOUDFLARE_ACCOUNT_ID:
+        required: true
+      R2_ACCESS_KEY_ID:
+        required: true
+      R2_SECRET_ACCESS_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+# Deployments run one after another and are never cancelled half way: an interrupted upload can
+# leave the two sites at different commits. GitHub keeps one running and one pending run per group,
+# so a newer pending run replaces an older pending one, and the newest commit wins.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  # Refresh this pin deliberately (read the release notes of wrangler, then change the number).
+  # npx downloads exactly this version, so a new wrangler release never changes a deployment.
+  WRANGLER_VERSION: 4.20.0
+
+jobs:
+  deploy:
+    name: Build, check and deploy
+    # Both deployments go to the production branch of the Pages projects, so only a run on main may
+    # publish. workflow_dispatch can be started from any branch in the Actions tab, and this guard
+    # makes such a run skip the job. For workflow_call the github context is the caller's, so the
+    # scheduled refresh, which runs on the default branch, passes.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The Dokka reference of roto-core is a Gradle build. The cache key is the init script of
+      # this repository, which is the only Gradle file here; roto's own build files are cloned
+      # during the build.
+      - name: Set up Java for the Dokka reference
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+          cache-dependency-path: build-support/dokka/dokka-init.gradle.kts
+
+      # Processed images and title cards are named by the hash of what they are made from, so an
+      # older cache can only add entries that are still valid: it is safe to fall back to it.
+      - name: Restore the image and title card caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/images
+            .cache/cards
+          key: images-${{ runner.os }}-${{ hashFiles('media.lock.json') }}-${{ hashFiles('coffer.yaml') }}-${{ github.run_id }}
+          restore-keys: |
+            images-${{ runner.os }}-${{ hashFiles('media.lock.json') }}-${{ hashFiles('coffer.yaml') }}-
+            images-${{ runner.os }}-
+
+      # The clones of the documentation sources and the generated references. coffer keys a
+      # stored reference by the commit of its source, the command and the scripts the command
+      # names, but a restored cache must still not outlive a change of the generators, the Gradle
+      # init script, the configuration or the project declarations, so every one of those is in
+      # the key and there is no fallback to a key without them. The run id makes each run save
+      # its own result; the restore key is the same hashes without it.
+      - name: Restore the documentation caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/reference
+            .cache/repos
+          key: docs-${{ runner.os }}-${{ hashFiles('generators/**') }}-${{ hashFiles('build-support/**') }}-${{ hashFiles('coffer.yaml', 'package-lock.json', 'media.lock.json') }}-${{ hashFiles('content/*/projects/*/project.yaml') }}-${{ github.run_id }}
+          restore-keys: |
+            docs-${{ runner.os }}-${{ hashFiles('generators/**') }}-${{ hashFiles('build-support/**') }}-${{ hashFiles('coffer.yaml', 'package-lock.json', 'media.lock.json') }}-${{ hashFiles('content/*/projects/*/project.yaml') }}-
+
+      # CI=true (set by GitHub Actions) makes the "prepare" script of package.json do nothing,
+      # so no git hooks are installed and no originals are fetched here: the next steps do that.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch the photo originals from R2
+        run: npx coffer media pull
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+
+      # The production build: no drafts and no posts dated in the future. It clones the
+      # documentation sources of the tool projects over HTTPS (public repositories, no token)
+      # and fails if one of them cannot be reached.
+      - name: Build both sites
+        run: npm run build
+
+      - name: Check the build
+        run: npx coffer check --w3c
+
+      - name: Print the build report
+        run: node scripts/build-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare the output for Cloudflare Pages
+        run: node scripts/prepare-deploy.mjs
+
+      - name: Deploy ba3a.dev
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" pages deploy dist/ba3a.dev --project-name ba3a-dev --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy my.ba3a.dev
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" pages deploy dist/my.ba3a.dev --project-name my-ba3a-dev --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Compares the live sites with this run: the builtAt in dist/<site>/build-info.json is what
+      # the live build-info.json must say. It retries for up to five minutes while the new
+      # deployment reaches the edge, then fails. It needs no secret.
+      - name: Smoke test the live sites
+        run: node scripts/smoke-test.mjs --dist dist --timeout 300

@@ -1,0 +1,39 @@
+# Response headers of both sites, for Cloudflare Pages. scripts/prepare-deploy.mjs copies this
+# file to the root of each built site just before the deployment, because coffer itself writes
+# no _headers file. Format: https://developers.cloudflare.com/pages/configuration/headers/
+#
+# Content-Security-Policy, in short:
+#   - the pages carry inline scripts (the theme switch and the page data) and inline style
+#     attributes, so both allow 'unsafe-inline'; no script is loaded from a third party except
+#     the Cloudflare Web Analytics beacon;
+#   - 'wasm-unsafe-eval' is for the WebAssembly of the Pagefind search;
+#   - the maps load OpenStreetMap tiles as images;
+#   - the beacon is loaded from static.cloudflareinsights.com and reports to cloudflareinsights.com.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://*.tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# The deploy workflow reads this file to see which build is live, so it must never be cached.
+/build-info.json
+  Cache-Control: no-cache
+
+# Image variants and title cards have a hash of their content in their address.
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+/cards/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The generated API reference of a project (Dokka) is the output of another tool, with its own
+# inline scripts and styles, so the policy above would break it. It is built from a public
+# repository by the deploy workflow and is the only part of the site served without a policy.
+/made/*/docs/reference/*
+  ! Content-Security-Policy
+
+# A press-kit SVG opened directly is a document of its own. The policy below is added to the
+# one above (a browser applies both), so a script inside the file cannot run.
+/made/*/press-kit/*.svg
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox
+  X-Content-Type-Options: nosniff
