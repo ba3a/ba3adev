@@ -1,0 +1,14 @@
+# UI strings of my.ba3a.dev that differ from coffer's Russian defaults
+# (coffer/i18n/ru.yaml). Only the changed keys are listed; every other string
+# keeps the engine's text. The copy below is a first draft for the author.
+
+# TODO: rewrite
+site:
+  # The line under the site title in the header.
+  tagline: Заметки о столярном деле и походах
+
+# TODO: rewrite
+not_found:
+  title: Страница потерялась
+  text: "Здесь ничего нет: такой страницы не было, или она переехала. Поищите нужное в блоге."
+  home: Вернуться к записям

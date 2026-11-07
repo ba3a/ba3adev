@@ -374,13 +374,11 @@ test('ba3a.dev: the header has no inline style or script of its own', () => {
   assert.doesNotMatch(header, /style=|<script/);
 });
 
-test('my.ba3a.dev is unaffected: it still uses the default theme', () => {
+test('my.ba3a.dev does not use the ba3a.dev theme: nothing of it leaks into the other site', () => {
   const html = output('my.ba3a.dev', 'index.html');
-  assert.match(html, /<link rel="stylesheet" href="\/assets\/coffer\.css">/);
   assert.doesNotMatch(html, /ba3a\.css|Manrope|manrope/);
   assert.ok(!existsSync(join(dist, 'my.ba3a.dev', 'assets', 'ba3a.css')));
-  assert.ok(!existsSync(join(dist, 'my.ba3a.dev', 'assets', 'fonts')));
-  assert.match(headerOf(html), /<li><a href="\/">Главная<\/a><\/li>/);
+  assert.ok(!existsSync(join(dist, 'my.ba3a.dev', 'assets', 'fonts', 'manrope-latin-700.woff2')));
 });
 
 // --- title cards --------------------------------------------------------------

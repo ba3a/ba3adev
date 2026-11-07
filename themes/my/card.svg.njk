@@ -1,0 +1,17 @@
+{#- The title card of my.ba3a.dev: a sheet of warm paper in a thin terracotta
+    frame, the title in the serif of the site and the site name under a short
+    rule. Nothing is drawn between the 80 px text margin and the frame on the
+    right, where the title wraps. Variables: width, height, padding, background,
+    foreground, muted, accent, fontFamily, siteTitle, siteTitleSize, siteTitleY,
+    titleLines ({ text, y }), titleSize. -#}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ width }}" height="{{ height }}" viewBox="0 0 {{ width }} {{ height }}">
+  <rect width="{{ width }}" height="{{ height }}" fill="{{ background }}"/>
+  <rect x="28" y="28" width="{{ width - 56 }}" height="{{ height - 56 }}" rx="10" fill="none" stroke="{{ accent }}" stroke-width="3"/>
+  <g font-family="{{ fontFamily }}">
+    {% for line in titleLines %}
+    <text x="{{ padding }}" y="{{ line.y }}" font-size="{{ titleSize }}" font-weight="700" fill="{{ foreground }}">{{ line.text }}</text>
+    {% endfor %}
+    <rect x="{{ padding }}" y="{{ siteTitleY - siteTitleSize - 20 }}" width="48" height="4" rx="2" fill="{{ accent }}"/>
+    <text x="{{ padding }}" y="{{ siteTitleY }}" font-size="{{ siteTitleSize }}" font-weight="700" fill="{{ muted }}">{{ siteTitle }}</text>
+  </g>
+</svg>

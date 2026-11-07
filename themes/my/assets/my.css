@@ -1,0 +1,394 @@
+/* The theme of my.ba3a.dev: warm and personal.
+
+   It loads after coffer's own stylesheet and changes the engine's custom
+   properties (see coffer/docs/themes.md), plus the rules for the centred header
+   and for the 404 page. The palette is paper and ink: a warm off-white page with
+   brown text and a terracotta accent, and a dark brown page with a lighter
+   terracotta in the dark scheme. Light values are on :root; dark values are
+   repeated under the system preference and under [data-theme="dark"], and light
+   is forced under [data-theme="light"], exactly as the engine does it. Every
+   foreground and background pair below is checked for WCAG AA contrast by
+   scripts/site-test/my-theme.test.mjs. */
+
+/* Literata (SIL OFL 1.1), regular, italic and bold, in the Latin, Cyrillic and
+   Cyrillic extended subsets, self-hosted. The files are in fonts/ next to this
+   stylesheet; see themes/my/README.md. The browser downloads only the subsets a
+   page needs. */
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/literata-cyrillic-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/literata-cyrillic-400-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/literata-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/literata-cyrillic-ext-400-italic.woff2") format("woff2");
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/literata-cyrillic-400-italic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/literata-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/literata-cyrillic-ext-700-normal.woff2") format("woff2");
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/literata-cyrillic-700-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/literata-latin-700-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --coffer-bg: #fbf6ec;
+  --coffer-text: #2a2018;
+  --coffer-muted: #6a5846;
+  --coffer-accent: #a4401e;
+  --coffer-border: #e4d7c0;
+  --coffer-code-bg: #f2e9d8;
+  --coffer-code-fg: #2a2018;
+  /* Borders that identify a control (buttons, the search field) need 3:1. */
+  --my-control-border: #8a7560;
+
+  --coffer-font-body: "Literata", "Noto Serif", "PT Serif", Georgia, "Times New Roman", serif;
+  --coffer-font-heading: "Literata", "Noto Serif", "PT Serif", Georgia, "Times New Roman", serif;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --coffer-bg: #1d1813;
+    --coffer-text: #efe5d6;
+    --coffer-muted: #bcab96;
+    --coffer-accent: #e8936a;
+    --coffer-border: #3b3126;
+    --coffer-code-bg: #292119;
+    --coffer-code-fg: #efe5d6;
+    --my-control-border: #8d7b66;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --coffer-bg: #1d1813;
+  --coffer-text: #efe5d6;
+  --coffer-muted: #bcab96;
+  --coffer-accent: #e8936a;
+  --coffer-border: #3b3126;
+  --coffer-code-bg: #292119;
+  --coffer-code-fg: #efe5d6;
+  --my-control-border: #8d7b66;
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --coffer-bg: #fbf6ec;
+  --coffer-text: #2a2018;
+  --coffer-muted: #6a5846;
+  --coffer-accent: #a4401e;
+  --coffer-border: #e4d7c0;
+  --coffer-code-bg: #f2e9d8;
+  --coffer-code-fg: #2a2018;
+  --my-control-border: #8a7560;
+
+  color-scheme: light;
+}
+
+/* Typography ------------------------------------------------------------- */
+
+body {
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+::selection {
+  background: var(--coffer-accent);
+  color: var(--coffer-bg);
+}
+
+/* Controls --------------------------------------------------------------- */
+
+.theme-switch,
+.search-input,
+.carousel-button {
+  border-color: var(--my-control-border);
+}
+
+/* Header: the site title centred above a short tagline, with the navigation
+   and the theme switch in one centred row below. The tagline is the first thing
+   the theme's nav block prints (see templates/base.njk). -------------------- */
+
+.site-header {
+  justify-content: center;
+  gap: 0.25rem 1.25rem;
+  padding-top: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px double var(--coffer-border);
+  text-align: center;
+}
+
+.site-header .site-title {
+  flex: 0 0 100%;
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+.site-header .site-title:hover {
+  color: var(--coffer-accent);
+}
+
+.site-header .site-tagline {
+  flex: 0 0 100%;
+  margin: 0 0 0.75rem;
+  color: var(--coffer-muted);
+  font-size: 1.0625rem;
+  font-style: italic;
+}
+
+.site-header nav {
+  flex: 0 1 auto;
+}
+
+.site-header nav ul {
+  justify-content: center;
+  gap: 0 1.5rem;
+}
+
+.site-header nav a {
+  padding: 0.375rem 0;
+  border-bottom: 1px solid transparent;
+  color: var(--coffer-muted);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.site-header nav a:hover {
+  color: var(--coffer-accent);
+  border-bottom-color: var(--coffer-accent);
+}
+
+.site-header nav a[aria-current="page"] {
+  color: var(--coffer-text);
+  border-bottom-color: var(--coffer-accent);
+}
+
+.site-header .theme-switch {
+  margin-left: 0;
+  padding: 0.1875rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 30rem) {
+  .site-header {
+    padding-top: 1.5rem;
+  }
+
+  .site-header .site-title {
+    font-size: 1.875rem;
+  }
+}
+
+/* Page layout: the header is centred, so the column of text is centred under it
+   instead of hugging the left edge. The column is centred once, as a whole: the
+   header, the main element and the footer all get one width (the engine's
+   measure plus the side padding) and the engine centres each of them with
+   margin: auto. The children of main are not centred one by one, because the
+   engine caps each child at the measure in ch, which is measured in the child's
+   own font size, so every child would get its own width and its own indent. The
+   children fill the column (max-width: none) and share its left edge.
+
+   A page with a table of contents or a documentation sidebar needs a wider
+   column for the second column of its layout, so on those pages all three
+   elements get the engine's wide width, again all three together. The :where()
+   keeps the specificity low, so that the print rule at the end still wins. The
+   footer has the same double rule as the header, so the page is framed like a
+   sheet of paper; it keeps the font size of the page, so that its width,
+   measured in ch, is the width of the header and of main. ------------------- */
+
+.site-header,
+.site-footer,
+main {
+  max-width: calc(var(--coffer-measure) + 2rem);
+}
+
+body:where(:has(.post-layout.has-toc)) .site-header,
+body:where(:has(.post-layout.has-toc)) .site-footer,
+body:where(:has(.post-layout.has-toc)) main,
+body:where(:has(.docs-layout)) .site-header,
+body:where(:has(.docs-layout)) .site-footer,
+body:where(:has(.docs-layout)) main {
+  max-width: calc(var(--coffer-measure) + 22rem);
+}
+
+main > * {
+  max-width: none;
+}
+
+.site-footer {
+  border-top: 3px double var(--coffer-border);
+  font-size: inherit;
+  text-align: center;
+}
+
+.site-footer p {
+  font-size: 0.875rem;
+}
+
+/* The 404 page ------------------------------------------------------------ */
+
+.not-found {
+  max-width: none;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  text-align: center;
+}
+
+.not-found h1 {
+  margin-top: 0;
+  font-size: 2.5rem;
+}
+
+/* A short accent rule above the heading, as decoration only. */
+.not-found h1::before {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 3px;
+  margin: 0 auto 1.25rem;
+  border-radius: 2px;
+  background: var(--coffer-accent);
+}
+
+.not-found p {
+  color: var(--coffer-muted);
+  font-size: 1.1875rem;
+}
+
+.not-found p:last-child {
+  margin-top: 1.75rem;
+}
+
+/* The way back is a button: the page background on the accent. */
+.not-found a {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
+  background: var(--coffer-accent);
+  color: var(--coffer-bg);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.not-found a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 30rem) {
+  .not-found h1 {
+    font-size: 2rem;
+  }
+}
+
+/* Print: the engine prints black on white whatever the reader chose, but this
+   stylesheet comes later and would win with its own colours, so the print
+   values are set again here. ---------------------------------------------- */
+
+@media print {
+  :root,
+  :root[data-theme] {
+    --coffer-bg: #ffffff;
+    --coffer-text: #000000;
+    --coffer-muted: #333333;
+    --coffer-accent: #000000;
+    --coffer-border: #999999;
+    --coffer-code-bg: #ffffff;
+    --coffer-code-fg: #000000;
+
+    color-scheme: light;
+  }
+
+  /* The page width above would otherwise win over the engine's print rule. */
+  body .site-header,
+  body .site-footer,
+  body main {
+    max-width: none;
+  }
+
+  .not-found a {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+}

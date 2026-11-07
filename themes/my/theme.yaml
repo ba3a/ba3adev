@@ -1,0 +1,8 @@
+# Colours of the title cards (see coffer/docs/themes.md). The card is a sheet of
+# paper: it uses the light scheme of the site, with the terracotta accent. The
+# contrast of these colours is checked by scripts/site-test/my-theme.test.mjs.
+accent: "#a4401e"
+card:
+  background: "#fbf6ec"
+  text: "#2a2018"
+  mutedText: "#6a5846"
