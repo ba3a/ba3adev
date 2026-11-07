@@ -44,3 +44,5 @@ content/my.ba3a.dev/**/*.[wW][eE][bB][mM]
 
 # Local settings with the credentials of the media store; never commit this file.
 .env.local
+
+site-spec.md
