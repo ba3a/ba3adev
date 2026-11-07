@@ -1,0 +1,42 @@
+# Seed declaration, drafted from the site spec (section 14.4).
+# TODO: rewrite all texts of this page before publishing.
+name: Faultory
+# Placeholder hook from the spec.
+pitch: Your factory makes the enemies. Then you have to stop them.
+kind: game
+status: in-development
+card: card.png
+cardAlt: "Placeholder card: the word Faultory in dark letters on an orange warehouse sticker, on a dark grid."
+logo: logo.png
+keyArt: key-art.png
+keyArtAlt: "Placeholder key art: a row of crates on a conveyor belt, one of them orange, tilted and crossed out, under an orange sticker that reads Faultory."
+featured: true
+order: 3
+tag: faultory
+platforms: [Desktop]
+# No store links yet: the page asks readers to follow the devlog instead. Fill
+# in a link and its button appears (itch, steam). A game has no repository link.
+stores:
+  itch:
+  steam:
+# Orange. The button label on it has to reach 4.5:1 and the line and bullets
+# 3:1 against the page in both colour schemes; scripts/site-test checks it.
+accent: "#d9730d"
+# Handjet Bold, self-hosted (SIL OFL 1.1, the license text is published with the theme at /assets/fonts/OFL-Handjet.txt).
+displayFont: Handjet
+displayFontFile: handjet-latin-700.woff2
+features:
+  - A factory game where defects, sabotage and quality control are the core.
+  - The player produces their own waves and builds the defence against them.
+  - Rotoscoped pixel-art workers, drawn from real footage.
+# The press kit is a placeholder: every TODO below is shown on the page until it
+# is replaced with a real fact.
+pressKit:
+  developer: "TODO: developer name"
+  shortDescription: Your factory makes the enemies. Then you have to stop them.
+  longDescription: |
+    <!-- TODO: rewrite -->
+    A factory game where defects, sabotage and quality control are the core; the player produces their own waves and builds the defence against them. Rotoscoped pixel-art workers, drawn from real footage.
+  logos:
+    - { file: logo.png, alt: "Placeholder wordmark: Faultory on an orange sticker." }
+    - { file: logo.svg, alt: "Placeholder wordmark: Faultory on an orange sticker, as a vector file." }

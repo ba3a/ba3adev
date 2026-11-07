@@ -1,0 +1,14 @@
+# Seed declaration, drafted from the site spec (section 14.3).
+# TODO: rewrite the pitch before publishing.
+name: roto
+pitch: Turn a phone video into pixel-art sprites you finish by hand.
+kind: tool
+status: in-development
+card: card.png
+cardAlt: "Placeholder card: the name roto in white letters on a dark green background."
+featured: true
+order: 2
+tag: roto
+license: Apache-2.0
+repo: https://github.com/ba3a/roto
+# Documentation is not configured yet, so the page links no docs.

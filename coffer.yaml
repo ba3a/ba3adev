@@ -19,6 +19,8 @@ sites:
     blogs:
       - { id: devlog, dir: content/ba3a.dev/devlog, prefix: devlog, title: Devlog, shareSummary: true }
     urls: { projects: made, docs: docs, tags: tags, series: series }
+    # Featured projects are shown in the order of their `order` in project.yaml.
+    projects: { dir: content/ba3a.dev/projects }
     location: { default: strip, camera: strip }
 
   - id: my.ba3a.dev

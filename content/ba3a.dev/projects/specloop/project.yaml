@@ -1,0 +1,15 @@
+# Seed declaration, drafted from the site spec (section 14.2).
+# TODO: rewrite the pitch and confirm the status before publishing.
+name: specloop
+pitch: A spec-driven plan → implement → review loop for Claude Code, built only from hooks and slash commands.
+kind: tool
+# TODO: confirm the status (idea, in-development, released, maintained or archived).
+status: in-development
+card: card.png
+cardAlt: "Placeholder card: the name specloop in white letters on a dark blue background."
+featured: true
+order: 1
+tag: specloop
+license: 0BSD
+repo: https://github.com/ba3a/specloop
+# Documentation is not configured yet, so the page links no docs.

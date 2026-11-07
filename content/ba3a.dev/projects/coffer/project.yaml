@@ -1,0 +1,16 @@
+# Seed declaration, drafted from the site spec (section 14.5).
+# TODO: rewrite the pitch before publishing.
+name: coffer
+pitch: A static site engine for people who make things and write about them.
+kind: tool
+# TODO: confirm the status once the first version is tagged.
+status: in-development
+card: card.png
+cardAlt: "Placeholder card: the name coffer in white letters on a dark brown background."
+featured: true
+order: 4
+tag: coffer
+license: Apache-2.0
+# The repository does not exist yet: this is its declared future address.
+repo: https://github.com/ba3a/coffer
+# Documentation is not configured yet, so the page links no docs.

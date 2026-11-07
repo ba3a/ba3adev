@@ -93,6 +93,19 @@ h3 {
   letter-spacing: -0.015em;
 }
 
+/* A game's page may set its own display font (--project-font, see
+   coffer/docs/projects.md). The engine declares that font as one face of normal
+   weight, and the headings and buttons ask for bold; without this rule the
+   browser would draw a second, synthetic bold on top of the real one. */
+
+.game-page h1,
+.game-page h2,
+.game-page h3,
+.game-page .project-pitch,
+.game-page .game-button {
+  font-synthesis-weight: none;
+}
+
 /* Controls --------------------------------------------------------------- */
 
 .theme-switch,

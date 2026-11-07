@@ -82,6 +82,7 @@ test('the theme directory holds only styles, fonts, the header template, the car
     /^assets\/ba3a\.css$/,
     /^assets\/fonts\/[a-z0-9-]+\.woff2$/,
     /^assets\/fonts\/OFL\.txt$/,
+    /^assets\/fonts\/OFL-Handjet\.txt$/, // the license of the Handjet font of the Faultory page, published with the theme
     /^fonts\/[A-Za-z0-9-]+\.ttf$/,
     /^fonts\/OFL\.txt$/,
   ];
@@ -359,6 +360,13 @@ test('ba3a.dev: the Projects link follows the site\'s project configuration', ()
   const header = headerOf(output('ba3a.dev', 'index.html'));
   const hasLink = header.includes('>Projects</a>');
   assert.equal(hasLink, site.projects !== null, 'a Projects link exists exactly when the site has projects');
+});
+
+test('ba3a.dev has projects, so its navigation leads with the Projects link to the projects page', () => {
+  assert.ok(site.projects, 'the site configures projects');
+  const header = headerOf(output('ba3a.dev', 'index.html'));
+  assert.match(header, /<nav aria-label="Main navigation">\s*<ul>\s*<li><a href="\/made\/">Projects<\/a><\/li>/);
+  assert.ok(existsSync(join(dist, 'ba3a.dev', 'made', 'index.html')), 'the projects page exists');
 });
 
 test('ba3a.dev: the current section is marked in the navigation', () => {
