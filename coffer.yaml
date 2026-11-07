@@ -38,3 +38,45 @@ sites:
     blogs:
       - { id: blog, dir: content/my.ba3a.dev, prefix: "", title: Блог }
     location: { default: strip, camera: strip }
+
+# Original photos and videos are kept out of git, in a private Cloudflare R2 bucket, and
+# listed by content hash in media.lock.json (see coffer/docs/media.md). The credentials are
+# never written here: coffer reads the variables named below from the environment, or from
+# .env.local next to this file (see .env.local.example).
+media:
+  store:
+    type: s3
+    endpoint: https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+    bucket: ba3a-media
+    region: auto
+    accessKeyIdEnv: R2_ACCESS_KEY_ID
+    secretAccessKeyEnv: R2_SECRET_ACCESS_KEY
+  # Raster images and videos below the devlog and the posts of my.ba3a.dev. The patterns spell
+  # every case of an extension, because the matcher is case-sensitive and cameras write
+  # IMG_0001.JPG. They are also the lines "coffer media gitignore" prints for .gitignore.
+  #
+  # The PNG and SVG placeholders under content/ba3a.dev/projects/ (cards, logos, key art) and
+  # the Handjet font stay regular git files, because the build needs them and
+  # scripts/make-placeholders.mjs generates them. `include` has no `exclude`, so the project
+  # folders are left out by not being listed: a new top-level folder under a content
+  # directory needs its own patterns here (and the test in scripts/test/media-config.test.mjs
+  # checks that no file of the project folders is matched).
+  include:
+    # content/ba3a.dev/devlog
+    - content/ba3a.dev/devlog/**/*.[jJ][pP][gG]
+    - content/ba3a.dev/devlog/**/*.[jJ][pP][eE][gG]
+    - content/ba3a.dev/devlog/**/*.[pP][nN][gG]
+    - content/ba3a.dev/devlog/**/*.[hH][eE][iI][cC]
+    - content/ba3a.dev/devlog/**/*.[hH][eE][iI][fF]
+    - content/ba3a.dev/devlog/**/*.[wW][eE][bB][pP]
+    - content/ba3a.dev/devlog/**/*.[mM][pP]4
+    - content/ba3a.dev/devlog/**/*.[wW][eE][bB][mM]
+    # content/my.ba3a.dev
+    - content/my.ba3a.dev/**/*.[jJ][pP][gG]
+    - content/my.ba3a.dev/**/*.[jJ][pP][eE][gG]
+    - content/my.ba3a.dev/**/*.[pP][nN][gG]
+    - content/my.ba3a.dev/**/*.[hH][eE][iI][cC]
+    - content/my.ba3a.dev/**/*.[hH][eE][iI][fF]
+    - content/my.ba3a.dev/**/*.[wW][eE][bB][pP]
+    - content/my.ba3a.dev/**/*.[mM][pP]4
+    - content/my.ba3a.dev/**/*.[wW][eE][bB][mM]

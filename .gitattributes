@@ -26,3 +26,6 @@
 *.zip binary
 
 # GPX tracks are XML text and stay text (covered by "* text=auto").
+
+# The lock file lists the media originals; keep its line ends the same on every platform.
+media.lock.json text eol=lf
