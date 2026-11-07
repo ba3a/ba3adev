@@ -70,13 +70,12 @@ const DARK_INK = '#17171c';
 const FALLBACK_ACCENT = '#e8841a';
 
 /**
- * The tools: the slug of the project folder, the name written on the card and
+ * The tools that still have a placeholder card (specloop has its real one, from its brand kit): the slug of the project folder, the name written on the card and
  * the colours (the text must stay readable on the background).
  *
  * @type {ReadonlyArray<{ slug: string, name: string, background: string, band: string, text: string }>}
  */
 export const TOOL_CARDS = Object.freeze([
-  { slug: 'specloop', name: 'specloop', background: '#16365c', band: '#7fb6ff', text: '#ffffff' },
   { slug: 'roto', name: 'roto', background: '#1c4a3a', band: '#8fd6b0', text: '#ffffff' },
   { slug: 'coffer', name: 'coffer', background: '#46301f', band: '#e0b27c', text: '#ffffff' },
 ]);

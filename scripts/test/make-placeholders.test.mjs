@@ -25,7 +25,6 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const projectsDir = join(root, 'content', 'ba3a.dev', 'projects');
 
 const EXPECTED_FILES = [
-  'specloop/card',
   'roto/card',
   'coffer/card',
   'faultory/card',
@@ -47,7 +46,7 @@ test('it makes a card for each tool and a card, a wordmark and a key art for Fau
   assert.deepEqual([...generated.keys()].sort(), [...EXPECTED_FILES].sort());
   assert.deepEqual(
     TOOL_CARDS.map((tool) => tool.slug),
-    ['specloop', 'roto', 'coffer'],
+    ['roto', 'coffer'],
   );
 });
 
@@ -118,7 +117,7 @@ test('each PNG is the picture of its SVG, at the declared size', async () => {
   assert.equal(data[3], 0, 'the corner of the wordmark is transparent');
   const centre = (Math.floor(info.height / 2) * info.width + 200) * info.channels;
   assert.equal(data[centre + 3], 255, 'the sticker is opaque');
-  const card = await sharp(/** @type {Buffer} */ (generated.get('specloop/card.png'))).raw().toBuffer({ resolveWithObject: true });
+  const card = await sharp(/** @type {Buffer} */ (generated.get('roto/card.png'))).raw().toBuffer({ resolveWithObject: true });
   assert.equal(card.data[3], 255, 'a card is opaque');
 });
 

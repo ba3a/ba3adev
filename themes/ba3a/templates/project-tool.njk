@@ -1,0 +1,41 @@
+{#
+  The page of a tool. It is coffer's own, except when the text of the project
+  (index.md) holds section markers: then the text is a landing page and is laid
+  out by partials/landing.njk and assets/landing.css. See AUTHORING.md, "A
+  landing page". Every other tool page is rendered exactly as the engine does it.
+#}
+{% extends "coffer:project-tool.njk" %}
+
+{% set landing = 'class="section-marker"' in (page.content or '') %}
+
+{% block head %}
+{{ super() }}
+{% if landing %}
+<link rel="preload" href="{{ '/assets/fonts/inter-latin-wght-normal.woff2' | url }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ '/assets/landing.css' | url }}">
+{# The brand pictures of the project, for this page only: the favicons of the site stay as they are. #}
+<link rel="icon" href="{{ ('/assets/' + project.slug + '/favicon.ico') | url }}" sizes="any">
+<link rel="icon" href="{{ ('/assets/' + project.slug + '/favicon.svg') | url }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ ('/assets/' + project.slug + '/apple-touch-icon.png') | url }}">
+{% endif %}
+{% endblock %}
+
+{# The headline of the landing page is the h1 in its text. #}
+{% block project_header %}{% if not landing %}{{ super() }}{% endif %}{% endblock %}
+
+{% block project_body %}
+{% if landing %}
+<div class="landing">
+{% include "partials/landing.njk" %}
+{# What every project page has, below the landing sections: facts, devlog posts. #}
+<div class="lp-section lp-extra">
+<div class="lp-wrap">
+{% include "partials/landing-facts.njk" %}
+{% include "partials/project-latest.njk" %}
+</div>
+</div>
+</div>
+{% else %}
+{{ super() }}
+{% endif %}
+{% endblock %}

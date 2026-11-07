@@ -73,15 +73,22 @@ test('the contrast helper follows WCAG 2.x', () => {
 
 // --- what the theme directory contains ---------------------------------------
 
-test('the theme directory holds only styles, fonts, the header template, the card and documentation', () => {
+test('the theme directory holds only styles, fonts, templates, UI strings, the card, the brand pictures of specloop and documentation', () => {
   const allowed = [
     /^README\.md$/,
     /^theme\.yaml$/,
     /^card\.svg\.njk$/,
     /^templates\/base\.njk$/,
+    // The landing layout (see specloop-landing.test.mjs).
+    /^templates\/project-tool\.njk$/,
+    /^templates\/partials\/landing(-facts)?\.njk$/,
+    /^i18n\/en\.yaml$/,
+    /^assets\/landing\.css$/,
+    /^assets\/specloop\/[a-z-]+\.(svg|ico|png)$/, // the brand pictures of the specloop page, copied from its brand kit
     /^assets\/ba3a\.css$/,
     /^assets\/fonts\/[a-z0-9-]+\.woff2$/,
     /^assets\/fonts\/OFL\.txt$/,
+    /^assets\/fonts\/OFL-(Inter|JetBrains-Mono)\.txt$/, // the licenses of the fonts of the landing layout
     /^assets\/fonts\/OFL-Handjet\.txt$/, // the license of the Handjet font of the Faultory page, published with the theme
     /^fonts\/[A-Za-z0-9-]+\.ttf$/,
     /^fonts\/OFL\.txt$/,
@@ -110,7 +117,8 @@ test('the theme templates only extend the engine and override its blocks', () =>
     ),
   );
 
-  for (const name of listFiles(templatesDir)) {
+  // The landing layout (project-tool.njk and partials/) has its own test, in specloop-landing.test.mjs.
+  for (const name of listFiles(templatesDir).filter((file) => !file.startsWith('partials/') && file !== 'project-tool.njk')) {
     const source = readFileSync(join(templatesDir, name), 'utf8');
     assert.ok(engineTemplates.includes(name), `${name} replaces an engine template`);
     assert.match(

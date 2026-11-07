@@ -1,0 +1,23 @@
+{# The facts box of a tool page (source, docs, license), as coffer's project-tool.njk writes it, for the end of a landing page. #}
+{% if project.fields.repo or project.docsUrl or project.license %}
+<section class="project-facts" aria-labelledby="project-facts-title">
+<h2 id="project-facts-title">{{ 'projects.facts.title' | t }}</h2>
+<dl>
+{% if project.fields.repo %}<div class="project-fact project-fact-repo">
+<dt>{{ 'projects.facts.repo' | t }}</dt>
+<dd><a href="{{ project.fields.repo }}" rel="noopener">{{ project.fields.repo | replace(r/^https?:\/\//, '') | replace(r/\/$/, '') }}</a></dd>
+</div>
+{% endif %}
+{% if project.docsUrl %}<div class="project-fact project-fact-docs">
+<dt>{{ 'projects.facts.docs' | t }}</dt>
+<dd><a href="{{ project.docsUrl | url }}">{{ 'projects.facts.docs_link' | t }}</a></dd>
+</div>
+{% endif %}
+{% if project.license %}<div class="project-fact project-fact-license">
+<dt>{{ 'projects.facts.license' | t }}</dt>
+<dd>{{ project.license }}</dd>
+</div>
+{% endif %}
+</dl>
+</section>
+{% endif %}

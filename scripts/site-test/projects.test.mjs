@@ -35,13 +35,9 @@ const SPEC = {
   specloop: {
     name: 'specloop',
     kind: 'tool',
-    pitch: 'A spec-driven plan → implement → review loop for Claude Code, built only from hooks and slash commands.',
-    points: [
-      'You hand it a spec, and Claude is walked through phases; a phase only completes when its check passes.',
-      'Runs in your normal Claude Code session, no API keys, no separate orchestrator.',
-      'Guard rails restrict edits per phase and block pushes until the work is done.',
-      'Single mode gives one reviewable diff; feature mode splits a big spec into steps, each reviewed and committed.',
-    ],
+    pitch: 'A spec-driven plan → implement → review loop for Claude Code. Hand it a spec, walk away, come back to a reviewed branch with one commit per step.',
+    // The text of the page is a landing page, checked by specloop-landing.test.mjs.
+    points: [],
     tag: 'specloop',
     license: '0BSD',
     repo: 'https://github.com/ba3a/specloop',
@@ -176,7 +172,7 @@ test('the declarations carry the facts of the spec: name, pitch, kind, tag, repo
     assert.equal(fields.tag, expected.tag, `${slug}: tag`);
     assert.equal(fields.license, expected.license, `${slug}: license`);
     assert.equal(fields.repo, expected.repo, `${slug}: repo`);
-    assert.equal(fields.status, 'in-development', `${slug}: status`);
+    assert.equal(fields.status, slug === 'specloop' ? 'released' : 'in-development', `${slug}: status`);
     assert.equal(fields.featured, true, `${slug}: featured`);
     assert.ok(typeof fields.cardAlt === 'string' && fields.cardAlt.length > 10, `${slug}: the card has alt text`);
     assert.match(fields.card, /\.png$/, `${slug}: the card is a picture the engine accepts`);
@@ -191,7 +187,8 @@ test('the featured order is specloop, roto, faultory, coffer, and every number i
 });
 
 test('every seed text is marked "TODO: rewrite" in its source', () => {
-  for (const slug of SHOWCASE) {
+  // The text of specloop is final: it is the landing page.
+  for (const slug of SHOWCASE.filter((name) => name !== 'specloop')) {
     const page = readText(join(projectsDir, slug, 'index.md'));
     assert.ok(page.startsWith('<!-- TODO: rewrite -->'), `${slug}/index.md starts with the marker`);
     // The declaration of coffer is final: its pitch and status are settled.
@@ -288,7 +285,8 @@ test('no seed marker reaches the published HTML, apart from the Faultory press k
 
 // --- the pages of the tools ---------------------------------------------------
 
-for (const slug of SHOWCASE.filter((name) => SPEC[name].kind === 'tool')) {
+// specloop has a landing page of its own, checked by specloop-landing.test.mjs.
+for (const slug of SHOWCASE.filter((name) => SPEC[name].kind === 'tool' && name !== 'specloop')) {
   test(`${slug}: the tool page shows the repository, the license and the text, and no game parts`, () => {
     const expected = SPEC[slug];
     const html = output(`made/${slug}/index.html`);
@@ -514,7 +512,7 @@ function isOriginal(include, path) {
 test('the placeholder art is found: every card, the Faultory pictures and the Handjet font, as PNG, SVG and woff2', () => {
   const artwork = placeholderArtwork();
   for (const slug of SHOWCASE) {
-    for (const extension of ['png', 'svg']) {
+    for (const extension of slug === 'specloop' ? ['png'] : ['png', 'svg']) {
       assert.ok(artwork.includes(`content/ba3a.dev/projects/${slug}/card.${extension}`), `${slug}/card.${extension}`);
     }
   }

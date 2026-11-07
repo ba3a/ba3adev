@@ -1,0 +1,12 @@
+# UI strings of the landing layout (themes/ba3a/templates/partials/landing.njk).
+# Only the words the layout adds are here; the text of a landing page is in its
+# index.md. Everything else is coffer's English default.
+landing:
+  nav: Sections of this page
+  brand_start: spec
+  brand_end: loop
+  github: "★ GitHub"
+  terminal_title: "claude — my-project"
+  hero_terminal: A terminal session in Claude Code, running a feature from a spec to reviewed commits.
+  dogfood_terminal: The git log of a feature that specloop built, one commit per step.
+  chat: A typical chat without specloop, in which the person keeps asking Claude to continue.

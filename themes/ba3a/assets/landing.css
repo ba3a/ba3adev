@@ -1,0 +1,826 @@
+/* The landing layout of ba3a.dev (templates/partials/landing.njk), used by the
+   page of a tool whose text has section markers: today, specloop.
+
+   It is loaded by that page only, after ba3a.css. Everything is scoped to the
+   .landing wrapper, so nothing here can reach another page, and the colours are
+   custom properties of that wrapper: its own palette (the brand of the project),
+   which also stands in for the --coffer-* variables so that the engine's parts
+   inside it (the facts, the devlog posts) take the same colours. Dark values are
+   repeated under the system preference and under [data-theme="dark"], as the
+   rest of the site does it.
+
+   Contrast: every text colour below is checked for WCAG AA in both schemes by
+   scripts/site-test/specloop-landing.test.mjs. Two tokens exist for that and are
+   not in the style guide: --accent-text, a darker rust for small accent text on
+   the light page (--accent itself is 4.0:1 on the alternating background), and
+   --on-accent, dark text on the orange buttons in the dark scheme (white would be
+   2.5:1). */
+
+/* Inter and JetBrains Mono, variable fonts, latin subset (SIL OFL 1.1),
+   self-hosted like Manrope; see themes/ba3a/README.md. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/inter-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Tokens ----------------------------------------------------------------- */
+
+.landing {
+  --bg: #fbfaf7;
+  --bg-alt: #f2efe8;
+  --fg: #1d1b18;
+  --muted: #6b665d;
+  --line: #e2ddd2;
+  --accent: #c2521c;
+  --accent-text: #ae4716;
+  --on-accent: #ffffff;
+  --accent-soft: #f6e3d6;
+  --ok: #2f7d4f;
+  --term-bg: #17161a;
+  --term-fg: #e9e6df;
+  --term-muted: #8a857b;
+  --term-ok: #7fd19b;
+  --term-warn: #f2b45c;
+  --term-accent: #f08a50;
+  --radius: 14px;
+
+  --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --code-bg: var(--bg-alt);
+
+  /* The engine's own parts inside the page (facts, devlog posts, links). */
+  --coffer-bg: var(--bg);
+  --coffer-text: var(--fg);
+  --coffer-muted: var(--muted);
+  --coffer-accent: var(--accent-text);
+  --coffer-border: var(--line);
+  --coffer-code-bg: var(--bg-alt);
+  --coffer-code-fg: var(--fg);
+  --coffer-font-heading: var(--sans);
+  --ba3a-control-border: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .landing {
+    --bg: #121114;
+    --bg-alt: #1a191d;
+    --fg: #ece9e2;
+    --muted: #a19c92;
+    --line: #2c2a30;
+    --accent: #f08a50;
+    --accent-text: #f08a50;
+    --on-accent: #121114;
+    --accent-soft: #2e1f17;
+    --ok: #7fd19b;
+    --term-bg: #0b0a0d;
+  }
+}
+
+:root[data-theme="dark"] .landing {
+  --bg: #121114;
+  --bg-alt: #1a191d;
+  --fg: #ece9e2;
+  --muted: #a19c92;
+  --line: #2c2a30;
+  --accent: #f08a50;
+  --accent-text: #f08a50;
+  --on-accent: #121114;
+  --accent-soft: #2e1f17;
+  --ok: #7fd19b;
+  --term-bg: #0b0a0d;
+}
+
+/* Page frame ------------------------------------------------------------- */
+
+/* The sections run edge to edge; the engine's main column would narrow them. */
+main:has(.landing),
+main:has(.landing) > article {
+  max-width: none;
+  padding: 0;
+}
+
+html:has(.landing) {
+  scroll-behavior: smooth;
+}
+
+.landing {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 17px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  max-width: none;
+}
+
+.landing *,
+.landing *::before,
+.landing *::after {
+  box-sizing: border-box;
+}
+
+/* The feed link and the link back to all projects, which every project page has. */
+.project:has(> .landing) > :not(.landing) {
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
+.lp-wrap {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.lp-section {
+  padding: 88px 0;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 60px;
+}
+
+.lp-s-hero {
+  padding: 72px 0 88px;
+  border-top: 0;
+}
+
+.lp-s-problem,
+.lp-s-timeline,
+.lp-s-features,
+.lp-s-quick-start,
+.lp-s-final-cta {
+  --code-bg: var(--bg);
+  background: var(--bg-alt);
+}
+
+.lp-extra {
+  padding: 56px 0;
+}
+
+.lp-extra h2 {
+  font-size: 1.25rem;
+}
+
+/* Two columns: text on the left, the visual on the right. */
+.lp-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .lp-two {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .lp-s-hero .lp-two {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+.lp-text,
+.lp-visual {
+  min-width: 0;
+}
+
+/* Typography ------------------------------------------------------------- */
+
+.landing h1,
+.landing h2,
+.landing h3 {
+  margin: 0 0 0.5em;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.landing h1 {
+  font-size: clamp(38px, 6vw, 68px);
+}
+
+.landing h2 {
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.landing h3 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.landing p {
+  margin: 0 0 1em;
+}
+
+.landing code,
+.landing pre {
+  font-family: var(--mono);
+}
+
+.landing :not(pre) > code {
+  padding: 0.1em 0.35em;
+  border-radius: 5px;
+  background: var(--code-bg);
+  color: var(--fg);
+  font-size: 0.9em;
+}
+
+.lp-wrap a {
+  color: var(--accent-text);
+}
+
+.lp-eyebrow {
+  margin: 0 0 16px;
+  color: var(--accent-text);
+  font: 600 13px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The first paragraph after a section heading is the lead. */
+.lp-section :is(h1, h2) + p {
+  max-width: 640px;
+  color: var(--muted);
+  font-size: clamp(18px, 2.2vw, 21px);
+}
+
+.lp-accent {
+  color: var(--accent-text);
+}
+
+.lp-line {
+  display: block;
+}
+
+.lp-s-hero .lp-line.lp-accent {
+  color: var(--accent);
+}
+
+.lp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.landing :focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Top bar ---------------------------------------------------------------- */
+
+.lp-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.lp-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 60px;
+}
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg);
+  font: 600 18px var(--mono);
+  text-decoration: none;
+}
+
+.lp-wrap a.lp-brand {
+  color: var(--fg);
+}
+
+.lp-logo {
+  width: 32px;
+  height: 32px;
+}
+
+.lp-logo-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lp-logo-light {
+    display: none;
+  }
+
+  :root:not([data-theme="light"]) .lp-logo-dark {
+    display: inline;
+  }
+}
+
+:root[data-theme="dark"] .lp-logo-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .lp-logo-dark {
+  display: inline;
+}
+
+.lp-links {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 15px;
+}
+
+.lp-wrap a.lp-link {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.lp-wrap a.lp-link:hover {
+  color: var(--fg);
+}
+
+@media (max-width: 640px) {
+  .lp-link {
+    display: none;
+  }
+}
+
+/* Buttons: the links of the hero and the final call to action, and the one in the bar. */
+.lp-btn,
+:is(.lp-s-hero, .lp-s-final-cta) p:has(> a:first-child) > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s;
+}
+
+.lp-btn-small {
+  padding: 7px 14px;
+  font-size: 14px;
+}
+
+.lp-wrap a.lp-btn,
+:is(.lp-s-hero, .lp-s-final-cta) .lp-wrap p:has(> a:first-child) > a {
+  color: var(--fg);
+}
+
+:is(.lp-s-hero, .lp-s-final-cta) p:has(> a:first-child) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 32px 0 0;
+}
+
+.lp-btn:hover,
+:is(.lp-s-hero, .lp-s-final-cta) p:has(> a:first-child) > a:hover {
+  transform: translateY(-1px);
+}
+
+:is(.lp-s-hero, .lp-s-final-cta) .lp-wrap p:has(> a:first-child) > a:first-child {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Hero ------------------------------------------------------------------- */
+
+.lp-s-hero .lp-text > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 28px 0 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 14px;
+  list-style: none;
+}
+
+.lp-s-hero .lp-text > ul li::before {
+  content: "✓ ";
+  color: var(--ok);
+  font-weight: 600;
+}
+
+/* Code and terminals ----------------------------------------------------- */
+
+/* Shiki paints every token with the GitHub colours; this page has one terminal
+   palette, so the variables the engine reads are fixed (the template flattens the
+   tokens and marks the few that get a colour of their own). */
+.landing pre.shiki {
+  --shiki-light: var(--term-fg) !important;
+  --shiki-dark: var(--term-fg) !important;
+  --shiki-light-bg: var(--term-bg) !important;
+  --shiki-dark-bg: var(--term-bg) !important;
+  margin: 0;
+  padding: 18px 20px;
+  overflow-x: auto;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--term-bg);
+  color: var(--term-fg);
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: pre;
+}
+
+.landing pre.shiki code {
+  font-size: inherit;
+}
+
+.landing pre.shiki span.lp-t-p {
+  color: var(--term-accent);
+}
+
+.landing pre.shiki span.lp-t-m {
+  color: var(--term-muted);
+}
+
+.landing pre.shiki span.lp-t-ok {
+  color: var(--term-ok);
+}
+
+.landing pre.shiki span.lp-t-w {
+  color: var(--term-warn);
+}
+
+/* Syntax-highlighted lines are spans; a line that is a span of its own, not a block. */
+.lp-term {
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--term-bg);
+  color: var(--term-fg);
+  font-size: 13.5px;
+  line-height: 1.65;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
+}
+
+.lp-term-plain {
+  box-shadow: none;
+}
+
+.lp-term pre.shiki {
+  border-radius: 0;
+  padding: 18px 20px 22px;
+}
+
+.lp-s-hero .lp-term pre.shiki {
+  min-height: 330px;
+}
+
+.lp-term-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lp-term-bar i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #3a383f;
+}
+
+.lp-term-bar b {
+  margin-left: 10px;
+  color: var(--term-muted);
+  font: 500 12px var(--sans);
+}
+
+.lp-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  background: var(--term-fg);
+  vertical-align: text-bottom;
+  animation: lp-blink 1s steps(1) infinite;
+}
+
+@keyframes lp-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* The problem: a chat ---------------------------------------------------- */
+
+.lp-chat {
+  display: grid;
+  gap: 10px;
+  max-width: 560px;
+}
+
+.lp-chat p {
+  max-width: 85%;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+.lp-chat .lp-ai {
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.lp-chat .lp-you {
+  justify-self: end;
+  background: var(--accent-soft);
+}
+
+/* How it works: the table as three cards --------------------------------- */
+
+.lp-cards,
+.lp-grid,
+.lp-stats {
+  display: grid;
+  gap: 16px;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-cards {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 720px) {
+  .lp-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.lp-card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.lp-phase {
+  margin: 0;
+  color: var(--accent-text);
+  font: 600 14px var(--mono);
+}
+
+.lp-phase strong {
+  font-weight: inherit;
+}
+
+.lp-card-body {
+  margin: 10px 0 0;
+  font-size: 15.5px;
+}
+
+.lp-gate {
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.lp-gate b {
+  color: var(--fg);
+}
+
+.lp-cards + p {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Timeline --------------------------------------------------------------- */
+
+.lp-timeline {
+  margin: 0;
+  padding: 0;
+  border-left: 2px solid var(--line);
+  list-style: none;
+}
+
+.lp-timeline li {
+  position: relative;
+  padding: 0 0 28px 28px;
+}
+
+.lp-timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.lp-timeline li::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: -7px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--bg-alt);
+}
+
+.lp-timeline li.lp-you::before {
+  background: var(--accent);
+}
+
+.lp-timeline time {
+  display: block;
+  color: var(--muted);
+  font: 600 14px var(--mono);
+}
+
+/* Features and stats ----------------------------------------------------- */
+
+.lp-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.lp-grid .lp-card h3 {
+  margin-bottom: 6px;
+}
+
+.lp-grid .lp-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15.5px;
+}
+
+.lp-ico {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+.lp-stats {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin: 40px 0;
+}
+
+.lp-stat {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.lp-stat b {
+  display: block;
+  color: var(--accent);
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.lp-stat span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.lp-s-dogfood .lp-term {
+  margin: 0 0 1em;
+}
+
+.lp-s-dogfood blockquote {
+  margin: 32px 0 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+
+.lp-s-dogfood blockquote p {
+  margin: 0;
+}
+
+/* FAQ -------------------------------------------------------------------- */
+
+.lp-s-faq .lp-wrap {
+  max-width: 780px;
+}
+
+.lp-s-faq h2 {
+  margin-bottom: 32px;
+}
+
+.lp-s-faq details {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.lp-s-faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.lp-s-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-s-faq summary::after {
+  content: "+";
+  float: right;
+  color: var(--accent-text);
+  font-weight: 400;
+}
+
+.lp-s-faq details[open] summary::after {
+  content: "–";
+}
+
+.lp-answer p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+/* Final call to action and the footer line ------------------------------- */
+
+.lp-s-final-cta {
+  text-align: center;
+}
+
+.lp-s-final-cta h2 + p {
+  margin-inline: auto;
+}
+
+.lp-s-final-cta p:has(> a:first-child) {
+  justify-content: center;
+}
+
+.lp-s-final-cta hr {
+  margin: 56px 0 24px;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.lp-s-final-cta hr + p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Motion ----------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.landing) {
+    scroll-behavior: auto;
+  }
+
+  .lp-cursor {
+    animation: none;
+  }
+
+  .lp-btn,
+  :is(.lp-s-hero, .lp-s-final-cta) p:has(> a:first-child) > a {
+    transition: none;
+  }
+
+  .lp-btn:hover,
+  :is(.lp-s-hero, .lp-s-final-cta) p:has(> a:first-child) > a:hover {
+    transform: none;
+  }
+}
+
+@media print {
+  .lp-bar {
+    display: none;
+  }
+}

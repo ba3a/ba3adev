@@ -1,0 +1,153 @@
+{#
+  A landing page: the text of a project (index.md) laid out as the sections of
+  assets/landing.css. Included by project-tool.njk when the text has section
+  markers. See AUTHORING.md, "A landing page", for the two conventions.
+
+  coffer has no hook between the Markdown and the template, and the Markdown
+  renderer drops HTML comments, so the page is rebuilt here from the HTML of the
+  text: the text is cut at the markers (`<div class="section-marker" id="name">`),
+  and what Markdown made of each section (the table, the lists, the quote, the
+  code blocks, the `###` questions) is reshaped with regular expressions, by the
+  name of the section. All the words on the page come from index.md; the strings
+  of this file are only the words the layout itself adds (i18n/en.yaml).
+#}
+
+{#- Code blocks. Shiki has coloured every token for the GitHub themes; the landing
+    page wants one terminal palette, so the token spans are flattened and only
+    what the style guide names is coloured again: p prompt and command, m muted,
+    w warning, ok success. `kind` is what the block shows. -#}
+{% macro tokens(html, kind) -%}
+{% set h = html | replace(r/<span style="--shiki[^"]*">([^<]*)<\/span>/g, '$1') -%}
+{% if kind == 'session' -%}
+{% set h = h | replace(r/<span class="line">> /g, '<span class="line"><span class="lp-t-p">></span> ') -%}
+{% set h = h | replace(r/<span class="line">(\[specloop\][^<]*)<\/span>/g, '<span class="line lp-t-m">$1</span>') -%}
+{% set h = h | replace(r/<span class="line">(\s*↳[^<]*)<\/span>/g, '<span class="line lp-t-m">$1</span>') -%}
+{% set h = h | replace(r/<span class="line">(☕[^<]*)<\/span>/g, '<span class="line lp-t-w">$1</span>') -%}
+{% set h = h | replace(r/(<span class="line">|\s)(# [^<]*)<\/span>/g, '$1<span class="lp-t-m">$2</span></span>') -%}
+{% set h = h | replace(r/\b(done|APPROVE)\b/g, '<span class="lp-t-ok">$1</span>') -%}
+{% set h = h | replace(r/\b((?=[0-9a-f]{0,6}\d)[0-9a-f]{7})\b/g, '<span class="lp-t-w">$1</span>') -%}
+{% elif kind == 'gitlog' -%}
+{% set h = h | replace(r/<span class="line">\$ /g, '<span class="line"><span class="lp-t-p">$$</span> ') -%}
+{% set h = h | replace(r/<span class="line">([0-9a-f]{7}) /g, '<span class="line"><span class="lp-t-w">$1</span> ') -%}
+{% set h = h | replace(r/<span class="line">(\s+specloop step [^<]*)<\/span>/g, '<span class="line lp-t-m">$1</span>') -%}
+{% set h = h | replace(r/<span class="line">(…)<\/span>/g, '<span class="line lp-t-m">$1</span>') -%}
+{% elif kind == 'shell' -%}
+{% set h = h | replace(r/<span class="line">(\/sl-[a-z-]+)/g, '<span class="line"><span class="lp-t-p">$1</span>') -%}
+{% set h = h | replace(r/(<span class="line">|\s)(# [^<]*)<\/span>/g, '$1<span class="lp-t-m">$2</span></span>') -%}
+{% elif kind == 'markdown' -%}
+{% set h = h | replace(r/<span class="line">(#+ [^<]*)<\/span>/g, '<span class="line lp-t-p">$1</span>') -%}
+{% endif -%}
+{{ h | safe }}
+{%- endmacro %}
+
+{#- The sections, as [marker, html, marker, html, ...] after a first empty piece. -#}
+{% set parts = page.content.split(r/<div class="section-marker" id="([a-z0-9-]+)"><\/div>\n*/) %}
+
+{#- Which of the two columns is the visual: the first element of this kind. -#}
+{% set visualTag = { 'hero': 'pre', 'problem': 'blockquote', 'timeline': 'ul', 'spec-example': 'pre', 'quick-start': 'pre' } %}
+
+{#- The links of the top bar are named after the eyebrow of the section they lead to. -#}
+{% set navItems = [] %}
+{% for i in range(1, parts.length, 2) %}
+{% if parts[i] in ['how-it-works', 'dogfood', 'quick-start'] %}
+{% set eyebrow = parts[i + 1].match(r/<h6[^>]*>([^<]*)<\/h6>/) %}
+{% set _ = navItems.push({ id: parts[i], label: eyebrow[1] if eyebrow else parts[i] }) %}
+{% endif %}
+{% endfor %}
+
+<nav class="lp-bar" aria-label="{{ 'landing.nav' | t }}">
+<div class="lp-wrap lp-bar-inner">
+<a class="lp-brand" href="#{{ parts[1] }}">
+<img class="lp-logo lp-logo-light" src="{{ ('/assets/' + project.slug + '/logo.svg') | url }}" width="32" height="32" alt="">
+<img class="lp-logo lp-logo-dark" src="{{ ('/assets/' + project.slug + '/logo-dark.svg') | url }}" width="32" height="32" alt="">
+<span>{{ 'landing.brand_start' | t }}<span class="lp-accent">{{ 'landing.brand_end' | t }}</span></span>
+</a>
+<div class="lp-links">
+{% for item in navItems %}<a class="lp-link" href="#{{ item.id }}">{{ item.label }}</a>
+{% endfor %}
+{% if project.fields.repo %}<a class="lp-btn lp-btn-small" href="{{ project.fields.repo }}" rel="noopener">{{ 'landing.github' | t }}</a>{% endif %}
+</div>
+</div>
+</nav>
+
+{% for i in range(1, parts.length, 2) %}
+{% set name = parts[i] %}
+{#- The eyebrow is a label, not a heading: a paragraph, so it is not in the outline of the page. -#}
+{% set html = parts[i + 1] | replace(r/<h6 [^>]*>([\s\S]*?)<\/h6>/, '<p class="lp-eyebrow">$1</p>') %}
+{% set twoCol = name in ['hero', 'problem', 'timeline', 'spec-example', 'quick-start'] %}
+
+{% if twoCol %}
+{% set at = html.indexOf('<' + visualTag[name]) %}
+{% set text = html.slice(0, at) %}
+{% set visual = html.slice(at) %}
+{% endif %}
+
+{% if name == 'hero' %}
+{#- Each sentence of the headline on its own line, the second one in the accent colour. -#}
+{% set text = text | replace(r/<h1( [^>]*)?>([^<.]*\.) ([^<.]*\.) ([^<]*)<\/h1>/, '<h1$1><span class="lp-line">$2</span> <span class="lp-line lp-accent">$3</span> <span class="lp-line">$4</span></h1>') %}
+{% set visual %}
+<div class="lp-term" role="group" aria-label="{{ 'landing.hero_terminal' | t }}">
+<div class="lp-term-bar" aria-hidden="true"><i></i><i></i><i></i><b>{{ 'landing.terminal_title' | t }}</b></div>
+{{ tokens(visual, 'session') | replace('</code></pre>', '\n<span class="lp-cursor" aria-hidden="true"></span></code></pre>') | safe }}
+</div>
+{% endset %}
+
+{% elif name == 'problem' %}
+{% set chatLabel %}{{ 'landing.chat' | t }}{% endset %}
+{% set visual = visual | replace('<blockquote>', '<div class="lp-chat" role="group" aria-label="' + chatLabel + '">') | replace('</blockquote>', '</div>') %}
+{% set visual = visual | replace(r/<p><strong>You:<\/strong> /g, '<p class="lp-you"><strong class="lp-sr">You:</strong> ') %}
+{% set visual = visual | replace(r/<p><strong>Claude:<\/strong> /g, '<p class="lp-ai"><strong class="lp-sr">Claude:</strong> ') %}
+
+{% elif name == 'how-it-works' %}
+{#- The table is three cards: phase, what happens, and the gate under a dashed line, named by the head of that column. -#}
+{% set gate = html.match(r/<th>[^<]*<\/th>\s*<th>[^<]*<\/th>\s*<th>([^<]*)<\/th>/) %}
+{% set html = html | replace(r/<table>\s*<thead>[\s\S]*?<\/thead>\s*<tbody>/, '<ul class="lp-cards">') | replace(r/<\/tbody>\s*<\/table>/, '</ul>') %}
+{% set html = html | replace(r/<tr>\s*<td>([\s\S]*?)<\/td>\s*<td>([\s\S]*?)<\/td>\s*<td>([\s\S]*?)<\/td>\s*<\/tr>/g, '<li class="lp-card"><p class="lp-phase">$1</p><p class="lp-card-body">$2</p><p class="lp-gate"><b>' + (gate[1] if gate else '') + ':</b> $3</p></li>') %}
+
+{% elif name == 'timeline' %}
+{#- A line of the timeline starts with a bold time. `*you*` after it marks a step of the person (filled dot) and is hidden. -#}
+{% set visual = visual | replace('<ul>', '<ul class="lp-timeline">') %}
+{% set visual = visual | replace(r/<li><strong>([^<]*)<\/strong> · <em>you<\/em> · /g, '<li class="lp-you"><time>$1</time><em class="lp-sr">you</em> ') %}
+{% set visual = visual | replace(r/<li><strong>([^<]*)<\/strong> · /g, '<li><time>$1</time> ') %}
+
+{% elif name == 'spec-example' %}
+{% set visual = tokens(visual, 'markdown') %}
+
+{% elif name == 'features' %}
+{#- A bold lead of the form "emoji Title." becomes the icon and the title of a card. -#}
+{% set html = html | replace('<ul>', '<ul class="lp-grid">') %}
+{% set html = html | replace(r/<li><strong>(\S+) ([^<]*?)\.?<\/strong> ([\s\S]*?)<\/li>/g, '<li class="lp-card"><span class="lp-ico" aria-hidden="true">$1</span><h3>$2</h3><p>$3</p></li>') %}
+
+{% elif name == 'dogfood' %}
+{% set html = html | replace('<ul>', '<ul class="lp-stats">') %}
+{% set html = html | replace(r/<li><strong>([^<]*)<\/strong> · ([\s\S]*?)<\/li>/g, '<li class="lp-stat"><b>$1</b><span>$2</span></li>') %}
+{% set preAt = html.indexOf('<pre') %}
+{% set preEnd = html.indexOf('</pre>') + 6 %}
+{% set terminal %}
+<div class="lp-term lp-term-plain" role="group" aria-label="{{ 'landing.dogfood_terminal' | t }}">{{ tokens(html.slice(preAt, preEnd), 'gitlog') }}</div>
+{% endset %}
+{% set html = html.slice(0, preAt) + terminal + html.slice(preEnd) %}
+
+{% elif name == 'quick-start' %}
+{% set visual = tokens(visual, 'shell') %}
+
+{% elif name == 'faq' %}
+{#- Every `###` question and the answer under it: a closed <details>, which works without JavaScript. -#}
+{% set html = html | replace(r/<h3[^>]*>([\s\S]*?)<\/h3>\s*([\s\S]*?)(?=<h3|$)/g, '<details><summary>$1</summary><div class="lp-answer">$2</div></details>') %}
+{% endif %}
+
+<section id="{{ name }}" class="lp-section lp-s-{{ name }}">
+<div class="lp-wrap{% if twoCol %} lp-two{% endif %}">
+{% if twoCol %}
+<div class="lp-text">
+{{ text | safe }}
+</div>
+<div class="lp-visual">
+{{ visual | safe }}
+</div>
+{% else %}
+{{ html | safe }}
+{% endif %}
+</div>
+</section>
+{% endfor %}

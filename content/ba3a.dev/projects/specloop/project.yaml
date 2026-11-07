@@ -1,12 +1,12 @@
-# Seed declaration, drafted from the site spec (section 14.2).
-# TODO: rewrite the pitch and confirm the status before publishing.
+# The page of specloop is a landing page: index.md holds its text and the
+# section markers that the theme turns into the layout (see AUTHORING.md,
+# "A landing page"). The brand pictures are in themes/ba3a/assets/specloop/.
 name: specloop
-pitch: A spec-driven plan → implement → review loop for Claude Code, built only from hooks and slash commands.
+pitch: A spec-driven plan → implement → review loop for Claude Code. Hand it a spec, walk away, come back to a reviewed branch with one commit per step.
 kind: tool
-# TODO: confirm the status (idea, in-development, released, maintained or archived).
-status: in-development
+status: released
 card: card.png
-cardAlt: "Placeholder card: the name specloop in white letters on a dark blue background."
+cardAlt: "The specloop logo, a snake biting its own tail, beside the name specloop and the line Write the spec. Go make tea. Come back to reviewed commits."
 featured: true
 order: 1
 tag: specloop

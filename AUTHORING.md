@@ -271,6 +271,17 @@ Use this checklist for a project with documentation pulled from its own reposito
 
 References: [Projects](https://github.com/ba3a/coffer/blob/v0.1.0/docs/projects.md), [Where a project's documentation comes from](https://github.com/ba3a/coffer/blob/v0.1.0/docs/docs-sources.md), [Project documentation](https://github.com/ba3a/coffer/blob/v0.1.0/docs/project-docs.md).
 
+## A landing page
+
+A tool can have a landing page instead of a README-style page. specloop does: its `index.md` is the text of the page, and the theme turns it into the designed sections. Every other tool page is unchanged.
+
+The text is ordinary Markdown with two conventions:
+
+- **Sections.** Each section starts with an empty marker, `<div class="section-marker" id="name"></div>`. The `id` is the name of the section and becomes the `id` of the section on the page, so `#name` links work. A page without markers is a normal tool page. The names the layout knows are `hero`, `problem`, `how-it-works`, `timeline`, `spec-example`, `features`, `dogfood`, `quick-start`, `faq` and `final-cta`. (A comment such as `<!-- section: hero -->` would be dropped by the Markdown renderer, which is why the marker is an element.)
+- **Eyebrows.** A `######` heading right before the `##` heading of a section (before the `#` of the hero) is the small label above it. It is published as a paragraph, not as a heading.
+
+How each part of the Markdown is shown (a table as three cards, a list as a timeline, a quote as a chat, `###` questions as an accordion, and so on) is in `themes/ba3a/templates/partials/landing.njk`. The look is `themes/ba3a/assets/landing.css`, loaded by landing pages only. All words on the page come from `index.md`; the few words the layout adds are in `themes/ba3a/i18n/en.yaml`. The brand pictures of the project (`logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`) are in `themes/ba3a/assets/{slug}/`; the card picture is the preview image of the page.
+
 ## If the scheduled workflow stops
 
 GitHub disables scheduled workflows of a public repository after 60 days without activity, and Refresh is what publishes scheduled posts and picks up project docs. The Keepalive workflow and a job inside Refresh try to prevent it (see `scripts/keepalive.mjs`), but a real commit is the only sure way to restart the 60-day clock. If GitHub disabled Refresh anyway, a commit does not turn it back on: enable it by hand. Open the Actions tab, choose Refresh, then "Enable workflow" (or run `gh workflow enable refresh.yml`). Make a real commit afterwards so that it does not happen again. A workflow disabled by hand is left alone by the keepalive. More in [OPERATIONS.md](OPERATIONS.md#things-to-know) (the go-live and operations runbook).
