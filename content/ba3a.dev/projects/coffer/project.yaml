@@ -13,4 +13,52 @@ tag: coffer
 license: Apache-2.0
 # The repository does not exist yet: this is its declared future address.
 repo: https://github.com/ba3a/coffer
-# Documentation is not configured yet, so the page links no docs.
+# The docs are built from the engine's own folder in this repository, because
+# the ba3a/coffer repository does not exist yet. A folder source has no `ref`:
+# links to files outside the guides (../CHANGELOG.md, ../LICENSE, ../README.md)
+# point to https://github.com/ba3a/coffer/blob/main/..., where `github` names
+# the repository and `main` is the default ref of a folder source that is not
+# the root of its own git repository.
+#
+# GO-LIVE: once the ba3a/coffer repository exists and is tagged, replace the
+# source with `{git: https://github.com/ba3a/coffer.git, ref: main}`, so that
+# the docs are pulled the same way as the docs of roto and specloop, and remove
+# `github` (it is taken from the address). The guides stay the same.
+#
+# The guides are the files of coffer/docs/. docs/README.md is the documentation
+# index, and `order` follows the table of contents in that README. There is no
+# reference for now; a later edit of this file can add one.
+docs:
+  source:
+    path: ../../../../coffer
+  github: ba3a/coffer
+  guides:
+    - dir: docs
+      order:
+        - configuration.md
+        - build.md
+        - authoring.md
+        - checks.md
+        - posts.md
+        - markdown.md
+        - tags.md
+        - series.md
+        - links.md
+        - sharing.md
+        - images.md
+        - location-policy.md
+        - carousels.md
+        - viewer.md
+        - maps.md
+        - media.md
+        - projects.md
+        - project-docs.md
+        - docs-sources.md
+        - home.md
+        - themes.md
+        - urls.md
+        - feeds.md
+        - seo.md
+        - full-text-search.md
+        - analytics.md
+        - scheduling.md
