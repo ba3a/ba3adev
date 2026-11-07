@@ -8,7 +8,9 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "npm test -w coffer",
-    "typecheck": "npm run typecheck -w coffer"
+    "test": "npm test -w coffer && npm run test:scripts",
+    "test:scripts": "node --test \"scripts/test/**/*.test.mjs\"",
+    "typecheck": "npm run typecheck -w coffer",
+    "check:standalone": "node scripts/check-coffer-standalone.mjs"
   }
 }
