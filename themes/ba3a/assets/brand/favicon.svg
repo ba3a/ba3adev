@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<title>ba3a</title>
+<style>.tile{fill:#0C1320}@media (prefers-color-scheme:dark){.tile{fill:none}}</style>
+<rect class="tile" width="512" height="512" rx="112" fill="#0C1320"/>
+<path fill="#4FC8DF" fill-rule="evenodd" d="M119 100H269C339 100 381 130 381 184C381 220 361 244 331 256C369 266 393 294 393 334C393 390 347 412 273 412H119ZM160 190L228 190L294 256L228 322L160 322L226 256Z"/>
+</svg>

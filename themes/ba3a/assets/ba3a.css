@@ -131,13 +131,31 @@ h3 {
   letter-spacing: -0.02em;
 }
 
-/* The mark in front of the name is decoration only. */
+/* The mark in front of the name: the letter B with a ">" prompt cut out of it.
+   On a light page it is on its slate tile (brand/logo.svg), on a dark page it
+   is the bare letter (brand/logo-dark.svg). It is decoration only. The dark
+   rules are repeated for the system preference and for the theme switch, and
+   light is forced again after them, as the colours above are. */
 .site-header .site-title::before {
   content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 2px;
-  background: var(--coffer-accent);
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: url("brand/logo.svg") center / contain no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  .site-header .site-title::before {
+    background-image: url("brand/logo-dark.svg");
+  }
+}
+
+:root[data-theme="dark"] .site-header .site-title::before {
+  background-image: url("brand/logo-dark.svg");
+}
+
+:root[data-theme="light"] .site-header .site-title::before {
+  background-image: url("brand/logo.svg");
 }
 
 .site-header nav ul {
