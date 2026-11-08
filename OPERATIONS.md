@@ -273,7 +273,7 @@ The steps in order: originals pulled, build, `coffer check --w3c`, build report 
 
 ### 6.2 Check the smoke test (read only)
 
-The step "Smoke test the live sites" passes only when both sites answer over HTTPS: the home page 200, `/devlog` redirecting to `/devlog/`, an unknown address 404 in the right language, and `build-info.json` carrying this run's build time.
+The step "Smoke test the live sites" asks the `pages.dev` addresses (`ba3a-dev.pages.dev`, `my-ba3a-dev.pages.dev`), not the custom domains: Bot Fight Mode on the zone answers GitHub runners with 403 and cannot be skipped by a rule. So it proves the deployment, not the DNS or the custom domains; 6.3 covers those. It passes only when both deployments answer over HTTPS: the home page 200, `/devlog` redirecting to `/devlog/`, an unknown address 404 in the right language, and `build-info.json` carrying this run's build time.
 
 **User confirms before running.**
 

@@ -167,8 +167,10 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      # Compares the live sites with this run: the builtAt in dist/<site>/build-info.json is what
-      # the live build-info.json must say. It retries for up to five minutes while the new
-      # deployment reaches the edge, then fails. It needs no secret.
+      # Compares the deployments with this run: the builtAt in dist/<site>/build-info.json is what
+      # the deployed build-info.json must say. It retries for up to five minutes while the new
+      # deployment reaches the edge, then fails. It asks the pages.dev addresses, not the custom
+      # domains: Bot Fight Mode on the zone answers CI runners with 403 and a rule cannot skip it.
+      # The custom domains and their DNS are checked by hand (runbook 6.3). It needs no secret.
       - name: Smoke test the live sites
-        run: node scripts/smoke-test.mjs --dist dist --timeout 300
+        run: node scripts/smoke-test.mjs --dist dist --timeout 300 --base ba3a.dev=https://ba3a-dev.pages.dev --base my.ba3a.dev=https://my-ba3a-dev.pages.dev

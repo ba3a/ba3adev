@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from '../../node_modules/coffer/src/config.js';
-import { SITES, languageOf, main, parseArgs, readExpectedBuiltAt, runSmokeTests } from '../smoke-test.mjs';
+import { SITES, describeStatus, languageOf, main, parseArgs, readExpectedBuiltAt, runSmokeTests } from '../smoke-test.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -147,6 +147,17 @@ test('a home page that redirects fails, naming the target', async () => {
   const failure = outcome.results.find((result) => !result.ok);
   assert.equal(failure?.site, 'ba3a.dev');
   assert.match(failure?.error ?? '', /answered 301 to https:\/\/example\.org\//);
+});
+
+test('a refusal is reported with the Cloudflare headers', async () => {
+  const refused = () => new Response('', { status: 403, headers: { server: 'cloudflare', 'cf-mitigated': 'challenge', 'cf-ray': 'abc-FRA' } });
+  const handlers = allGood();
+  handlers['https://ba3a.dev'] = fakeSite(SITES[0], { home: refused });
+  const outcome = await run(handlers, { timeoutMs: 0 }).promise;
+  const failure = outcome.results.find((result) => !result.ok);
+  assert.match(failure?.error ?? '', /answered 403 \(server: cloudflare, cf-mitigated: challenge, cf-ray: abc-FRA\); expected 200/);
+  assert.equal(describeStatus({ status: 200, headers: new Headers({ server: 'cloudflare' }) }), '200');
+  assert.equal(describeStatus({ status: 403, headers: new Headers() }), '403');
 });
 
 test('a home page in the wrong language fails', async () => {

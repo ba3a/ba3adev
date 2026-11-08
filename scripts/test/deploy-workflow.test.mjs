@@ -214,7 +214,7 @@ test('each site goes to its own production Pages project from its own folder', (
 
 test('the smoke test reads the build of this run and has a bounded wait', () => {
   const smoke = step('Smoke test').run;
-  assert.match(smoke, /^node scripts\/smoke-test\.mjs --dist dist --timeout \d+$/);
+  assert.match(smoke, /^node scripts\/smoke-test\.mjs --dist dist --timeout \d+ --base ba3a\.dev=https:\/\/ba3a-dev\.pages\.dev --base my\.ba3a\.dev=https:\/\/my-ba3a-dev\.pages\.dev$/);
   const seconds = Number(/--timeout (\d+)/.exec(smoke)?.[1]);
   assert.ok(seconds > 0 && seconds <= 600);
   assert.ok(workflow.jobs.deploy['timeout-minutes'] > seconds / 60, 'the job limit is longer than the smoke test');

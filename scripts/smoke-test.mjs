@@ -16,6 +16,10 @@
 // attempt. Redirects are never followed implicitly: every request asks for the answer as the
 // server gives it. The script reads no secret and sends no credential.
 //
+// The deploy workflow points the checks at the pages.dev addresses (--base), because Bot Fight Mode
+// on the zone answers CI runners with 403 on the custom domains. A failing answer is reported with
+// the Cloudflare headers that explain it.
+//
 // Exit codes: 0 all checks passed, 1 a check failed, 2 the script was used wrongly.
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -52,6 +56,9 @@ export const MAX_DELAY_MS = 30_000;
 
 /** How long one request may take, in milliseconds. */
 export const REQUEST_TIMEOUT_MS = 20_000;
+
+/** Response headers that tell who refused a request, in the order they are reported. */
+const DIAGNOSTIC_HEADERS = Object.freeze(['server', 'cf-mitigated', 'cf-ray']);
 
 /** Statuses that mean "moved, look at the Location header". */
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
@@ -150,6 +157,22 @@ async function request(ctx, url, headers = {}) {
 }
 
 /**
+ * A status for a failure message: the number, and for a refusal (status 400 or more) the response
+ * headers that show whether Cloudflare or the origin gave it.
+ *
+ * @param {{ status: number, headers: Headers }} answer
+ * @returns {string}
+ */
+export function describeStatus(answer) {
+  if (answer.status < 400) return String(answer.status);
+  const found = DIAGNOSTIC_HEADERS.flatMap((name) => {
+    const value = answer.headers.get(name);
+    return value ? [`${name}: ${value}`] : [];
+  });
+  return found.length > 0 ? `${answer.status} (${found.join(', ')})` : String(answer.status);
+}
+
+/**
  * The language declared on the root element of an HTML text.
  *
  * @param {string} html
@@ -174,7 +197,7 @@ async function checkHome(site, ctx) {
   if (REDIRECT_STATUSES.has(answer.status)) {
     throw new CheckFailure(`GET ${url} answered ${answer.status} to ${answer.location ?? '(no Location)'}; expected 200 without a redirect`);
   }
-  if (answer.status !== 200) throw new CheckFailure(`GET ${url} answered ${answer.status}; expected 200`);
+  if (answer.status !== 200) throw new CheckFailure(`GET ${url} answered ${describeStatus(answer)}; expected 200`);
   if (!answer.url.startsWith('https://') && !(ctx.allowInsecureLoopback && answer.url.startsWith(`${site.baseUrl}/`))) {
     throw new CheckFailure(`GET ${url} was answered from ${answer.url}, which is not https://`);
   }
@@ -197,14 +220,14 @@ async function checkRedirect(site, ctx) {
   const expected = `${site.baseUrl}${site.redirect.to}`;
   const answer = await request(ctx, from);
   if (!REDIRECT_STATUSES.has(answer.status)) {
-    throw new CheckFailure(`GET ${from} answered ${answer.status}; expected a redirect to ${expected}`);
+    throw new CheckFailure(`GET ${from} answered ${describeStatus(answer)}; expected a redirect to ${expected}`);
   }
   const target = answer.location === null ? null : new URL(answer.location, from).href;
   if (target !== expected) {
     throw new CheckFailure(`GET ${from} redirects to ${target ?? '(no Location)'}; expected ${expected}`);
   }
   const final = await request(ctx, expected);
-  if (final.status !== 200) throw new CheckFailure(`GET ${expected} answered ${final.status}; expected 200`);
+  if (final.status !== 200) throw new CheckFailure(`GET ${expected} answered ${describeStatus(final)}; expected 200`);
 }
 
 /**
@@ -218,7 +241,7 @@ async function checkNotFound(site, ctx) {
   requireSecureBase(site.baseUrl, ctx);
   const url = `${site.baseUrl}/smoke-test-no-such-page-${ctx.token}/`;
   const answer = await request(ctx, url);
-  if (answer.status !== 404) throw new CheckFailure(`GET ${url} answered ${answer.status}; expected 404`);
+  if (answer.status !== 404) throw new CheckFailure(`GET ${url} answered ${describeStatus(answer)}; expected 404`);
   const lang = languageOf(answer.body);
   if (lang !== site.lang) {
     throw new CheckFailure(`the 404 page of ${site.id} has lang="${lang ?? 'none'}"; expected "${site.lang}"`);
@@ -241,7 +264,7 @@ async function checkBuildInfo(site, ctx, expectedBuiltAt) {
   requireSecureBase(site.baseUrl, ctx);
   const url = `${site.baseUrl}/build-info.json`;
   const answer = await request(ctx, url, { 'cache-control': 'no-cache', pragma: 'no-cache' });
-  if (answer.status !== 200) throw new CheckFailure(`GET ${url} answered ${answer.status}; expected 200`);
+  if (answer.status !== 200) throw new CheckFailure(`GET ${url} answered ${describeStatus(answer)}; expected 200`);
   /** @type {unknown} */
   let info;
   try {
