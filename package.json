@@ -22,6 +22,6 @@
     "opentype.js": "1.3.4"
   },
   "dependencies": {
-    "coffer": "git+https://github.com/ba3a/coffer.git#v0.1.0"
+    "coffer": "git+https://github.com/ba3a/coffer.git#v0.1.1"
   }
 }
