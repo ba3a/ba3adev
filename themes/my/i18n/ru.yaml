@@ -2,10 +2,9 @@
 # (`i18n/ru.yaml` of coffer). Only the changed keys are listed; every other string
 # keeps the engine's text. The copy below is a first draft for the author.
 
-# TODO: rewrite
 site:
   # The line under the site title in the header.
-  tagline: Заметки о столярном деле и походах
+  tagline: Я Вася, я делаю всякие штуки
 
 # TODO: rewrite
 not_found:

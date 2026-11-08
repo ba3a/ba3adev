@@ -28,7 +28,7 @@ sites:
     lang: ru
     timezone: Europe/Samara
     title: ba3a
-    description: Личный блог о столярном деле и походах.
+    description: Личный блог.
     contentDir: content/my.ba3a.dev
     theme: themes/my
     contentLicense: Все права защищены
@@ -38,6 +38,7 @@ sites:
     blogs:
       - { id: blog, dir: content/my.ba3a.dev, prefix: "", title: Блог }
     location: { default: strip, camera: strip }
+
 
 # Original photos and videos are kept out of git, in a private Cloudflare R2 bucket, and
 # listed by content hash in media.lock.json (see github.com/ba3a/coffer/blob/v0.1.0/docs/media.md). The credentials are
