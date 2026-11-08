@@ -11,7 +11,7 @@ default theme (see `github.com/ba3a/coffer/blob/v0.1.0/docs/themes.md`).
 | File | What it does |
 | --- | --- |
 | `assets/my.css` | Overrides coffer's colour and font custom properties for light and dark (`prefers-color-scheme` and the theme switch), declares the web fonts, arranges the centred header and styles the 404 page. |
-| `templates/base.njk` | `{% extends "coffer:base.njk" %}`. Overrides the `head` block (with `super()`, to add the stylesheet and the font preloads) and the `nav` block of the header. No other template or block is replaced. |
+| `templates/base.njk` | `{% extends "coffer:base.njk" %}`. Overrides the `head` block (with `super()`, to add the stylesheet and the font preloads) the `footer` block (with `super()`, to link the word "coffer" of the credit line to <https://ba3a.dev/made/coffer/>) and the `nav` block of the header. No other template or block is replaced. |
 | `i18n/ru.yaml` | The tagline of the header and the copy of the 404 page. |
 | `theme.yaml`, `card.svg.njk`, `fonts/` | The title card for link previews: warm paper in a thin terracotta frame, set in Literata Bold. |
 | `assets/fonts/` | The self-hosted web font files and their license. |

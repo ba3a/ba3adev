@@ -182,7 +182,7 @@ test('the theme directory holds only styles, fonts, brand pictures, the header t
   }
 });
 
-test('the theme templates only extend the engine and override its head and nav blocks', () => {
+test('the theme templates only extend the engine and override its head, footer and nav blocks', () => {
   const templatesDir = join(themeDir, 'templates');
   const engineTemplatesDir = join(engineTheme, 'templates');
   const engineTemplates = listFiles(engineTemplatesDir);
@@ -208,7 +208,9 @@ test('the theme templates only extend the engine and override its head and nav b
     const blocks = [...source.matchAll(/\{%-?\s*block\s+([a-z_]+)/g)].map((m) => m[1]);
     for (const block of blocks) assert.ok(engineBlocks.has(block), `${name}: block "${block}" exists in the engine's ${name}`);
     // Overriding "header" and redeclaring the blocks nested in it would drop the theme switch.
-    assert.deepEqual([...blocks].sort(), ['head', 'nav'], `${name} overrides head and nav and nothing else`);
+    assert.deepEqual([...blocks].sort(), ['footer', 'head', 'nav'], `${name} overrides head, footer and nav and nothing else`);
+    const footer = /\{%-?\s*block footer\s*-?%\}([\s\S]*?)\{%-?\s*endblock/.exec(source);
+    assert.ok(footer && /\{\{\s*super\(\)/.test(footer[1]), 'the footer block keeps the engine footer with super()');
     const head = /\{%-?\s*block head\s*-?%\}([\s\S]*?)\{%-?\s*endblock/.exec(source);
     assert.ok(head && /\{\{\s*super\(\)\s*\}\}/.test(head[1]), 'the head block keeps the engine head with super()');
 
@@ -222,7 +224,8 @@ test('no theme file hard-codes a font host or a script', () => {
   for (const name of ['assets/my.css', 'templates/base.njk', 'card.svg.njk']) {
     const source = read(join(themeDir, name));
     assert.doesNotMatch(source, /@import/, `${name} has no @import`);
-    assert.doesNotMatch(source, /fonts\.(googleapis|gstatic)\.com|https?:\/\/(?!www\.w3\.org)/, `${name} names no external host`);
+    // The one address allowed is the link of the credit in the footer, to the coffer page on ba3a.dev.
+    assert.doesNotMatch(source, /fonts\.(googleapis|gstatic)\.com|https?:\/\/(?!www\.w3\.org|ba3a\.dev\/made\/coffer\/)/, `${name} names no external host`);
     assert.doesNotMatch(source, /<script/i, `${name} adds no script`);
   }
 });
@@ -941,4 +944,24 @@ test('the logo colours contrast with the page: sky blue on the dark page, navy t
   assert.ok(contrastRatio('#38bdf8', darkMedia['--coffer-bg']) >= AA_UI, 'the sky-blue letter on the dark page');
   assert.ok(contrastRatio('#0c4a6e', light['--coffer-bg']) >= AA_UI, 'the navy tile on the light page');
   assert.ok(contrastRatio('#38bdf8', '#0c4a6e') >= AA_UI, 'the sky-blue letter on the navy tile');
+});
+
+// --- the credit line ---------------------------------------------------------
+
+test('my.ba3a.dev: the credit in the footer of every page links "coffer" to its page on ba3a.dev', () => {
+  const root = join(dist, 'my.ba3a.dev');
+  const pages = listFiles(root).filter((file) => file.endsWith('.html'));
+  assert.ok(pages.length > 0);
+  let credits = 0;
+  for (const page of pages) {
+    const html = read(join(root, ...page.split('/')));
+    if (!html.includes('<footer class="site-footer">')) continue;
+    credits += 1;
+    assert.ok(
+      html.includes('<p class="credit">Сделано на <a href="https://ba3a.dev/made/coffer/">coffer</a></p>'),
+      `${page}: the credit is "Сделано на coffer" with a link on "coffer"`,
+    );
+    assert.ok(!html.includes('Сделано на coffer'), `${page}: no unlinked credit`);
+  }
+  assert.ok(credits >= 4, `${credits} pages carry the credit`);
 });

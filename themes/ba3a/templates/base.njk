@@ -18,6 +18,11 @@
 <link rel="stylesheet" href="{{ '/assets/ba3a.css' | url }}">
 {% endblock %}
 
+{#- The credit line of the footer links "coffer" to its page on this site. The engine's footer (the license and the credit) is kept with super(), and only the word at the end of the credit is replaced, so the translated text of the line stays the engine's. -#}
+{% block footer %}
+{{ super() | replace(r/coffer(?=<\/p>)/, '<a href="' + ('/made/coffer/' | url) + '">coffer</a>') | safe }}
+{% endblock %}
+
 {% block nav %}
 <nav aria-label="{{ 'nav.label' | t }}">
 <ul>

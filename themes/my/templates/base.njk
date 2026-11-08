@@ -20,6 +20,11 @@
 <link rel="stylesheet" href="{{ '/assets/my.css' | url }}">
 {% endblock %}
 
+{#- The credit line of the footer links "coffer" to its page on ba3a.dev. The engine's footer (the license and the credit) is kept with super(), and only the word at the end of the credit is replaced, so the translated text of the line stays the engine's. -#}
+{% block footer %}
+{{ super() | replace(r/coffer(?=<\/p>)/, '<a href="https://ba3a.dev/made/coffer/">coffer</a>') | safe }}
+{% endblock %}
+
 {% block nav %}
 {# TODO: rewrite the tagline in the UI strings of the theme (i18n/ru.yaml, site.tagline). -#}
 <p class="site-tagline">{{ 'site.tagline' | t }}</p>

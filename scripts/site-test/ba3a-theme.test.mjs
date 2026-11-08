@@ -137,10 +137,12 @@ test('the theme templates only extend the engine and override its blocks', () =>
     // The navigation is the point of the theme; the head only adds the stylesheet and the font.
     assert.ok(blocks.includes('nav'), 'the nav block of the header is overridden');
     assert.deepEqual(
-      blocks.filter((block) => !['head', 'nav'].includes(block)),
+      blocks.filter((block) => !['head', 'footer', 'nav'].includes(block)),
       [],
-      `${name} overrides no block besides head and nav`,
+      `${name} overrides no block besides head, footer and nav`,
     );
+    const footer = /\{%-?\s*block footer\s*-?%\}([\s\S]*?)\{%-?\s*endblock/.exec(source);
+    assert.ok(footer && /\{\{\s*super\(\)/.test(footer[1]), 'the footer block keeps the engine footer with super()');
     const head = /\{%-?\s*block head\s*-?%\}([\s\S]*?)\{%-?\s*endblock/.exec(source);
     assert.ok(head && /\{\{\s*super\(\)\s*\}\}/.test(head[1]), 'the head block keeps the engine head with super()');
 
@@ -491,4 +493,24 @@ test('the logo colours contrast with the page: teal on the dark page, slate tile
   assert.ok(contrastRatio('#4fc8df', darkMedia['--coffer-bg']) >= AA_UI, 'the teal letter on the dark page');
   assert.ok(contrastRatio('#0c1320', light['--coffer-bg']) >= AA_UI, 'the slate tile on the light page');
   assert.ok(contrastRatio('#4fc8df', '#0c1320') >= AA_UI, 'the teal letter on the slate tile');
+});
+
+// --- the credit line ---------------------------------------------------------
+
+test('ba3a.dev: the credit in the footer of every page links "coffer" to its page', () => {
+  const root = join(dist, 'ba3a.dev');
+  const pages = listFiles(root).filter((file) => file.endsWith('.html'));
+  assert.ok(pages.length > 0);
+  let credits = 0;
+  for (const page of pages) {
+    const html = readFileSync(join(root, ...page.split('/')), 'utf8');
+    if (!html.includes('<footer class="site-footer">')) continue;
+    credits += 1;
+    assert.ok(
+      html.includes('<p class="credit">Built with <a href="/made/coffer/">coffer</a></p>'),
+      `${page}: the credit is "Built with coffer" with a link on "coffer"`,
+    );
+    assert.ok(!html.includes('Built with coffer'), `${page}: no unlinked credit`);
+  }
+  assert.ok(credits >= 10, `${credits} pages carry the credit`);
 });
