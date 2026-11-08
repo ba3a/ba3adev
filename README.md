@@ -21,7 +21,7 @@ To go live, run the sites or upgrade the engine, read [OPERATIONS.md](OPERATIONS
 | `media.lock.json` | The list, by content hash, of the original photos and videos, which are kept in a private R2 bucket and not in git. |
 | `generators/` | Scripts that generate project references (for specloop). |
 | `build-support/` | Files the project reference builds need (the Dokka setup for roto). |
-| `scripts/` | Repository scripts: git hook setup, placeholder pictures, deploy preparation, the Cloudflare setup, the split of the engine into its own repository, and their tests. |
+| `scripts/` | Repository scripts: git hook setup, placeholder pictures, the brand pictures of my.ba3a.dev, deploy preparation, the Cloudflare setup, the split of the engine into its own repository, and their tests. |
 | `deploy/` | Response headers for Cloudflare Pages. |
 | `.github/workflows/` | Deploy, scheduled refresh and keepalive workflows. |
 

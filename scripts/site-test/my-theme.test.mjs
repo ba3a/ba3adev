@@ -157,7 +157,7 @@ function inRanges(ranges, codePoint) {
 
 // --- what the theme directory contains ---------------------------------------
 
-test('the theme directory holds only styles, fonts, the header template, UI strings, the card and documentation', () => {
+test('the theme directory holds only styles, fonts, brand pictures, the header template, UI strings, the card and documentation', () => {
   const allowed = [
     /^README\.md$/,
     /^theme\.yaml$/,
@@ -167,6 +167,7 @@ test('the theme directory holds only styles, fonts, the header template, UI stri
     /^assets\/my\.css$/,
     /^assets\/fonts\/[a-z0-9-]+\.woff2$/,
     /^assets\/fonts\/OFL\.txt$/,
+    /^assets\/brand\/[a-z0-9-]+\.(svg|png|ico)$/,
     /^fonts\/[A-Za-z0-9-]+\.ttf$/,
     /^fonts\/OFL\.txt$/,
   ];
@@ -897,4 +898,47 @@ test('the theme asset and font files have sane sizes', () => {
     const size = statSync(join(themeDir, ...file.split('/'))).size;
     assert.ok(size < 200 * 1024, `${relative(root, join(themeDir, file))} is ${size} bytes`);
   }
+});
+
+// --- the brand pictures ------------------------------------------------------
+
+test('my.ba3a.dev: pages declare the favicons, and the files are in the output', () => {
+  for (const file of ['index.html', '404.html', 'search/index.html']) {
+    const html = output('my.ba3a.dev', file);
+    const ico = html.indexOf('<link rel="icon" href="/assets/brand/favicon.ico" sizes="any">');
+    const svg = html.indexOf('<link rel="icon" href="/assets/brand/favicon.svg" type="image/svg+xml">');
+    assert.ok(ico > 0, `${file} links the .ico`);
+    assert.ok(svg > ico, `${file} links the SVG icon after the .ico, so browsers that read SVG pick it`);
+    assert.ok(html.includes('<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">'), `${file} links the apple touch icon`);
+  }
+  for (const name of listFiles(join(themeDir, 'assets', 'brand'))) {
+    const built = join(dist, 'my.ba3a.dev', 'assets', 'brand', name);
+    assert.ok(existsSync(built), `assets/brand/${name} is in the output`);
+    assert.deepEqual(readFileSync(built), readFileSync(join(themeDir, 'assets', 'brand', name)));
+  }
+});
+
+test('the mark above the title is the light logo on light pages and the bare dark logo on dark pages', () => {
+  const rules = readRules(stylesheet);
+  const mark = (/** @type {string} */ selector, /** @type {string | null} */ media) => {
+    const found = rules.filter((rule) => rule.selector === selector && rule.media === media);
+    assert.equal(found.length, 1, `one rule "${selector}" (${media})`);
+    return found[0].declarations;
+  };
+  const base = mark('.site-header .site-title::before', null);
+  assert.equal(base.content, '""');
+  assert.match(base.background, /^url\("brand\/logo\.svg"\)/);
+  assert.match(mark('.site-header .site-title::before', '(prefers-color-scheme: dark)')['background-image'], /brand\/logo-dark\.svg/);
+  assert.match(mark(':root[data-theme="dark"] .site-header .site-title::before', null)['background-image'], /brand\/logo-dark\.svg/);
+  assert.match(mark(':root[data-theme="light"] .site-header .site-title::before', null)['background-image'], /brand\/logo\.svg/);
+  for (const name of ['logo.svg', 'logo-dark.svg']) {
+    assert.ok(existsSync(join(themeDir, 'assets', 'brand', name)), `${name} exists next to the stylesheet's brand/ path`);
+  }
+});
+
+test('the logo colours contrast with the page: sky blue on the dark page, navy tile on the light page', () => {
+  const { light, darkMedia } = readSchemes(stylesheet);
+  assert.ok(contrastRatio('#38bdf8', darkMedia['--coffer-bg']) >= AA_UI, 'the sky-blue letter on the dark page');
+  assert.ok(contrastRatio('#0c4a6e', light['--coffer-bg']) >= AA_UI, 'the navy tile on the light page');
+  assert.ok(contrastRatio('#38bdf8', '#0c4a6e') >= AA_UI, 'the sky-blue letter on the navy tile');
 });

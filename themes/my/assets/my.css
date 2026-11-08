@@ -206,6 +206,34 @@ h6 {
   color: var(--coffer-accent);
 }
 
+/* The mark above the title: the cursive letter Վ. On a light page it is on its
+   navy tile (brand/logo.svg), on a dark page it is the bare letter
+   (brand/logo-dark.svg). It is decoration: the title text names the link. The
+   dark rules are repeated for the system preference and for the theme switch,
+   and light is forced again after them, as the colours above are. */
+.site-header .site-title::before {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 0.5rem;
+  background: url("brand/logo.svg") center / contain no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  .site-header .site-title::before {
+    background-image: url("brand/logo-dark.svg");
+  }
+}
+
+:root[data-theme="dark"] .site-header .site-title::before {
+  background-image: url("brand/logo-dark.svg");
+}
+
+:root[data-theme="light"] .site-header .site-title::before {
+  background-image: url("brand/logo.svg");
+}
+
 .site-header .site-tagline {
   flex: 0 0 100%;
   margin: 0 0 0.75rem;
