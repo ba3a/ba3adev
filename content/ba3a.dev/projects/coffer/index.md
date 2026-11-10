@@ -55,7 +55,7 @@ rsync -av public/ host:/var/www/
 
 ## Built for people who make things and write about them
 
-- **🔨 Makers with a journal.** Woodworking, hiking, any craft with a lot of photos and a few maps. [my.ba3a.dev](my.ba3a.dev) is one, written in Russian.
+- **🔨 Makers with a journal.** Woodworking, hiking, any craft with a lot of photos and a few maps. [my.ba3a.dev](https://my.ba3a.dev) is one, written in Russian.
 - **🎮 Indie developers.** A devlog whose posts are branded by project, a page for each project, and press kits for games.
 - **🧰 Tool authors.** Your docs stay in your repository. The site pulls them at build time and renders them in your theme.
 - **🔒 Privacy-minded photographers.** Location and camera data are stripped unless you say otherwise, and every build lists the posts that publish an exact position.
