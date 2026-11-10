@@ -5,6 +5,13 @@ secondaryLinks:
   - { label: "my.ba3a.dev (personal blog, in Russian)", url: "https://my.ba3a.dev" }
 ---
 
-<!-- TODO: rewrite -->
+# Vasily Petrov
+Senior backend engineer · Java, Spring, Kafka · ~10 years
 
-Senior backend engineer, about ten years of Java and Spring: caching layers, replication, backward-compatible APIs, legacy that has to keep running. These days I also build my own tools and games, mostly in Kotlin, with a lot of AI in the loop. This site is where they live.
+I build performance-sensitive backend systems: caching layers, data replication,
+backward-compatible multi-version APIs, legacy modernization.
+Lately — agentic dev tooling (specloop) and small games, built with heavy AI use.
+
+Yerevan (GMT+4) · Open to new roles: on-site in Yerevan, remote, or relocation.
+
+[Email](mailto:hi@ba3a.dev) · [LinkedIn](https://www.linkedin.com/in/vasily-petrov-0ab56220/) · [GitHub](https://github.com/ba3a)
