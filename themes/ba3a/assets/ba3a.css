@@ -191,6 +191,39 @@ h3 {
   }
 }
 
+/* The table of contents of a post, on a wide screen: the engine puts it in a
+   second column, which narrows the text. Here it floats at the right edge of
+   the column, so the text flows around it and runs the full width of the column
+   once the table ends. The column of such a page is the narrow one (the measure
+   plus the side padding), as the table no longer needs a second column. On a
+   narrow screen, and in print, the engine's rules are kept. ----------------- */
+
+@media (min-width: 60rem) {
+  body:where(:has(.post-layout.has-toc)) .site-header,
+  body:where(:has(.post-layout.has-toc)) .site-footer,
+  body:where(:has(.post-layout.has-toc)) main {
+    max-width: calc(var(--coffer-measure) + 2rem);
+  }
+
+  .post-layout.has-toc {
+    display: flow-root;
+  }
+
+  .post-layout.has-toc .post-body {
+    max-width: none;
+  }
+
+  .post-layout.has-toc .toc {
+    float: right;
+    box-sizing: border-box;
+    width: 15rem;
+    max-height: none;
+    margin: 0 0 1rem 2rem;
+    overflow: visible;
+    position: static;
+  }
+}
+
 /* Print: the engine prints black on white whatever the reader chose, but this
    stylesheet comes later and would win with its own colours, so the print
    values are set again here. ---------------------------------------------- */

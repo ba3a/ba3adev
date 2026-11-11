@@ -429,12 +429,15 @@ test('the header, main and the footer share one width, as the engine centres the
     assert.deepEqual([...elements].sort(), [...PAGE_ELEMENTS].sort(), `"${key}" sets the width of the header, main and the footer together`);
   }
 
-  // The wide width is the engine's own, for the pages with a second column, and is
-  // chosen by a selector with no specificity of its own, so the print rule wins.
-  const wide = [...groups.keys()].find((key) => key.includes('has-toc'));
-  assert.ok(wide, 'a page with a table of contents gets a wider column');
-  assert.ok(wide.includes(':where(:has(.post-layout.has-toc))'));
+  // The wide width is the engine's own, for the pages with a second column (the
+  // documentation sidebar), and is chosen by a selector with no specificity of its
+  // own, so the print rule wins. A post with a table of contents keeps the narrow
+  // column: the table floats and the text flows around it.
+  const wide = [...groups.keys()].find((key) => key.includes('docs-layout'));
+  assert.ok(wide, 'a documentation page gets a wider column');
+  assert.ok(wide.includes(':where(:has(.docs-layout))'));
   assert.ok(wide.endsWith('calc(var(--coffer-measure) + 22rem)'));
+  assert.ok(![...groups.keys()].some((key) => key.includes('has-toc')), 'a post with a table of contents keeps the narrow column');
   const engineFrame = readRules(read(join(engineTheme, 'assets', 'coffer.css'))).find((rule) => rule.selector === '.site-header, .site-footer, main' && rule.media === null);
   assert.ok(engineFrame, 'the engine styles the header, main and the footer together');
   assert.equal(engineFrame.declarations['max-width'], 'calc(var(--coffer-measure) + 22rem)', 'the wide width is the engine\'s own');

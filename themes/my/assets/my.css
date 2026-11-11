@@ -297,9 +297,11 @@ h6 {
    own font size, so every child would get its own width and its own indent. The
    children fill the column (max-width: none) and share its left edge.
 
-   A page with a table of contents or a documentation sidebar needs a wider
-   column for the second column of its layout, so on those pages all three
-   elements get the engine's wide width, again all three together. The :where()
+   A page with a documentation sidebar needs a wider column for the second
+   column of its layout, so on those pages all three elements get the engine's
+   wide width, again all three together. A post with a table of contents keeps
+   the narrow column: the table floats at the right edge and the text flows
+   around it (see below). The :where()
    keeps the specificity low, so that the print rule at the end still wins. The
    footer has the same double rule as the header, so the page is framed like a
    sheet of paper; it keeps the font size of the page, so that its width,
@@ -311,9 +313,6 @@ main {
   max-width: calc(var(--coffer-measure) + 2rem);
 }
 
-body:where(:has(.post-layout.has-toc)) .site-header,
-body:where(:has(.post-layout.has-toc)) .site-footer,
-body:where(:has(.post-layout.has-toc)) main,
 body:where(:has(.docs-layout)) .site-header,
 body:where(:has(.docs-layout)) .site-footer,
 body:where(:has(.docs-layout)) main {
@@ -322,6 +321,32 @@ body:where(:has(.docs-layout)) main {
 
 main > * {
   max-width: none;
+}
+
+/* The table of contents of a post, on a wide screen: the engine puts it in a
+   second column, which narrows the text. Here it floats at the right edge of
+   the column, so the text flows around it and runs the full width of the column
+   once the table ends. On a narrow screen the engine's closed details element
+   is kept. ----------------------------------------------------------------- */
+
+@media (min-width: 60rem) {
+  .post-layout.has-toc {
+    display: flow-root;
+  }
+
+  .post-layout.has-toc .post-body {
+    max-width: none;
+  }
+
+  .post-layout.has-toc .toc {
+    float: right;
+    box-sizing: border-box;
+    width: 15rem;
+    max-height: none;
+    margin: 0 0 1rem 2rem;
+    overflow: visible;
+    position: static;
+  }
 }
 
 .site-footer {
