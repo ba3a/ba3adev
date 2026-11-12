@@ -290,37 +290,42 @@ h6 {
 
 /* Page layout: the header is centred, so the column of text is centred under it
    instead of hugging the left edge. The column is centred once, as a whole: the
-   header, the main element and the footer all get one width (the engine's
-   measure plus the side padding) and the engine centres each of them with
-   margin: auto. The children of main are not centred one by one, because the
-   engine caps each child at the measure in ch, which is measured in the child's
-   own font size, so every child would get its own width and its own indent. The
-   children fill the column (max-width: none) and share its left edge.
+   header, the main element and the footer are one frame with the same width,
+   --frame, centred with margin-inline: auto, and with no side padding of their
+   own, so the 3px double rules of the header and the footer start and end where
+   the text starts and ends. The width is min(100% - 2rem, --frame): a margin of
+   1rem each side on a narrow screen, where the engine used padding.
 
-   A page with a documentation sidebar needs a wider column for the second
-   column of its layout, so on those pages all three elements get the engine's
-   wide width, again all three together. A post with a table of contents keeps
-   the narrow column: the table floats at the right edge and the text flows
-   around it (see below). The :where()
-   keeps the specificity low, so that the print rule at the end still wins. The
-   footer has the same double rule as the header, so the page is framed like a
-   sheet of paper; it keeps the font size of the page, so that its width,
-   measured in ch, is the width of the header and of main. ------------------- */
+   --frame is the engine's measure, a length the engine resolves once at the root
+   (see @property --coffer-measure in coffer.css), so it is the same in the
+   header, in main and in the footer whatever their font sizes, and the children
+   of main, which the engine caps at the same measure, fill the column. Because
+   of that the footer needs no font-size override and the children of main need
+   no max-width: none.
+
+   A page with a documentation sidebar needs a wider column for the second column
+   of its layout, so on those pages --frame is the measure plus 20rem, again for
+   all three elements. A post with a table of contents keeps the narrow column:
+   the table floats at the right edge and the text flows around it (see below).
+   The :where() keeps the specificity of --frame low. The print rule at the end
+   resets the frame. --------------------------------------------------------- */
+
+:where(body) {
+  --frame: var(--coffer-measure);
+}
+
+body:where(:has(.docs-layout)) {
+  --frame: calc(var(--coffer-measure) + 20rem);
+}
 
 .site-header,
 .site-footer,
 main {
-  max-width: calc(var(--coffer-measure) + 2rem);
-}
-
-body:where(:has(.docs-layout)) .site-header,
-body:where(:has(.docs-layout)) .site-footer,
-body:where(:has(.docs-layout)) main {
-  max-width: calc(var(--coffer-measure) + 22rem);
-}
-
-main > * {
+  box-sizing: border-box;
+  width: min(100% - 2rem, var(--frame));
   max-width: none;
+  margin-inline: auto;
+  padding-inline: 0;
 }
 
 /* The table of contents of a post, on a wide screen: the engine puts it in a
@@ -351,7 +356,6 @@ main > * {
 
 .site-footer {
   border-top: 3px double var(--coffer-border);
-  font-size: inherit;
   text-align: center;
 }
 
@@ -432,11 +436,14 @@ main > * {
     color-scheme: light;
   }
 
-  /* The page width above would otherwise win over the engine's print rule. */
+  /* The frame above would otherwise win over the engine's print rule, which is
+     full width with no side padding. */
   body .site-header,
   body .site-footer,
   body main {
+    width: auto;
     max-width: none;
+    margin: 0;
   }
 
   .not-found a {

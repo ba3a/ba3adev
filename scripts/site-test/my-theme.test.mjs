@@ -17,6 +17,7 @@ import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
 import { CARD_HEIGHT, CARD_WIDTH, createCardMaker, loadConfig, readFontMetrics } from 'coffer';
 
+import { assertFrame } from './lib/frame.mjs';
 import { contrastRatio, parseHex, readRules, readSchemes } from './lib/wcag.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -374,14 +375,11 @@ test('print always uses the engine\'s black on white, whatever scheme the reader
 // --- the text column ----------------------------------------------------------
 //
 // The build has no layout engine, so these tests read the rules. The defect they
-// guard against: the engine caps every child of `main` at `max-width:
-// var(--coffer-measure)` (68ch), and `ch` is measured in the child's own font size,
-// so centring each child with `margin: auto` gave every child its own width and
-// indent, and a class rule such as `.tags-link { margin: 0 0 1rem }` beat the
-// theme's `main > *` rule, so some children stayed at the left edge. The column
-// must be centred once, as a whole, and every child of `main` must fill it.
-
-const PAGE_ELEMENTS = ['.site-header', '.site-footer', 'main'];
+// guard against: the engine resolved `--coffer-measure` (68ch) in the font size of the
+// element that used it, so the footer (smaller font) and the children of main got
+// their own widths and indents, and the side padding of the header, main and footer
+// put the 3px rules 16px outside the text. The three are now one frame (see
+// lib/frame.mjs) and the column is centred once, as a whole.
 
 /** @param {string} selectors A selector list. @returns {string[]} */
 function selectorParts(selectors) {
@@ -401,75 +399,65 @@ test('the text column is not centred child by child: no rule gives anything in m
   assert.deepEqual(offenders, [], 'a child of main is centred by its own margin, so its indent depends on its font size');
 });
 
-test('the header, main and the footer share one width, as the engine centres them, and the children of main fill it', () => {
-  const rules = readRules(stylesheet).filter((rule) => rule.media === null);
-  const widthOf = (/** @type {string} */ selector) => {
-    const found = rules.filter((rule) => rule.selector === selector && rule.declarations['max-width']);
-    assert.equal(found.length, 1, `exactly one top-level rule "${selector}" sets max-width`);
-    return found[0].declarations['max-width'];
-  };
+test('the header, main and the footer are one frame: one width group, no side padding, no width that depends on the footer\'s font', () => {
+  const groups = assertFrame(stylesheet, { exceptions: [] });
+  const rules = readRules(stylesheet);
 
-  // The narrow column: the engine's measure plus the side padding of 1rem each side.
-  const narrow = widthOf('.site-header, .site-footer, main');
-  assert.equal(narrow, 'calc(var(--coffer-measure) + 2rem)');
+  // The frame is one rule for the three elements.
+  const frame = rules.filter((rule) => rule.media === null && rule.selector === '.site-header, .site-footer, main');
+  assert.equal(frame.length, 1, 'exactly one top-level rule sets the frame of the header, main and the footer');
+  assert.deepEqual(frame[0].declarations, {
+    'box-sizing': 'border-box',
+    width: 'min(100% - 2rem, var(--frame))',
+    'max-width': 'none',
+    'margin-inline': 'auto',
+    'padding-inline': '0',
+  });
 
-  // Every rule that sets a max-width on one of the three elements sets it on all three.
-  /** @type {Map<string, Set<string>>} */
-  const groups = new Map();
-  for (const rule of rules) {
-    if (!rule.declarations['max-width']) continue;
-    for (const part of selectorParts(rule.selector)) {
-      const element = PAGE_ELEMENTS.find((candidate) => part === candidate || part.endsWith(` ${candidate}`));
-      if (!element) continue;
-      const prefix = part.slice(0, part.length - element.length).trim();
-      const key = `${prefix}|${rule.declarations['max-width']}`;
-      groups.set(key, (groups.get(key) ?? new Set()).add(element));
-    }
-  }
-  assert.ok(groups.size >= 2, 'the narrow and the wide widths are both declared');
-  for (const [key, elements] of groups) {
-    assert.deepEqual([...elements].sort(), [...PAGE_ELEMENTS].sort(), `"${key}" sets the width of the header, main and the footer together`);
-  }
-
-  // The wide width is the engine's own, for the pages with a second column (the
-  // documentation sidebar), and is chosen by a selector with no specificity of its
-  // own, so the print rule wins. A post with a table of contents keeps the narrow
-  // column: the table floats and the text flows around it.
-  const wide = [...groups.keys()].find((key) => key.includes('docs-layout'));
-  assert.ok(wide, 'a documentation page gets a wider column');
-  assert.ok(wide.includes(':where(:has(.docs-layout))'));
-  assert.ok(wide.endsWith('calc(var(--coffer-measure) + 22rem)'));
-  assert.ok(![...groups.keys()].some((key) => key.includes('has-toc')), 'a post with a table of contents keeps the narrow column');
-  const engineFrame = readRules(read(join(engineTheme, 'assets', 'coffer.css'))).find((rule) => rule.selector === '.site-header, .site-footer, main' && rule.media === null);
-  assert.ok(engineFrame, 'the engine styles the header, main and the footer together');
-  assert.equal(engineFrame.declarations['max-width'], 'calc(var(--coffer-measure) + 22rem)', 'the wide width is the engine\'s own');
-
-  // The children fill the column instead of keeping their own measure.
-  assert.equal(ruleOf('main > *')['max-width'], 'none');
+  // The frame width is a custom property of body: the narrow reading column, and the
+  // engine's wide width for a page with a documentation sidebar. A post with a table
+  // of contents keeps the narrow column: the table floats and the text flows around it.
+  // The :where() keeps the specificity low, so that the print rule wins.
+  const defaults = rules.filter((rule) => rule.media === null && rule.selector === ':where(body)');
+  assert.equal(defaults.length, 1);
+  assert.equal(defaults[0].declarations['--frame'], 'var(--coffer-measure)');
+  const wide = rules.filter((rule) => rule.media === null && rule.declarations['--frame'] === 'calc(var(--coffer-measure) + 20rem)');
+  assert.equal(wide.length, 1, 'a documentation page gets a wider column');
+  assert.equal(wide[0].selector, 'body:where(:has(.docs-layout))');
+  assert.ok(!rules.some((rule) => '--frame' in rule.declarations && rule.selector.includes('has-toc')), 'a post with a table of contents keeps the narrow column');
+  assert.ok(groups.size >= 2, 'the frame and the print reset are both width groups');
 });
 
-test('the rule that lets the children of main fill the column is not beaten by the engine\'s rules', () => {
-  const engine = readRules(read(join(engineTheme, 'assets', 'coffer.css')));
-  // The engine's measure for the children of main has the same specificity as the
-  // theme's rule, and the theme's stylesheet is loaded later, so the theme's wins.
-  assert.ok(engine.some((rule) => rule.media === null && selectorParts(rule.selector).includes('main > *') && rule.declarations['max-width'] === 'var(--coffer-measure)'));
-  // No engine rule with a class selector sets a side margin or a width on a direct
-  // child of main in a way the single rule of the theme would lose to.
-  const maxWidthSelectors = engine
-    .filter((rule) => rule.media === null && rule.declarations['max-width'] && rule.declarations['max-width'] !== 'none')
-    .flatMap((rule) => selectorParts(rule.selector))
-    .filter((part) => /^\.(tags-link|feed-link|breadcrumbs|post-tags|tag-count|tag-description|empty|post-list|tag-tree|search|not-found)$/.test(part));
-  assert.deepEqual(maxWidthSelectors, [], 'no class rule of the engine sets a max-width on the direct children of the pages');
+test('the footer and the children of main have no workaround for the engine\'s measure', () => {
+  const rules = readRules(stylesheet);
+  // The engine resolves --coffer-measure once, at the root, so `ch` no longer depends on the
+  // font size of the element that uses it.
+  const engine = read(join(engineTheme, 'assets', 'coffer.css'));
+  assert.match(engine, /@property --coffer-measure\s*\{[^}]*syntax:\s*"<length>"/);
+  // The footer keeps the engine's font size.
+  for (const rule of rules.filter((candidate) => selectorParts(candidate.selector).includes('.site-footer'))) {
+    assert.ok(!('font-size' in rule.declarations), `${rule.selector} does not set font-size`);
+  }
+  // The engine's cap on the children of main stays: no rule of the theme uncaps them. The
+  // documentation page stays uncapped through the engine's own `.docs { max-width: none }`.
+  const uncapped = rules.filter((rule) => rule.media === null && rule.declarations['max-width'] === 'none' && selectorParts(rule.selector).some((part) => /(^|[\s>])main\b/.test(part) && part !== 'main'));
+  assert.deepEqual(uncapped.map((rule) => rule.selector), [], 'no rule uncaps the children of main on a text page');
+  const engineRules = readRules(engine);
+  assert.equal(engineRules.find((rule) => rule.media === null && rule.selector === '.docs')?.declarations['max-width'], 'none');
+  assert.equal(rules.find((rule) => rule.media === null && rule.selector === '.site-footer p')?.declarations['font-size'], '0.875rem');
+  assert.equal(rules.find((rule) => rule.media === null && rule.selector === '.site-footer')?.declarations['text-align'], 'center');
   const stylesheetOrder = ['coffer.css', 'my.css'].map((name) => output('my.ba3a.dev', 'index.html').indexOf(`/${name}`));
   assert.ok(stylesheetOrder[0] > 0 && stylesheetOrder[0] < stylesheetOrder[1], 'the theme stylesheet comes after the engine\'s');
 });
 
-test('print drops the page width again, so the engine\'s print layout is not narrowed by the theme', () => {
+test('print drops the page frame again, so the engine\'s print layout is not narrowed by the theme', () => {
   const print = readRules(stylesheet).filter((rule) => rule.media === 'print');
   const rule = print.find((candidate) => selectorParts(candidate.selector).includes('body main'));
-  assert.ok(rule, 'a print rule resets the width of main');
+  assert.ok(rule, 'a print rule resets the frame of main');
   assert.deepEqual(selectorParts(rule.selector).sort(), ['body .site-footer', 'body .site-header', 'body main']);
   assert.equal(rule.declarations['max-width'], 'none');
+  assert.equal(rule.declarations.width, 'auto');
+  assert.equal(rule.declarations.margin, '0');
 });
 
 test('the card colours of theme.yaml have enough contrast and are the light scheme of the site', () => {
