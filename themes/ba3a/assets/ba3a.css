@@ -233,6 +233,23 @@ main {
   }
 }
 
+/* The links under the home page sections: "All projects" and "All posts" have
+   one size and one gap above (the engine gives them 0.9375rem and the inherited
+   size), and the secondary links are a deliberate muted, smaller line with a
+   stated size (the engine's 0.875em depends on the parent). --------------- */
+
+.all-projects,
+.all-posts {
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.secondary-links {
+  margin-top: 2rem;
+  color: var(--coffer-muted);
+  font-size: 0.875rem;
+}
+
 /* The table of contents of a post, on a wide screen: the engine puts it in a
    second column, which narrows the text. Here it floats at the right edge of
    the column, so the text flows around it and runs the full width of the column

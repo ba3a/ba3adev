@@ -204,6 +204,51 @@ test('ba3a.dev landing: a section divider is the top border of a full-bleed sect
   assert.deepEqual(landingRules.filter((rule) => rule.selector === '.lp-s-faq .lp-wrap'), [], 'the details rules fill the column of the other sections');
 });
 
+// --- the links under the home page sections -----------------------------------
+//
+// The engine sets .all-projects to 0.9375rem (a rule shared with the licence line), leaves
+// .all-posts at the inherited size, and sets .secondary-links to 0.875em, which is derived
+// from whatever the parent is. The theme gives the two "all" links one size and one gap
+// above, and the secondary line a stated rem size in the muted colour.
+
+/**
+ * The declaration a theme stylesheet gives a class at top level (not in a media query); the last rule
+ * that lists the class on its own wins, as in the cascade for rules of equal specificity.
+ *
+ * @param {string} className
+ * @param {string} property
+ * @returns {string | undefined}
+ */
+function themeValue(className, property) {
+  const rules = readRules(stylesheet).filter(
+    (rule) => rule.media === null && selectorParts(rule.selector).includes(`.${className}`) && property in rule.declarations,
+  );
+  return rules.at(-1)?.declarations[property];
+}
+
+test('ba3a.dev: "All projects" and "All posts" have one font size and one gap above, in rem', () => {
+  for (const property of ['font-size', 'margin-top']) {
+    const projects = themeValue('all-projects', property);
+    const posts = themeValue('all-posts', property);
+    assert.ok(projects, `.all-projects sets ${property}`);
+    assert.equal(projects, posts, `.all-projects and .all-posts have the same ${property}`);
+    assert.match(projects, /^\d+(\.\d+)?rem$/, `${property} is a rem length, not derived from the parent`);
+  }
+  assert.equal(themeValue('all-projects', 'font-size'), '1rem');
+  assert.equal(themeValue('all-projects', 'margin-top'), '1rem');
+});
+
+test('ba3a.dev: the secondary links are a muted, smaller line with a stated rem size and gap', () => {
+  const size = themeValue('secondary-links', 'font-size');
+  assert.equal(size, '0.875rem', 'a rem size, not the engine\'s em-derived one');
+  assert.equal(themeValue('secondary-links', 'color'), 'var(--coffer-muted)');
+  assert.match(themeValue('secondary-links', 'margin-top') ?? '', /^\d+(\.\d+)?rem$/, 'the gap above is stated');
+  assert.ok(
+    Number.parseFloat(size) < Number.parseFloat(/** @type {string} */ (themeValue('all-projects', 'font-size'))),
+    'smaller than the section links',
+  );
+});
+
 // --- the contrast helper ------------------------------------------------------
 
 test('the contrast helper follows WCAG 2.x', () => {
