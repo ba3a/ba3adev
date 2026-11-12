@@ -156,6 +156,24 @@ test('the page uses no script of its own and loads nothing from another host', (
   assert.doesNotMatch(body, /<(?:img|link|source)\b[^>]*(?:src|href)="https?:/);
 });
 
+// --- the widths ----------------------------------------------------------------
+
+test('the final call to action has no <hr>, and its closing line stays as written', () => {
+  const section = part('final-cta');
+  assert.doesNotMatch(section, /<hr/);
+  assert.doesNotMatch(page, /<hr/, 'no stray rule on the page: the dividers are borders of the sections');
+  assert.match(section, /<p>coffer · Apache-2\.0 · /, 'the Markdown text is the one in index.md');
+  assert.match(source, /\n---\n\ncoffer · Apache-2\.0 · /, 'index.md still has its --- line');
+});
+
+test('the FAQ column is as wide as the other sections', () => {
+  const rules = readRules(css);
+  assert.deepEqual(rules.filter((rule) => rule.selector === '.lp-s-faq .lp-wrap'), []);
+  const answer = rules.find((rule) => rule.media === null && rule.selector === '.lp-answer p');
+  assert.ok(answer);
+  assert.ok(Number.parseFloat(answer.declarations['max-width']) <= 780, 'the answers keep a reading width');
+});
+
 // --- the gold palette ----------------------------------------------------------
 
 const rules = readRules(css);

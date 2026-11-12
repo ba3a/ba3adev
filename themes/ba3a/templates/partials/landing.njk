@@ -154,6 +154,11 @@
 {% elif name == 'quick-start' %}
 {% set visual = tokens(visual, 'shell') %}
 
+{% elif name == 'final-cta' %}
+{#- The Markdown has a rule between the buttons and the closing line. The divider above the section is the page's
+    only rule of that kind, so this one is dropped (the text in index.md stays as written). -#}
+{% set html = html | replace(r/<hr\s*\/?>\s*/g, '') %}
+
 {% elif name == 'faq' %}
 {#- Every `###` question and the answer under it: a closed <details>, which works without JavaScript. -#}
 {% set html = html | replace(r/<h3[^>]*>([\s\S]*?)<\/h3>\s*([\s\S]*?)(?=<h3|$)/g, '<details><summary>$1</summary><div class="lp-answer">$2</div></details>') %}

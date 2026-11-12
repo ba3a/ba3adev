@@ -141,6 +141,51 @@ test('the stylesheet loads nothing from another host and the page uses no script
   assert.doesNotMatch(body, /<script/);
 });
 
+// --- the widths ----------------------------------------------------------------
+//
+// Every rule inside a section sits in the column of .lp-wrap, which is also the frame
+// of the header and footer (ba3a-theme.test.mjs). Only the dividers between sections
+// are full-bleed.
+
+test('the final call to action has no <hr>, and its closing line stays as written', () => {
+  const section = /<section id="final-cta"[\s\S]*?<\/section>/.exec(page)?.[0] ?? '';
+  assert.ok(section.length > 0);
+  assert.doesNotMatch(section, /<hr/);
+  assert.doesNotMatch(page, /<hr/, 'no stray rule on the page: the dividers are borders of the sections');
+  assert.match(section, /<p>specloop · 0BSD · do anything with it\./, 'the Markdown text is the one in index.md');
+  assert.match(source, /\n---\n\nspecloop · 0BSD/, 'index.md still has its --- line');
+});
+
+test('the FAQ column has the standard width, and only the answer text is capped at a reading width', () => {
+  const rules = readRules(css);
+  const wrapWidth = Number.parseFloat(/** @type {{ declarations: Record<string, string> }} */ (rules.find((rule) => rule.media === null && rule.selector === '.lp-wrap')).declarations['max-width']);
+  // No section narrows its .lp-wrap below the standard width (the cards, the visuals and the answers are capped by their own rules).
+  for (const rule of rules.filter((candidate) => selectorParts(candidate.selector).some((part) => /\.lp-wrap$/.test(part) && part !== '.lp-wrap'))) {
+    if (!('max-width' in rule.declarations)) continue;
+    assert.ok(Number.parseFloat(rule.declarations['max-width']) >= wrapWidth, `${rule.selector} is not narrower than .lp-wrap (${wrapWidth}px)`);
+  }
+  assert.deepEqual(rules.filter((rule) => rule.selector === '.lp-s-faq .lp-wrap'), []);
+  const answer = rules.find((rule) => rule.media === null && rule.selector === '.lp-answer p');
+  assert.ok(answer, 'the answers have a rule');
+  assert.equal(answer.declarations['max-width'], '780px');
+  assert.ok(Number.parseFloat(answer.declarations['max-width']) <= 780);
+  // The question rows fill the column: the details are not capped.
+  assert.ok(rules.every((rule) => !/^\.lp-s-faq details\b/.test(rule.selector) || !('max-width' in rule.declarations)));
+});
+
+test('the closing line of the final call to action is styled without the <hr>', () => {
+  const rules = readRules(css);
+  assert.deepEqual(rules.filter((rule) => /hr\b/.test(rule.selector)), [], 'no rule styles an <hr> any more');
+  const closing = rules.find((rule) => rule.media === null && rule.selector === '.lp-s-final-cta .lp-wrap > p:last-child');
+  assert.ok(closing, 'the closing paragraph is the last child of the section');
+  assert.equal(closing.declarations.margin, '56px 0 0');
+});
+
+/** @param {string} selectors @returns {string[]} */
+function selectorParts(selectors) {
+  return selectors.split(',').map((part) => part.trim());
+}
+
 // --- contrast ------------------------------------------------------------------
 
 const rules = readRules(css);

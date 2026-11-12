@@ -143,11 +143,21 @@
 
 /* Page frame ------------------------------------------------------------- */
 
-/* The sections run edge to edge; the engine's main column would narrow them. */
+/* The sections run edge to edge; the frame of the page (ba3a.css) would narrow them. */
 main:has(.landing),
 main:has(.landing) > article {
   max-width: none;
+  width: auto;
+  margin-inline: 0;
   padding: 0;
+}
+
+/* The header and the footer are one column with the text of the sections: the
+   content box of .lp-wrap (1080px less 16px of padding on each side), so their
+   rules end where the text ends. The section dividers are the only rules that
+   run to the edge of the viewport. */
+body:has(.landing) {
+  --frame: 1048px;
 }
 
 html:has(.landing) {
@@ -839,10 +849,6 @@ html:has(.landing) {
 
 /* FAQ -------------------------------------------------------------------- */
 
-.lp-s-faq .lp-wrap {
-  max-width: 780px;
-}
-
 .lp-s-faq h2 {
   margin-bottom: 32px;
 }
@@ -874,6 +880,7 @@ html:has(.landing) {
 }
 
 .lp-answer p {
+  max-width: 780px;
   margin: 10px 0 0;
   color: var(--muted);
 }
@@ -892,14 +899,10 @@ html:has(.landing) {
   justify-content: center;
 }
 
-.lp-s-final-cta hr {
-  margin: 56px 0 24px;
-  border: 0;
-  border-top: 1px solid var(--line);
-}
-
-.lp-s-final-cta hr + p {
-  margin: 0;
+/* The closing line: the Markdown has a rule before it, which landing.njk drops
+   (the divider above the section is enough). */
+.lp-s-final-cta .lp-wrap > p:last-child {
+  margin: 56px 0 0;
   color: var(--muted);
   font-size: 14px;
 }

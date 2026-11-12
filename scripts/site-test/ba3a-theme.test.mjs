@@ -74,9 +74,15 @@ function selectorParts(selectors) {
   return selectors.split(',').map((part) => part.trim());
 }
 
+/**
+ * The rules that may differ from the frame, listed explicitly: the landing page, whose main is full-bleed and
+ * whose header and footer take the width of its content column (see the landing tests below). There is no
+ * table-of-contents exception: the floating table fits the narrow column.
+ */
+const FRAME_EXCEPTIONS = ['.landing'];
+
 test('ba3a.dev: the header, main and the footer are one frame: one width group, no side padding, no width that depends on the footer\'s font', () => {
-  // The landing page (landing.css, not this stylesheet) is the only exception, and is handled by its own rules.
-  const groups = assertFrame(stylesheet, { exceptions: ['.landing'] });
+  const groups = assertFrame(stylesheet, { exceptions: FRAME_EXCEPTIONS });
   const rules = readRules(stylesheet);
 
   // The frame is one rule for the three elements.
@@ -152,6 +158,51 @@ test('ba3a.dev: print drops the page frame again, so the engine\'s print layout 
 });
 
 const FRAME_PARTS = /(^|[\s>])(\.site-header|\.site-footer|main)$/;
+
+// --- the landing exception ----------------------------------------------------
+//
+// A landing page is full-bleed: its sections run edge to edge, but the text of every
+// section sits in .lp-wrap, a column of 1080px with 16px padding. The header and footer
+// of the page (the frame above) take that column's width, so their rules end where the
+// text of the sections ends; main is the only element that is wider.
+
+const landingStylesheet = readFileSync(join(themeDir, 'assets', 'landing.css'), 'utf8');
+const landingRules = readRules(landingStylesheet);
+
+test('ba3a.dev: the exception list of the frame names the landing page only, and ba3a.css has no landing rule', () => {
+  assert.deepEqual(FRAME_EXCEPTIONS, ['.landing']);
+  const hidden = readRules(stylesheet).filter((rule) => FRAME_EXCEPTIONS.some((exception) => rule.selector.includes(exception)));
+  assert.deepEqual(hidden.map((rule) => rule.selector), [], 'the landing rules are all in landing.css');
+});
+
+test('ba3a.dev landing: the frame is the content column of the sections, so the header and footer rules end where the text ends', () => {
+  const setters = landingRules.filter((rule) => '--frame' in rule.declarations);
+  assert.equal(setters.length, 1, 'one rule sets the frame of a landing page');
+  assert.equal(setters[0].media, null);
+  assert.equal(setters[0].selector, 'body:has(.landing)');
+  assert.equal(setters[0].declarations['--frame'], '1048px');
+
+  // 1048px is the content box of .lp-wrap: its max-width minus the padding on both sides.
+  const wrap = landingRules.find((rule) => rule.media === null && rule.selector === '.lp-wrap');
+  assert.ok(wrap, '.lp-wrap exists');
+  const side = /^0 (\d+)px$/.exec(wrap.declarations.padding)?.[1];
+  assert.ok(side, '.lp-wrap pads its two sides equally');
+  assert.equal(Number.parseFloat(wrap.declarations['max-width']) - 2 * Number(side), 1048);
+});
+
+test('ba3a.dev landing: main stays full-bleed: no frame width, no auto margin, no padding', () => {
+  const main = landingRules.filter((rule) => rule.media === null && selectorParts(rule.selector).includes('main:has(.landing)'));
+  assert.equal(main.length, 1);
+  assert.deepEqual(selectorParts(main[0].selector), ['main:has(.landing)', 'main:has(.landing) > article']);
+  assert.deepEqual(main[0].declarations, { 'max-width': 'none', width: 'auto', 'margin-inline': '0', padding: '0' });
+});
+
+test('ba3a.dev landing: a section divider is the top border of a full-bleed section, and the FAQ column has the standard width', () => {
+  const section = landingRules.find((rule) => rule.media === null && rule.selector === '.lp-section');
+  assert.ok(section);
+  assert.equal(section.declarations['border-top'], '1px solid var(--line)');
+  assert.deepEqual(landingRules.filter((rule) => rule.selector === '.lp-s-faq .lp-wrap'), [], 'the details rules fill the column of the other sections');
+});
 
 // --- the contrast helper ------------------------------------------------------
 
