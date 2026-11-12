@@ -13,6 +13,7 @@ import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
 import { CARD_HEIGHT, CARD_WIDTH, createCardMaker, loadConfig } from 'coffer';
 
+import { assertFrame } from './lib/frame.mjs';
 import { contrastRatio, readRules, readSchemes } from './lib/wcag.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -59,6 +60,98 @@ function headerOf(html) {
   assert.ok(match, 'the page has the site header');
   return match[1];
 }
+
+// --- the page frame -----------------------------------------------------------
+//
+// The build has no layout engine, so these tests read the rules. The defect they
+// guard against: the engine resolved `--coffer-measure` (68ch) in the font size of the
+// element that used it, so the footer (smaller font) was narrower than the header and
+// its text was indented, and the side padding of the header, main and footer put the
+// rules outside the text. The three are now one frame (see lib/frame.mjs).
+
+/** @param {string} selectors A selector list. @returns {string[]} */
+function selectorParts(selectors) {
+  return selectors.split(',').map((part) => part.trim());
+}
+
+test('ba3a.dev: the header, main and the footer are one frame: one width group, no side padding, no width that depends on the footer\'s font', () => {
+  // The landing page (landing.css, not this stylesheet) is the only exception, and is handled by its own rules.
+  const groups = assertFrame(stylesheet, { exceptions: ['.landing'] });
+  const rules = readRules(stylesheet);
+
+  // The frame is one rule for the three elements.
+  const frame = rules.filter((rule) => rule.media === null && rule.selector === '.site-header, .site-footer, main');
+  assert.equal(frame.length, 1, 'exactly one top-level rule sets the frame of the header, main and the footer');
+  assert.deepEqual(frame[0].declarations, {
+    'box-sizing': 'border-box',
+    width: 'min(100% - 2rem, var(--frame))',
+    'max-width': 'none',
+    'margin-inline': 'auto',
+    'padding-inline': '0',
+  });
+  assert.ok(groups.size >= 2, 'the frame and the print reset are both width groups');
+});
+
+test('ba3a.dev: the narrow reading column is the default, the wide one is for a documentation sidebar and the projects card grid', () => {
+  const rules = readRules(stylesheet);
+  const defaults = rules.filter((rule) => rule.media === null && rule.selector === ':where(body)');
+  assert.equal(defaults.length, 1);
+  assert.equal(defaults[0].declarations['--frame'], 'var(--coffer-measure)');
+
+  const wide = rules.filter((rule) => rule.media === null && rule.declarations['--frame'] === 'calc(var(--coffer-measure) + 20rem)');
+  assert.equal(wide.length, 1, 'one rule sets the wide frame');
+  // The :where() keeps the specificity low, so that the print rule wins.
+  assert.deepEqual(selectorParts(wide[0].selector), ['body:where(:has(.docs-layout))', 'body:where(:has(main > .project-cards))']);
+
+  const setters = rules.filter((rule) => '--frame' in rule.declarations);
+  assert.equal(setters.length, 2, 'the frame width is set by the default and the wide rule only');
+});
+
+test('ba3a.dev: a post with a table of contents has no column of its own; the floating table is only for wide screens and fits the narrow column', () => {
+  const rules = readRules(stylesheet);
+  for (const rule of rules) {
+    if (!rule.selector.includes('has-toc')) continue;
+    assert.ok(!('--frame' in rule.declarations), `${rule.selector} does not set the frame width: it is the same as on every text page`);
+    assert.ok(!selectorParts(rule.selector).some((part) => FRAME_PARTS.test(part)), `${rule.selector} does not style the frame`);
+  }
+  const toc = rules.filter((rule) => rule.selector.includes('has-toc'));
+  assert.ok(toc.length > 0);
+  assert.ok(toc.every((rule) => rule.media === '(min-width: 60rem)'), 'the floating table is for screens of 60rem and wider');
+
+  // The text beside the table keeps a readable width: the measure (68ch, at least 34rem
+  // at 16px root with a typical body font) minus the table and its gap.
+  const table = toc.find((rule) => rule.selector === '.post-layout.has-toc .toc');
+  assert.ok(table, 'the table is floated');
+  assert.equal(table.declarations.float, 'right');
+  const tableRem = Number.parseFloat(table.declarations.width);
+  const gapRem = Number.parseFloat(table.declarations.margin.split(/\s+/)[3]);
+  assert.ok(table.declarations.width.endsWith('rem') && tableRem + gapRem <= 17, 'the table and its gap take at most 17rem of the narrow column');
+});
+
+test('ba3a.dev: the footer text is left-aligned with the body text and the footer sets no width in its own font units', () => {
+  const rules = readRules(stylesheet);
+  const footer = rules.find((rule) => rule.media === null && rule.selector === '.site-footer' && 'text-align' in rule.declarations);
+  assert.ok(footer, 'the footer sets its text alignment');
+  assert.equal(footer.declarations['text-align'], 'left');
+  for (const rule of rules.filter((candidate) => selectorParts(candidate.selector).includes('.site-footer'))) {
+    assert.ok(!('font-size' in rule.declarations) || rule.media !== null, `${rule.selector} does not change the footer font, so the footer is as wide as the header`);
+    for (const property of ['text-indent', 'padding-left', 'padding-inline', 'margin-left']) {
+      assert.ok(!(property in rule.declarations) || /^(0|auto)$/.test(rule.declarations[property]), `${rule.selector} does not indent the footer text (${property})`);
+    }
+  }
+});
+
+test('ba3a.dev: print drops the page frame again, so the engine\'s print layout is not narrowed by the theme', () => {
+  const print = readRules(stylesheet).filter((rule) => rule.media === 'print');
+  const rule = print.find((candidate) => selectorParts(candidate.selector).includes('body main'));
+  assert.ok(rule, 'a print rule resets the frame of main');
+  assert.deepEqual(selectorParts(rule.selector).sort(), ['body .site-footer', 'body .site-header', 'body main']);
+  assert.equal(rule.declarations['max-width'], 'none');
+  assert.equal(rule.declarations.width, 'auto');
+  assert.equal(rule.declarations.margin, '0');
+});
+
+const FRAME_PARTS = /(^|[\s>])(\.site-header|\.site-footer|main)$/;
 
 // --- the contrast helper ------------------------------------------------------
 

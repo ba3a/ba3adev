@@ -114,6 +114,48 @@ h3 {
   border-color: var(--ba3a-control-border);
 }
 
+/* Page frame: the header, the main element and the footer are one frame with
+   the same width, --frame, centred with margin-inline: auto, and with no side
+   padding of their own, so the bottom rule of the header, the top rule of the
+   footer and the rules inside main start and end where the text starts and ends.
+   The width is min(100% - 2rem, --frame): a margin of 1rem each side on a narrow
+   screen, where the engine used padding.
+
+   --frame is the engine's measure, a length the engine resolves once at the root
+   (see @property --coffer-measure in coffer.css), so it is the same in the
+   header, in main and in the footer whatever their font sizes, and the children
+   of main, which the engine caps at the same measure, fill the column. The
+   footer text is left-aligned with the body text.
+
+   Every text page uses the narrow reading column. A page with a second column
+   (the documentation sidebar) or a card grid (the projects index, where the cards
+   are direct children of main) gets the measure plus 20rem, again for all three
+   elements. The :where() keeps the specificity of --frame low. The print rule
+   at the end resets the frame. ------------------------------------------- */
+
+:where(body) {
+  --frame: var(--coffer-measure);
+}
+
+body:where(:has(.docs-layout)),
+body:where(:has(main > .project-cards)) {
+  --frame: calc(var(--coffer-measure) + 20rem);
+}
+
+.site-header,
+.site-footer,
+main {
+  box-sizing: border-box;
+  width: min(100% - 2rem, var(--frame));
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+.site-footer {
+  text-align: left;
+}
+
 /* Header: a wordmark on the left, the navigation and the theme switch to its
    right, in one row where they fit. -------------------------------------- */
 
@@ -194,17 +236,11 @@ h3 {
 /* The table of contents of a post, on a wide screen: the engine puts it in a
    second column, which narrows the text. Here it floats at the right edge of
    the column, so the text flows around it and runs the full width of the column
-   once the table ends. The column of such a page is the narrow one (the measure
-   plus the side padding), as the table no longer needs a second column. On a
-   narrow screen, and in print, the engine's rules are kept. ----------------- */
+   once the table ends. The column of such a page is the narrow one, like every
+   text page (see the page frame above). On a narrow screen, and in print, the
+   engine's rules are kept. ------------------------------------------------ */
 
 @media (min-width: 60rem) {
-  body:where(:has(.post-layout.has-toc)) .site-header,
-  body:where(:has(.post-layout.has-toc)) .site-footer,
-  body:where(:has(.post-layout.has-toc)) main {
-    max-width: calc(var(--coffer-measure) + 2rem);
-  }
-
   .post-layout.has-toc {
     display: flow-root;
   }
@@ -216,9 +252,9 @@ h3 {
   .post-layout.has-toc .toc {
     float: right;
     box-sizing: border-box;
-    width: 15rem;
+    width: 13rem;
     max-height: none;
-    margin: 0 0 1rem 2rem;
+    margin: 0 0 1rem 1.5rem;
     overflow: visible;
     position: static;
   }
@@ -244,5 +280,15 @@ h3 {
 
   .site-header .site-title::before {
     display: none;
+  }
+
+  /* The frame above would otherwise win over the engine's print rule, which is
+     full width with no side padding. */
+  body .site-header,
+  body .site-footer,
+  body main {
+    width: auto;
+    max-width: none;
+    margin: 0;
   }
 }
