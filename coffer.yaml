@@ -22,6 +22,10 @@ sites:
     # Featured projects are shown in the order of their `order` in project.yaml.
     projects: { dir: content/ba3a.dev/projects }
     location: { default: strip, camera: strip }
+    # Site icon for the feeds and the files at the root of the site; no logo is set.
+    icon: assets/brand/icon-192.png
+    favicon: assets/brand/favicon.ico
+    appleTouchIcon: assets/brand/apple-touch-icon.png
 
   - id: my.ba3a.dev
     baseUrl: https://my.ba3a.dev
@@ -38,6 +42,9 @@ sites:
     blogs:
       - { id: blog, dir: content/my.ba3a.dev, prefix: "", title: Блог }
     location: { default: strip, camera: strip }
+    icon: assets/brand/icon-192.png
+    favicon: assets/brand/favicon.ico
+    appleTouchIcon: assets/brand/apple-touch-icon.png
 
 
 # Original photos and videos are kept out of git, in a private Cloudflare R2 bucket, and

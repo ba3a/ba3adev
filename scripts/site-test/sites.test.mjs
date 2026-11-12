@@ -4,11 +4,12 @@
 // that output.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from 'coffer';
+import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist');
@@ -158,3 +159,71 @@ test('the two sites do not share output', () => {
   assert.ok(!output('my.ba3a.dev', 'index.html').includes(ABOUT_START));
   assert.ok(!existsSync(join(dist, 'my.ba3a.dev', 'devlog')));
 });
+
+/**
+ * @param {string} dir Absolute directory.
+ * @returns {string[]} Paths of every feed.xml below it, relative to it, with forward slashes.
+ */
+function feedFiles(dir) {
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name === 'feed.xml')
+    .map((entry) => relative(dir, join(entry.parentPath, entry.name)).split(sep).join('/'))
+    .sort();
+}
+
+for (const [id, base] of [
+  ['ba3a.dev', 'https://ba3a.dev'],
+  ['my.ba3a.dev', 'https://my.ba3a.dev'],
+]) {
+  test(`${id}: the site sets the icon, the favicon and the touch icon, and no logo`, () => {
+    const site = siteConfig(id);
+    assert.equal(site.icon, 'assets/brand/icon-192.png');
+    assert.equal(site.favicon, 'assets/brand/favicon.ico');
+    assert.equal(site.appleTouchIcon, 'assets/brand/apple-touch-icon.png');
+    assert.ok(!site.logo, 'no logo is set');
+  });
+
+  test(`${id}: every feed has the absolute URL of the site icon and no logo`, async () => {
+    const feeds = feedFiles(join(dist, id));
+    assert.ok(feeds.length > 0, 'the site has feeds');
+    if (id === 'ba3a.dev') {
+      for (const feed of ['devlog/feed.xml', 'made/coffer/feed.xml', 'made/specloop/feed.xml', 'made/roto/feed.xml']) {
+        assert.ok(feeds.includes(feed), `${feed} is among the feeds`);
+      }
+    } else {
+      assert.ok(feeds.includes('feed.xml'), 'feed.xml is among the feeds');
+    }
+    const icon = `${base}/assets/brand/icon-192.png`;
+    for (const feed of feeds) {
+      const xml = output(id, feed);
+      assert.equal(
+        [...xml.matchAll(/<icon>([^<]*)<\/icon>/g)].map((match) => match[1]).join(),
+        icon,
+        `${id}/${feed} has one <icon>, the site icon`,
+      );
+      assert.doesNotMatch(xml, /<logo[ >]/, `${id}/${feed} has no <logo>`);
+    }
+
+    const file = join(dist, id, 'assets', 'brand', 'icon-192.png');
+    assert.ok(existsSync(file), `${id}/assets/brand/icon-192.png is in the output`);
+    const meta = await sharp(file).metadata();
+    assert.equal(meta.format, 'png');
+    assert.equal(meta.width, meta.height, 'the icon is square');
+    assert.ok(meta.width >= 128, `the icon is at least 128 px (${meta.width})`);
+  });
+
+  test(`${id}: /favicon.ico and /apple-touch-icon.png are the brand files of the theme`, () => {
+    const theme = siteConfig(id).theme;
+    for (const [name, brand] of [
+      ['favicon.ico', 'favicon.ico'],
+      ['apple-touch-icon.png', 'apple-touch-icon.png'],
+    ]) {
+      const served = join(dist, id, name);
+      assert.ok(existsSync(served), `${id}/${name} is at the root of the output`);
+      assert.ok(
+        readFileSync(served).equals(readFileSync(join(theme, 'assets', 'brand', brand))),
+        `${id}/${name} is byte-identical to the theme's assets/brand/${brand}`,
+      );
+    }
+  });
+}
