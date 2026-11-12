@@ -11,6 +11,8 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig } from 'coffer';
 import sharp from 'sharp';
 
+import { assertFullPosts, listPages, mainOf, readManifest, readPage, readPostSource } from './lib/full-posts.mjs';
+
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist');
 const config = loadConfig({ configPath: join(root, 'coffer.yaml') });
@@ -227,3 +229,95 @@ for (const [id, base] of [
     }
   });
 }
+
+/**
+ * @param {string} dir Absolute directory.
+ * @returns {string[]} Every Markdown file below it, absolute.
+ */
+function markdownFiles(dir) {
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+    .map((entry) => join(entry.parentPath, entry.name));
+}
+
+/** @param {{ source: string }} post @returns {string} */
+const sourceOf = (post) => readFileSync(join(root, post.source), 'utf8');
+
+for (const id of ['ba3a.dev', 'my.ba3a.dev']) {
+  const siteDir = join(dist, id);
+
+  test(`${id}: the blog sets index: full and no post sets its own index`, () => {
+    const site = siteConfig(id);
+    for (const blog of site.blogs) assert.deepEqual(blog.index, { type: 'full', pageSize: null }, `blog ${blog.id}`);
+    for (const blog of site.blogs) {
+      for (const file of markdownFiles(blog.dir)) {
+        const front = /^---\r?\n([^]*?)\r?\n---/.exec(readFileSync(file, 'utf8'))?.[1] ?? '';
+        assert.doesNotMatch(front, /^index\s*:/m, `${relative(root, file)} sets no index`);
+      }
+    }
+    const manifest = readManifest(siteDir);
+    assert.ok(manifest.posts.length > 0, 'the site has published posts');
+    for (const post of manifest.posts) assert.equal(post.index, 'full', `${post.url} is shown in full`);
+  });
+
+  test(`${id}: the blog index, every tag page and every series page show the whole body of every post they list`, () => {
+    const manifest = readManifest(siteDir);
+    const pages = listPages(manifest, siteConfig(id).blogs);
+    assert.ok(pages.some((page) => page.type === 'blog-index'), 'the blog index is checked');
+    assert.ok(pages.some((page) => page.type === 'tag'), 'tag pages are checked');
+    for (const page of pages) assertFullPosts(page.url, readPage(siteDir, page.file), page.posts, sourceOf);
+  });
+
+  test(`${id}: the search index keeps one hit per post: the post pages are indexed, the list pages are not`, () => {
+    const manifest = readManifest(siteDir);
+    for (const post of manifest.posts) {
+      const html = readPage(siteDir, post.file);
+      assert.equal((html.match(/data-pagefind-body/g) ?? []).length, 1, `${post.url} is indexed once`);
+    }
+    for (const page of manifest.pages.filter((candidate) => ['blog-index', 'tag', 'series', 'tag-index', 'search', 'not-found'].includes(candidate.type))) {
+      assert.doesNotMatch(readPage(siteDir, page.file), /data-pagefind-body/, `${page.url} is not indexed`);
+    }
+  });
+
+  test(`${id}: the post pages keep their own table of contents, and their heading ids reach the list page behind the slug`, () => {
+    const manifest = readManifest(siteDir);
+    const list = readPage(siteDir, listPages(manifest, siteConfig(id).blogs)[0].file);
+    for (const post of manifest.posts) {
+      const html = readPage(siteDir, post.file);
+      const { headings } = readPostSource(sourceOf(post));
+      if (headings.filter((heading) => heading.level === 2).length >= 3) {
+        assert.match(html, /class="toc"/, `${post.url} has a table of contents`);
+      }
+      // A heading of the body keeps its id on the list page, behind the slug of its post.
+      for (const match of html.matchAll(/<h[2-6] id="([^"]+)">/g)) {
+        assert.ok(list.includes(`id="${post.slug}-${match[1]}"`), `${post.url}: #${match[1]} is #${post.slug}-${match[1]} on the list page`);
+      }
+    }
+  });
+
+  test(`${id}: the 404, search and tag-tree pages show no post`, () => {
+    const manifest = readManifest(siteDir);
+    for (const page of manifest.pages.filter((candidate) => ['tag-index', 'search', 'not-found'].includes(candidate.type))) {
+      const main = mainOf(readPage(siteDir, page.file));
+      assert.doesNotMatch(main, /post-body|post-list|post-item/, `${page.url} lists no post`);
+      for (const post of manifest.posts) assert.ok(!main.includes(readPostSource(sourceOf(post)).sentence), `${page.url} has no text of ${post.slug}`);
+    }
+  });
+}
+
+test('ba3a.dev: the home page keeps the compact list of the latest posts, titles and dates only', () => {
+  const siteDir = join(dist, 'ba3a.dev');
+  const manifest = readManifest(siteDir);
+  const html = readPage(siteDir, 'index.html');
+  const section = /<section class="latest-posts">([\s\S]*?)<\/section>/.exec(html)?.[1];
+  assert.ok(section, 'the home page has a latest posts section');
+  const items = section.match(/<li class="post-item">/g) ?? [];
+  const links = [...section.matchAll(/<h3><a href="([^"]+)">[^<]+<\/a><\/h3>/g)].map((match) => match[1]);
+  assert.ok(items.length >= 1 && items.length <= manifest.posts.length, 'the newest posts are listed');
+  assert.equal(links.length, items.length, 'every item has a title that links to a post');
+  for (const url of links) assert.ok(manifest.posts.some((post) => post.url === url), `${url} is a post`);
+  assert.equal((section.match(/<time datetime="[^"]+">[^<]+<\/time>/g) ?? []).length, items.length, 'every item has its date');
+  for (const post of manifest.posts) assert.ok(!html.includes(readPostSource(sourceOf(post)).sentence), `${post.url}: no text of the body`);
+  assert.doesNotMatch(html, /class="post-body"/);
+  assert.doesNotMatch(section, /post-tags|post-summary|reading-time/, 'no tags, summary or reading time');
+});

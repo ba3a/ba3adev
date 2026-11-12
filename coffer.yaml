@@ -17,7 +17,7 @@ sites:
       # TODO: add the contact address as a mailto: link, for example:
       # - { label: Email, url: "mailto:<address>" }
     blogs:
-      - { id: devlog, dir: content/ba3a.dev/devlog, prefix: devlog, title: Devlog, shareSummary: true }
+      - { id: devlog, dir: content/ba3a.dev/devlog, prefix: devlog, title: Devlog, shareSummary: true, index: full }
     urls: { projects: made, docs: docs, tags: tags, series: series }
     # Featured projects are shown in the order of their `order` in project.yaml.
     projects: { dir: content/ba3a.dev/projects }
@@ -40,7 +40,7 @@ sites:
     # root blog, so only posts may be placed there. Pages, made/ and other
     # Markdown files would be read as posts.
     blogs:
-      - { id: blog, dir: content/my.ba3a.dev, prefix: "", title: Блог }
+      - { id: blog, dir: content/my.ba3a.dev, prefix: "", title: Блог, index: full }
     location: { default: strip, camera: strip }
     icon: assets/brand/icon-192.png
     favicon: assets/brand/favicon.ico

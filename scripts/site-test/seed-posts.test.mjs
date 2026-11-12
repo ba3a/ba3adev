@@ -16,6 +16,7 @@ import exifr from 'exifr';
 import { createPolicyResolver, loadConfig, loadTagMeta } from 'coffer';
 
 import { SEED_PHOTOS, restoreSeedPhotos } from '../make-placeholders.mjs';
+import { assertFullPosts, listPages, mainOf, readPostSource } from './lib/full-posts.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const production = join(root, '.cache', 'test-dist');
@@ -302,6 +303,38 @@ describe('the preview build (--drafts)', () => {
     assert.match(tree, /Столярное дело/);
     assert.doesNotMatch(tree, /Походы/, 'a tag without a post is not in the tree');
     assert.match(page('my.ba3a.dev', 'series/pervye-shkatulki/index.html'), /Первые шкатулки/);
+  });
+
+  test('the blog index, every tag page and every series page show the whole body of every post, seed drafts included', () => {
+    for (const site of config.sites) {
+      const manifest = manifestOf(site.id);
+      const pages = listPages(manifest, site.blogs);
+      const types = new Set(pages.map((candidate) => candidate.type));
+      assert.deepEqual([...types].sort(), ['blog-index', 'series', 'tag'], `${site.id}: index, tag and series pages are checked`);
+      const slugs = (site.id === 'ba3a.dev' ? ['first', 'second'] : ['pervyj', 'vtoroj']).sort();
+      const index = pages.find((candidate) => candidate.type === 'blog-index');
+      assert.ok(index);
+      assert.deepEqual(index.posts.map((post) => post.slug).filter((slug) => slugs.includes(slug)).sort(), slugs, `${site.id}: the index lists the seed posts`);
+      for (const candidate of pages) {
+        assertFullPosts(`${site.id}${candidate.url}`, page(site.id, candidate.file), candidate.posts, (post) => readFileSync(join(root, post.source), 'utf8'));
+      }
+    }
+  });
+
+  test('on a list page the seed carousels, captions and code blocks of each post stay whole, with no table of contents', () => {
+    for (const { site, file, slugs } of [
+      { site: 'ba3a.dev', file: 'devlog/series/devlog-start/index.html', slugs: ['first', 'second'] },
+      { site: 'my.ba3a.dev', file: 'series/pervye-shkatulki/index.html', slugs: ['pervyj', 'vtoroj'] },
+    ]) {
+      const html = page(site, file);
+      assert.equal((html.match(/<li class="carousel-slide">/g) ?? []).length, 3 * slugs.length, `${file}: three slides per post`);
+      assert.equal((html.match(/<figcaption>/g) ?? []).length, 4 * slugs.length, `${file}: four captions per post`);
+      if (site === 'ba3a.dev') assert.equal((html.match(/<pre class="shiki /g) ?? []).length, slugs.length, `${file}: a code block per post`);
+      for (const slug of slugs) {
+        assert.ok(html.includes(`<a href="${site === 'ba3a.dev' ? '/devlog' : ''}/${slug}/">`), `${file}: links to ${slug}`);
+      }
+      assert.doesNotMatch(mainOf(html), /class="toc"/, `${file}: the table of contents stays on the post page`);
+    }
   });
 
   test('no published image carries a position or a camera: the strip policy is exercised on every seed photo', async () => {
