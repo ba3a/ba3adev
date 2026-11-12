@@ -264,6 +264,33 @@ main {
   border-bottom: 0;
 }
 
+/* A whole post on the blog index, the tag pages and the series pages (index: full). The
+   engine writes the item as the title (h2), the meta line and then the same
+   <div class="post-body"> the post page has, so the body takes the post page's
+   typography with no font setting here, and the title and meta line keep the engine's
+   style. It adds no class to the list, so these rules find a full post by its body; the
+   home page's compact "Latest posts" items have none and are not touched. The rule
+   between posts is the .post-item one above, at the width of the list; a full post has
+   2rem above and below it, equal on both sides. Wide content (code, tables, carousels,
+   figures) is at most as wide as the column and scrolls inside its own box. ---------- */
+
+.post-item:has(> .post-body) {
+  padding: 2rem 0;
+}
+
+.post-item > .post-body {
+  min-width: 0;
+}
+
+.post-item > .post-body :is(pre, table, figure, .carousel-track) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.post-item > .post-body :is(img, video, iframe, svg, .carousel) {
+  max-width: 100%;
+}
+
 /* The table of contents of a post, on a wide screen: the engine puts it in a
    second column, which narrows the text. Here it floats at the right edge of
    the column, so the text flows around it and runs the full width of the column

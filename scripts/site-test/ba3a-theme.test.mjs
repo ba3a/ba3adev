@@ -14,6 +14,7 @@ import { parse as parseYaml } from 'yaml';
 import { CARD_HEIGHT, CARD_WIDTH, createCardMaker, loadConfig } from 'coffer';
 
 import { assertFrame } from './lib/frame.mjs';
+import { listPages, mainOf, readManifest } from './lib/full-posts.mjs';
 import { contrastRatio, readRules, readSchemes } from './lib/wcag.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -279,6 +280,133 @@ test('both themes: .post-item has the same 1px solid var(--coffer-border) rule b
     assert.ok(top.indexOf(last[0]) > top.indexOf(item[0]), `${name}: the last-child rule comes after the general one`);
   }
   assert.equal(new Set(borders).size, 1, 'one declaration on both sites');
+});
+
+// --- whole posts on the blog index, the tag pages and the series pages ----------
+//
+// With `index: full` the engine's blog-index.njk writes `<li class="post-item">` with the title (h2),
+// the meta line, the tags and then `<div class="post-body">`, the same element the post page has. It adds
+// no class to the list, so the theme scopes the full-post rules by that child: `.post-item > .post-body`
+// and `.post-item:has(> .post-body)`. The home page's "Latest posts" items have no body, so they match
+// neither and stay compact.
+
+const FULL_ITEM = '.post-item:has(> .post-body)';
+const FULL_BODY = '.post-item > .post-body';
+
+/** @param {string} selector A selector list. @returns {string[]} Its parts, split at the commas outside parentheses. */
+function topLevelParts(selector) {
+  /** @type {string[]} */
+  const parts = [];
+  let depth = 0;
+  let current = '';
+  for (const character of selector) {
+    if (character === '(') depth += 1;
+    if (character === ')') depth -= 1;
+    if (character === ',' && depth === 0) {
+      parts.push(current.trim());
+      current = '';
+    } else {
+      current += character;
+    }
+  }
+  parts.push(current.trim());
+  return parts;
+}
+
+/** @param {string} selector @returns {boolean} The selector is part of the full-post rules. */
+const isFullPostSelector = (selector) => topLevelParts(selector).some((part) => part.includes('> .post-body') || part.includes(':has(> .post-body)'));
+
+/** @returns {Array<{ media: string | null, selector: string, declarations: Record<string, string> }>} */
+const fullPostRules = () => readRules(stylesheet).filter((rule) => isFullPostSelector(rule.selector));
+
+/** @param {string} value A padding or margin shorthand. @returns {{ top: string, bottom: string }} */
+function verticalSides(value) {
+  const parts = value.split(/\s+/);
+  return { top: parts[0], bottom: parts[2] ?? parts[0] };
+}
+
+test('ba3a.dev: a full post on a list page is spaced equally above and below the rule between posts', () => {
+  const item = fullPostRules().find((rule) => rule.media === null && rule.selector === FULL_ITEM);
+  assert.ok(item, `ba3a.css has a rule for ${FULL_ITEM}`);
+  const padding = item.declarations.padding ?? item.declarations['padding-block'];
+  assert.ok(padding, 'the full post sets its padding');
+  const { top, bottom } = verticalSides(padding);
+  assert.equal(top, bottom, 'padding above and below the rule are equal');
+  assert.match(top, /^\d*\.?\d+rem$/, 'in rem');
+  assert.ok(parseFloat(top) > 1, 'more room than the 1rem of a compact item');
+  assert.ok(!('padding-top' in item.declarations || 'padding-bottom' in item.declarations), 'no side of the padding is overridden');
+  assert.ok(!('border-bottom' in item.declarations || 'border' in item.declarations), 'the rule and its removal after the last post stay with .post-item');
+});
+
+test('ba3a.dev: the rule between full posts is the .post-item rule at the width of the list, and the last post has none', () => {
+  const top = readRules(stylesheet).filter((rule) => rule.media === null);
+  const index = (/** @type {string} */ selector) => top.findIndex((rule) => rule.selector === selector);
+  assert.ok(index('.post-item') >= 0 && index('.post-item:last-child') > index('.post-item'));
+  // Nothing later sets a border or a width on a full post's item or body that would shorten the rule or bring it back.
+  for (const rule of fullPostRules().filter((candidate) => [FULL_ITEM, FULL_BODY].includes(candidate.selector))) {
+    for (const property of ['border', 'border-bottom', 'border-top', 'width', 'max-width', 'margin-inline', 'margin-left', 'margin-right', 'padding-inline', 'padding-left', 'padding-right']) {
+      assert.ok(!(property in rule.declarations), `${rule.selector} does not set ${property}`);
+    }
+  }
+});
+
+test('ba3a.dev: the body of a full post reuses the typography of .post-body and sets no font of its own', () => {
+  for (const rule of readRules(stylesheet)) {
+    if (!rule.selector.includes('.post-body')) continue;
+    for (const property of Object.keys(rule.declarations)) {
+      assert.ok(!/^(font|line-height|letter-spacing|word-spacing|text-(align|indent|transform))/.test(property), `${rule.selector} must not set ${property}`);
+    }
+  }
+  assert.ok(fullPostRules().every((rule) => !rule.selector.includes('h2')), 'the title keeps the engine\'s h2 style');
+  assert.ok(!stylesheet.includes('.post-meta'), 'the meta line keeps the engine\'s style');
+});
+
+test('ba3a.dev: wide content of a full post scrolls inside its own box instead of widening the column', () => {
+  const rules = fullPostRules().filter((rule) => rule.media === null);
+  const body = rules.find((rule) => rule.selector === FULL_BODY);
+  assert.ok(body, `ba3a.css has a rule for ${FULL_BODY}`);
+  assert.equal(body.declarations['min-width'], '0', 'the body may shrink below the width of its widest child');
+  const contained = rules.find((rule) => rule.declarations['overflow-x'] === 'auto');
+  assert.ok(contained, 'a rule gives wide content its own scroll box');
+  for (const element of ['pre', 'table', 'figure', '.carousel-track']) {
+    assert.ok(contained.selector.includes(element), `${element} scrolls inside its own box`);
+  }
+  assert.equal(contained.declarations['max-width'], '100%');
+  const media = rules.find((rule) => rule.declarations['max-width'] === '100%' && rule.selector !== contained.selector);
+  for (const element of ['img', 'video', 'iframe', 'svg']) {
+    assert.ok(media?.selector.includes(element), `${element} is at most as wide as the column`);
+  }
+  assert.ok(!rules.some((rule) => rule.declarations['overflow-x'] === 'hidden' || rule.declarations.overflow === 'hidden'), 'nothing is clipped');
+});
+
+test('ba3a.dev: the full-post rules are for the list pages only, not for the compact lists or the post page', () => {
+  for (const rule of fullPostRules()) {
+    for (const part of topLevelParts(rule.selector)) {
+      assert.match(part, /^\.post-item(:has\(> \.post-body\)| > \.post-body)/, `${part} starts at a post item with a body`);
+    }
+  }
+  assert.ok(!/\.post-layout[^{]*\.post-body/.test(fullPostRules().map((rule) => rule.selector).join(' ')), 'no rule for the post page');
+});
+
+test('ba3a.dev: every post on the blog index, a tag page and a series page is a list item with a body the CSS targets, and the home list has none', () => {
+  const manifest = readManifest(join(dist, 'ba3a.dev'));
+  const pages = listPages(manifest, site.blogs);
+  assert.ok(pages.some((page) => page.type === 'blog-index'), 'the blog index is checked');
+  assert.ok(pages.some((page) => page.type === 'tag'), 'a tag page is checked');
+  assert.ok(pages.some((page) => manifest.series.some((entry) => entry.url === page.url)), 'a series page is checked');
+  for (const page of pages) {
+    const main = mainOf(output('ba3a.dev', page.file));
+    const items = main.split('<li class="post-item">').slice(1);
+    assert.equal(items.length, page.posts.length, `${page.url} lists every post`);
+    // The body is a direct child of the item, after the series part (series pages), the title, the meta line, the
+    // tags and the preview banner, and nothing wraps it.
+    const head = /^\s*(?:<p class="series-part">[^<]*<\/p>\s*)?<h2><a [^>]*>[^<]*<\/a><\/h2>\s*<p class="post-meta">[\s\S]*?<\/p>\s*(?:<ul class="post-tags"[\s\S]*?<\/ul>\s*)?(?:<p class="preview-note[^>]*>[^<]*<\/p>\s*)?<div class="post-body">/;
+    for (const item of items) assert.match(item, head, `${page.url}: the item is title, meta line, tags and then the body`);
+    assert.ok(main.includes('<ol class="post-list">'), `${page.url} has the list`);
+  }
+  const home = output('ba3a.dev', 'index.html');
+  assert.match(home, /<li class="post-item">/);
+  assert.doesNotMatch(home, /class="post-body"/, 'the home list has no body, so the full-post rules do not apply');
 });
 
 // --- the contrast helper ------------------------------------------------------
