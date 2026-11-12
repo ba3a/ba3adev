@@ -85,6 +85,12 @@ test('image variants and title cards, which have a content hash in their address
   }
 });
 
+test('the root icons have their type and a long, not immutable, cache; so do the brand files', () => {
+  assert.deepEqual(ruleFor('/favicon.ico').lines, ['Content-Type: image/x-icon', 'Cache-Control: public, max-age=2592000']);
+  assert.deepEqual(ruleFor('/apple-touch-icon.png').lines, ['Content-Type: image/png', 'Cache-Control: public, max-age=2592000']);
+  assert.deepEqual(ruleFor('/assets/brand/*').lines, ['Cache-Control: public, max-age=2592000']);
+});
+
 test('lintHeaders finds what Cloudflare Pages would silently ignore', () => {
   assert.deepEqual(lintHeaders('/a\n  X-A: b\n'), []);
   assert.match(lintHeaders('  X-A: b\n')[0], /no path above/);

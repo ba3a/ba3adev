@@ -9,6 +9,11 @@
 #   - 'wasm-unsafe-eval' is for the WebAssembly of the Pagefind search;
 #   - the maps load OpenStreetMap tiles as images;
 #   - the beacon is loaded from static.cloudflareinsights.com and reports to cloudflareinsights.com.
+#
+# Caching, in short: files with a hash of their content in their address are cached for a year
+# and marked immutable. The root icons and the brand files have fixed addresses, so they are
+# cached for 30 days only, and the two root icons also get an explicit Content-Type because
+# browsers and feed readers request them without a page that names the type.
 
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://*.tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
@@ -25,6 +30,17 @@
   Cache-Control: public, max-age=31536000, immutable
 /cards/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The root icons are requested by fixed address (browsers ask for /favicon.ico on their own), and
+# the brand files in /assets/brand are not renamed when they change, so none is immutable.
+/favicon.ico
+  Content-Type: image/x-icon
+  Cache-Control: public, max-age=2592000
+/apple-touch-icon.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=2592000
+/assets/brand/*
+  Cache-Control: public, max-age=2592000
 
 # The generated API reference of a project (Dokka) is the output of another tool, with its own
 # inline scripts and styles, so the policy above would break it. It is built from a public
