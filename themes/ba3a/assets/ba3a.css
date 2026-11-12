@@ -250,6 +250,20 @@ main {
   font-size: 0.875rem;
 }
 
+/* The rule between the items of a post list (home, blog index, tags, series): the same
+   1px line on both sites, as wide as the text because the list sits in the frame. The
+   last item has none, so the list does not end in a rule above what follows it. The
+   padding is the engine's: 1rem below the last item plus the 1rem gap of the link
+   after the list is within 1px of the gap between two items. ---------------------- */
+
+.post-item {
+  border-bottom: 1px solid var(--coffer-border);
+}
+
+.post-item:last-child {
+  border-bottom: 0;
+}
+
 /* The table of contents of a post, on a wide screen: the engine puts it in a
    second column, which narrows the text. Here it floats at the right edge of
    the column, so the text flows around it and runs the full width of the column

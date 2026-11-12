@@ -963,3 +963,31 @@ test('my.ba3a.dev: the credit in the footer of every page links "coffer" to its 
   }
   assert.ok(credits >= 4, `${credits} pages carry the credit`);
 });
+
+// --- the rule between the items of a post list --------------------------------
+//
+// The engine gives every `.post-item` a 1px rule below it, so the last item of a list closed the
+// list with a rule right above the lists' following content. Both themes state the rule between
+// items alike and drop it after the last item. The padding is left as the engine has it.
+
+test('both themes: .post-item has the same 1px solid var(--coffer-border) rule below it, and the last item has none', () => {
+  /** @type {string[]} */
+  const borders = [];
+  for (const [name, css] of [['my.css', stylesheet], ['ba3a.css', otherStylesheet]]) {
+    const top = readRules(css).filter((rule) => rule.media === null);
+    const item = top.filter((rule) => rule.selector === '.post-item');
+    assert.equal(item.length, 1, `${name} has one top-level .post-item rule`);
+    assert.equal(item[0].declarations['border-bottom'], '1px solid var(--coffer-border)', `${name}: the rule between items`);
+    borders.push(item[0].declarations['border-bottom']);
+
+    const last = top.filter((rule) => rule.selector === '.post-item:last-child');
+    assert.equal(last.length, 1, `${name} has one .post-item:last-child rule`);
+    assert.equal(last[0].declarations['border-bottom'], '0', `${name}: no rule after the last item`);
+    assert.ok(
+      !('padding' in last[0].declarations || 'padding-bottom' in last[0].declarations),
+      `${name}: the last item keeps the padding of the others`,
+    );
+    assert.ok(top.indexOf(last[0]) > top.indexOf(item[0]), `${name}: the last-child rule comes after the general one`);
+  }
+  assert.equal(new Set(borders).size, 1, 'one declaration on both sites');
+});
