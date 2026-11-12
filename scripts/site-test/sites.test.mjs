@@ -38,7 +38,7 @@ function output(site, file) {
   return readFileSync(path, 'utf8');
 }
 
-const SEED_ABOUT_START = 'Senior backend engineer, about ten years of Java and Spring';
+const ABOUT_START = 'I build performance-sensitive backend systems';
 
 test('the repository configures exactly the two sites, in order', () => {
   assert.deepEqual(
@@ -95,11 +95,10 @@ test('every theme folder exists and is documented, so the build can fall back to
   }
 });
 
-test('the seed about text is in the source, marked to be rewritten', () => {
+test('the about text of the author is in the source, with no rewrite marker left', () => {
   const source = readFileSync(join(root, 'content', 'ba3a.dev', 'home.md'), 'utf8');
-  assert.ok(source.includes('<!-- TODO: rewrite -->'));
-  assert.ok(source.includes(SEED_ABOUT_START));
-  assert.ok(source.includes('This site is where they live.'));
+  assert.ok(!source.includes('TODO: rewrite'));
+  assert.ok(source.includes(ABOUT_START));
 });
 
 test('the content folders and the blog folders exist, as a build needs them', () => {
@@ -107,11 +106,11 @@ test('the content folders and the blog folders exist, as a build needs them', ()
   assert.ok(existsSync(join(root, 'content', 'ba3a.dev', 'devlog')));
 });
 
-test('ba3a.dev: the home page has the seed text, the links and no author note', () => {
+test('ba3a.dev: the home page has the about text, the links and no author note', () => {
   const html = output('ba3a.dev', 'index.html');
   assert.match(html, /<html lang="en">/);
   assert.match(html, /<link rel="canonical" href="https:\/\/ba3a\.dev\/">/);
-  assert.ok(html.includes(SEED_ABOUT_START));
+  assert.ok(html.includes(ABOUT_START));
   assert.doesNotMatch(html, /<!--\s*TODO/);
   assert.match(html, /href="https:\/\/github\.com\/ba3a"/);
   assert.match(html, /href="https:\/\/my\.ba3a\.dev"/);
@@ -123,7 +122,7 @@ test('ba3a.dev: the devlog index, its feed, the 404 page and the sitemap are wri
   const index = output('ba3a.dev', 'devlog/index.html');
   assert.match(index, /<html lang="en">/);
   assert.match(index, /<link rel="canonical" href="https:\/\/ba3a\.dev\/devlog\/">/);
-  assert.match(index, /No posts yet\./);
+  assert.match(index, /<a href="\/devlog\/finally-built-me-a-site\/">Finally built me a site<\/a>/);
 
   const feed = output('ba3a.dev', 'devlog/feed.xml');
   assert.match(feed, /<feed xmlns="http:\/\/www\.w3\.org\/2005\/Atom"/);
@@ -156,6 +155,6 @@ test('my.ba3a.dev: the blog index is the home page, in Russian, with its feed an
 });
 
 test('the two sites do not share output', () => {
-  assert.ok(!output('my.ba3a.dev', 'index.html').includes(SEED_ABOUT_START));
+  assert.ok(!output('my.ba3a.dev', 'index.html').includes(ABOUT_START));
   assert.ok(!existsSync(join(dist, 'my.ba3a.dev', 'devlog')));
 });

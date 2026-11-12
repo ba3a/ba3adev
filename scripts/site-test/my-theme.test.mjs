@@ -230,9 +230,11 @@ test('no theme file hard-codes a font host or a script', () => {
   }
 });
 
-test('the copy written for the author is marked to be rewritten', () => {
-  assert.match(read(join(themeDir, 'i18n', 'ru.yaml')), /#\s*TODO: rewrite\s*\n\s*site:/, 'the tagline');
-  assert.match(read(join(themeDir, 'i18n', 'ru.yaml')), /#\s*TODO: rewrite\s*\n\s*not_found:/, 'the 404 copy');
+test('the tagline is set by the author; the 404 copy is still marked to be rewritten', () => {
+  const strings = read(join(themeDir, 'i18n', 'ru.yaml'));
+  assert.match(strings, /^site:\n(?:\s*#.*\n)*\s+tagline: \S/m, 'the tagline is set');
+  assert.doesNotMatch(strings, /#\s*TODO: rewrite\s*\n\s*site:/, 'the tagline is no longer marked');
+  assert.match(strings, /#\s*TODO: rewrite\s*\n\s*not_found:/, 'the 404 copy');
   assert.match(read(join(themeDir, 'templates', 'base.njk')), /TODO: rewrite/, 'the template points to the tagline');
 });
 
@@ -784,8 +786,13 @@ test('my.ba3a.dev: the 404 page is Russian, in the theme\'s words, and has none 
 test('my.ba3a.dev: no page shows an English UI string, so no string fell back to English', () => {
   for (const file of ['index.html', '404.html', 'search/index.html', 'tags/index.html']) {
     const html = output('my.ba3a.dev', file);
-    const visible = textOf(html.replace(/<head>[\s\S]*?<\/head>/, '').replace(/<script[\s\S]*?<\/script>/g, ''));
-    assert.deepEqual(visible.replace(/ba3a|coffer/g, '').match(/[A-Za-z]{2,}/g), null, `${file} shows no English word`);
+    // Character references such as &middot; are markup, not words, and the names of tags are the author's, not UI strings.
+    const body = html
+      .replace(/<head>[\s\S]*?<\/head>/, '')
+      .replace(/<script[\s\S]*?<\/script>/g, '')
+      .replace(/<a\b[^>]*href="\/tags\/[^>]*>[\s\S]*?<\/a>/g, ' ');
+    const visible = textOf(body).replace(/&[a-z]+;/g, ' ');
+    assert.deepEqual(visible.replace(/ba3a|coffer|JavaScript/g, '').match(/[A-Za-z]{2,}/g), null, `${file} shows no English word`);
   }
 });
 

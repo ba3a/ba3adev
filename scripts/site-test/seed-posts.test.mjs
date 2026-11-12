@@ -168,21 +168,29 @@ describe('the tag policies of my.ba3a.dev', () => {
 
 describe('the production build', () => {
   test('leaves the drafts out: no page, no feed entry, no sitemap entry, and the blogs are empty', () => {
-    for (const [site, prefix, slugs] of /** @type {const} */ ([
-      ['ba3a.dev', 'devlog/', ['first', 'second']],
-      ['my.ba3a.dev', '', ['pervyj', 'vtoroj']],
+    // The blogs also hold the author's published posts; only the seed drafts must be absent.
+    for (const [site, prefix, slugs, series] of /** @type {const} */ ([
+      ['ba3a.dev', 'devlog/', ['first', 'second'], 'devlog-start'],
+      ['my.ba3a.dev', '', ['pervyj', 'vtoroj'], 'pervye-shkatulki'],
     ])) {
       const manifest = JSON.parse(readFileSync(join(production, site, '.coffer-manifest.json'), 'utf8'));
-      assert.deepEqual(manifest.posts, [], `${site}: no posts`);
-      assert.deepEqual(manifest.series, [], `${site}: no series`);
-      assert.deepEqual(manifest.tags, [], `${site}: no tags`);
+      assert.deepEqual(
+        manifest.posts.filter((/** @type {any} */ post) => slugs.includes(post.slug)),
+        [],
+        `${site}: no seed posts`,
+      );
+      assert.deepEqual(
+        manifest.series.filter((/** @type {any} */ entry) => entry.slug === series),
+        [],
+        `${site}: no seed series`,
+      );
       const sitemap = readFileSync(join(production, site, 'sitemap.xml'), 'utf8');
       for (const slug of slugs) {
         assert.equal(existsSync(join(production, site, ...prefix.split('/'), slug, 'index.html')), false, `${site}: ${slug} has no page`);
         assert.ok(!sitemap.includes(`/${prefix}${slug}/`), `${site}: ${slug} is not in the sitemap`);
       }
       const feed = readFileSync(join(production, site, prefix === '' ? 'feed.xml' : `${prefix}feed.xml`), 'utf8');
-      assert.doesNotMatch(feed, /<entry>/);
+      for (const slug of slugs) assert.ok(!feed.includes(`/${prefix}${slug}/`), `${site}: ${slug} is not in the feed`);
       assert.equal(manifest.drafts, false);
     }
   });
@@ -224,14 +232,15 @@ describe('the preview build (--drafts)', () => {
     ])) {
       const manifest = manifestOf(site);
       assert.equal(manifest.drafts, true);
-      assert.deepEqual(manifest.posts.map((/** @type {any} */ post) => post.slug).sort(), [...slugs].sort());
-      for (const post of manifest.posts) {
+      const seeds = manifest.posts.filter((/** @type {any} */ post) => slugs.includes(post.slug));
+      assert.deepEqual(seeds.map((/** @type {any} */ post) => post.slug).sort(), [...slugs].sort());
+      for (const post of seeds) {
         assert.equal(post.draft, true);
         assert.equal(post.published, false);
         assert.equal(post.series.count, 2);
       }
-      assert.deepEqual(manifest.posts.map((/** @type {any} */ post) => post.series.number).sort(), [1, 2]);
-      assert.equal(manifest.series.length, 1);
+      assert.deepEqual(seeds.map((/** @type {any} */ post) => post.series.number).sort(), [1, 2]);
+      assert.equal(manifest.series.filter((/** @type {any} */ entry) => entry.slug === seeds[0].series.slug).length, 1);
     }
   });
 
