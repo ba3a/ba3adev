@@ -1,10 +1,14 @@
 # Seed declaration, drafted from the site spec (section 14.3).
 # TODO: rewrite the pitch before publishing.
+# The text of the page is site/landing.md of the roto repository and the card is
+# site/card.png of the same repository. The build fetches them from main, so a
+# push to roto changes the site at the next build.
 name: roto
 pitch: Turn a phone video into pixel-art sprites you finish by hand.
 kind: tool
 status: in-development
-card: card.png
+landing: { file: site/landing.md }
+card: repo:site/card.png
 cardAlt: "Placeholder card: the name roto in white letters on a dark green background."
 featured: true
 order: 2

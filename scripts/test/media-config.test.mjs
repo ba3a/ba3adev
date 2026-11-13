@@ -114,7 +114,7 @@ test('git ignores image originals and the local settings, and keeps the lock fil
   const stay = gitIgnoreStatus([
     'media.lock.json',
     '.env.local.example',
-    'content/ba3a.dev/projects/roto/card.png',
+    'content/ba3a.dev/projects/faultory/card.png',
     'content/ba3a.dev/projects/faultory/logo.svg',
     'content/ba3a.dev/devlog/first/index.md',
   ]);

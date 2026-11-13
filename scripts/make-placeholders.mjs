@@ -2,11 +2,12 @@
 //
 //   node scripts/make-placeholders.mjs
 //
-// For every project in `content/ba3a.dev/projects/` it writes a card picture
-// (the project's name on a coloured background). For Faultory it also writes a
-// wordmark in Handjet on a sticker shape, and a key art. These are design
-// placeholders, not photos and not final artwork: they exist so that the pages
-// have pictures until the real ones replace them.
+// For Faultory it writes a card, a wordmark in Handjet on a sticker shape and a
+// key art. The tools have no placeholder here: their cards (and, for specloop and
+// coffer, their brand pictures) come from their own repositories (`card:
+// repo:site/card.png`). These are design placeholders, not photos and not final
+// artwork: they exist so that the page has pictures until the real ones replace
+// them.
 //
 // Each picture is written twice, because the two readers need different things:
 //
@@ -21,9 +22,9 @@
 //
 // The script is deterministic: it uses no clock and no random numbers, so
 // running it again writes byte-identical files, and a file whose content has not
-// changed is not touched. The fonts are the theme's Manrope Bold (cards of the
-// tools) and Handjet Bold from the pinned `@fontsource/handjet` devDependency
-// (the Faultory wordmark); opentype.js reads the outlines.
+// changed is not touched. The fonts are the theme's Manrope Bold (the seed photos)
+// and Handjet Bold from the pinned `@fontsource/handjet` devDependency (the
+// Faultory wordmark); opentype.js reads the outlines.
 //
 // Seed photos
 // -----------
@@ -68,16 +69,6 @@ export const LOGO_SIZE = Object.freeze({ width: 1920, height: 640 });
 
 const DARK_INK = '#17171c';
 const FALLBACK_ACCENT = '#e8841a';
-
-/**
- * The tools that still have a placeholder card (specloop and coffer have their real ones, from their brand kits): the slug of the project folder, the name written on the card and
- * the colours (the text must stay readable on the background).
- *
- * @type {ReadonlyArray<{ slug: string, name: string, background: string, band: string, text: string }>}
- */
-export const TOOL_CARDS = Object.freeze([
-  { slug: 'roto', name: 'roto', background: '#1c4a3a', band: '#8fd6b0', text: '#ffffff' },
-]);
 
 /**
  * @param {string} path
@@ -149,27 +140,6 @@ function svgDocument({ width, height, viewWidth = width, viewHeight = height, ti
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${viewWidth} ${viewHeight}" role="img">\n` +
     `<title>${xml(title)}</title>\n${body.trim()}\n</svg>\n`
   );
-}
-
-/**
- * The card of a tool: its name on a coloured background, with a band along the bottom.
- *
- * @param {import('opentype.js').Font} font
- * @param {(typeof TOOL_CARDS)[number]} tool
- * @returns {string}
- */
-function toolCard(font, tool) {
-  const { width, height } = CARD_SIZE;
-  const size = fitSize(font, tool.name, 220, width - 200);
-  return svgDocument({
-    width,
-    height,
-    title: `Placeholder card: ${tool.name}`,
-    body: `
-<rect width="${width}" height="${height}" fill="${tool.background}"/>
-<rect y="${height - 28}" width="${width}" height="28" fill="${tool.band}"/>
-<path d="${centeredPath(font, tool.name, size, width / 2, (height - 28) / 2)}" fill="${tool.text}"/>`,
-  });
 }
 
 /**
@@ -336,13 +306,11 @@ function faultoryAccent(root) {
  * @returns {Promise<Map<string, Buffer | string>>} The content of each file, by its path below `content/ba3a.dev/projects/`, with forward slashes.
  */
 export async function renderPlaceholders({ root = defaultRoot } = {}) {
-  const manrope = loadFont(join(root, 'themes', 'ba3a', 'fonts', 'Manrope-Bold.ttf'));
   const handjet = loadFont(join(root, 'node_modules', '@fontsource', 'handjet', 'files', 'handjet-latin-700-normal.woff'));
   const accent = faultoryAccent(root);
 
   /** @type {Array<[string, string]>} */
   const drawings = [
-    ...TOOL_CARDS.map(/** @returns {[string, string]} */ (tool) => [`${tool.slug}/card.svg`, toolCard(manrope, tool)]),
     ['faultory/card.svg', faultoryCard(handjet, accent)],
     ['faultory/logo.svg', faultoryLogo(handjet, accent)],
     ['faultory/key-art.svg', faultoryKeyArt(handjet, accent)],

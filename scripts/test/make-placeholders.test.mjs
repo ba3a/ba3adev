@@ -11,12 +11,11 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { inspectSvg } from 'coffer';
 
-import { contrastRatio } from '../site-test/lib/wcag.mjs';
+import * as placeholders from '../make-placeholders.mjs';
 import {
   CARD_SIZE,
   KEY_ART_SIZE,
   LOGO_SIZE,
-  TOOL_CARDS,
   renderPlaceholders,
   writePlaceholders,
 } from '../make-placeholders.mjs';
@@ -25,7 +24,6 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const projectsDir = join(root, 'content', 'ba3a.dev', 'projects');
 
 const EXPECTED_FILES = [
-  'roto/card',
   'faultory/card',
   'faultory/logo',
   'faultory/key-art',
@@ -41,12 +39,12 @@ function text(file) {
   return /** @type {string} */ (content);
 }
 
-test('it makes a card for each tool that has no real one and a card, a wordmark and a key art for Faultory, as SVG and PNG', () => {
+test('it makes a card, a wordmark and a key art for Faultory, as SVG and PNG, and nothing for the tools (their cards come from their repositories)', () => {
   assert.deepEqual([...generated.keys()].sort(), [...EXPECTED_FILES].sort());
-  assert.deepEqual(
-    TOOL_CARDS.map((tool) => tool.slug),
-    ['roto'],
-  );
+  assert.ok([...generated.keys()].every((file) => file.startsWith('faultory/')), 'only Faultory has generated pictures');
+  assert.ok(!generated.has('roto/card.png'), 'roto/card.png is fetched from the roto repository');
+  assert.ok(!generated.has('roto/card.svg'), 'roto/card.svg is not needed');
+  assert.ok(!('TOOL_CARDS' in placeholders), 'the generator has no tool cards');
 });
 
 test('running it twice gives byte-identical files', async () => {
@@ -116,17 +114,8 @@ test('each PNG is the picture of its SVG, at the declared size', async () => {
   assert.equal(data[3], 0, 'the corner of the wordmark is transparent');
   const centre = (Math.floor(info.height / 2) * info.width + 200) * info.channels;
   assert.equal(data[centre + 3], 255, 'the sticker is opaque');
-  const card = await sharp(/** @type {Buffer} */ (generated.get('roto/card.png'))).raw().toBuffer({ resolveWithObject: true });
+  const card = await sharp(/** @type {Buffer} */ (generated.get('faultory/card.png'))).raw().toBuffer({ resolveWithObject: true });
   assert.equal(card.data[3], 255, 'a card is opaque');
-});
-
-test('the name on a tool card is readable on its background', () => {
-  for (const tool of TOOL_CARDS) {
-    assert.ok(contrastRatio(tool.text, tool.background) >= 4.5, `${tool.slug}: text on background`);
-    const svg = text(`${tool.slug}/card.svg`);
-    assert.ok(svg.includes(`fill="${tool.background}"`));
-    assert.ok(svg.includes(`fill="${tool.text}"`));
-  }
 });
 
 test('the Faultory pictures use the accent colour of its declaration', () => {

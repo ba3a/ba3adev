@@ -29,8 +29,20 @@ const SHOWCASE = ['specloop', 'roto', 'faultory', 'coffer'];
 /** The tools whose text is a landing page, checked by their own test files (specloop-landing and coffer-landing). */
 const LANDING = ['specloop', 'coffer'];
 
-/** The landing pages whose text, brand pictures and card are fetched from the repository of the project (no index.md or card.png here). */
-const FROM_REPOSITORY = ['specloop', 'coffer'];
+/** The projects whose page text and card (and, for a landing page, brand pictures) are fetched from the repository of the project (no index.md or card.png here). */
+const FROM_REPOSITORY = ['specloop', 'roto', 'coffer'];
+
+/** Where the build leaves the checkout of a project whose page is fetched; its `site/landing.md` is the text of the page. */
+const checkouts = join(root, '.cache', 'repos');
+
+/**
+ * @param {string} slug
+ * @returns {string} The Markdown source of the page of a project: its own `index.md`, or the landing file fetched from its repository.
+ */
+function pageSource(slug) {
+  const file = FROM_REPOSITORY.includes(slug) ? join(checkouts, slug, 'site', 'landing.md') : join(projectsDir, slug, 'index.md');
+  return readText(file);
+}
 
 /**
  * What the spec (section 14) says about each project, which the seed texts copy.
@@ -198,8 +210,8 @@ test('the featured order is specloop, roto, faultory, coffer, and every number i
 test('every seed text is marked "TODO: rewrite" in its source', () => {
   // The texts of the landing pages are final.
   for (const slug of SHOWCASE.filter((name) => !LANDING.includes(name))) {
-    const page = readText(join(projectsDir, slug, 'index.md'));
-    assert.ok(page.startsWith('<!-- TODO: rewrite -->'), `${slug}/index.md starts with the marker`);
+    const page = pageSource(slug);
+    assert.ok(page.startsWith('<!-- TODO: rewrite -->'), `${slug}: the source of the page starts with the marker`);
     assert.match(readText(join(projectsDir, slug, 'project.yaml')), /^# TODO: rewrite\b/m, `${slug}/project.yaml has the marker`);
   }
   for (const slug of LANDING.filter((name) => !FROM_REPOSITORY.includes(name))) {
@@ -209,11 +221,8 @@ test('every seed text is marked "TODO: rewrite" in its source', () => {
 });
 
 test('the seed points are the spec\'s text, in the Markdown source (the features of a game, in its declaration)', () => {
-  for (const [slug, expected] of Object.entries(SPEC).filter(([name]) => !FROM_REPOSITORY.includes(name))) {
-    const source =
-      slug === 'faultory'
-        ? /** @type {string[]} */ (declaration(slug).features).join('\n')
-        : readText(join(projectsDir, slug, 'index.md'));
+  for (const [slug, expected] of Object.entries(SPEC).filter(([name]) => !LANDING.includes(name))) {
+    const source = slug === 'faultory' ? /** @type {string[]} */ (declaration(slug).features).join('\n') : pageSource(slug);
     for (const point of expected.points) assert.ok(source.includes(point), `${slug}: "${point}" is in the source`);
   }
 });
@@ -270,6 +279,17 @@ test('the sitemap lists the projects page and every project page; each project h
     assert.match(feed, new RegExp(`<title>${SPEC[slug].name}\\b`), `the feed of ${slug} is titled with the project name`);
     assert.match(output(`made/${slug}/index.html`), new RegExp(`<link rel="alternate" type="application/atom\\+xml" title="Feed of ${SPEC[slug].name}" href="/made/${slug}/feed\\.xml">`));
   }
+});
+
+test('roto takes its page text and card from the roto repository, and /made/roto/ shows that text', () => {
+  const fields = declaration('roto');
+  assert.deepEqual(fields.landing, { file: 'site/landing.md' });
+  assert.equal(fields.card, 'repo:site/card.png');
+  assert.ok(!existsSync(join(projectsDir, 'roto', 'index.md')), 'no local index.md');
+  assert.ok(!existsSync(join(projectsDir, 'roto', 'card.png')), 'no local card.png');
+  assert.ok(!existsSync(join(projectsDir, 'roto', 'card.svg')), 'no local card.svg');
+  const main = mainOf(output('made/roto/index.html'));
+  for (const point of SPEC.roto.points) assert.ok(main.includes(`<li>${pointHtml(point)}</li>`), `the page shows "${point}"`);
 });
 
 test('the card of each project is its link preview image', () => {
@@ -537,7 +557,7 @@ test('the placeholder art is found: every card, the Faultory pictures and the Ha
 test('the guard uses the engine glob matcher: a wide raster pattern would capture the pictures, a narrow one would not', () => {
   const artwork = placeholderArtwork();
   const png = artwork.filter((path) => path.endsWith('.png'));
-  assert.ok(png.length >= 4, `at least four raster pictures (the cards of roto and faultory, and its logo and key art): ${png.length}`);
+  assert.ok(png.length >= 3, `at least three raster pictures (the card of faultory, its logo and key art): ${png.length}`);
   // What step 52 must not write: any of these takes the project pictures out of git.
   for (const wide of ['content/**/*.png', '**/*.png', 'content/ba3a.dev/**/*.png', 'content/ba3a.dev/projects/**/*.png']) {
     assert.ok(png.every((path) => isOriginal([wide], path)), `${wide} would capture the project pictures`);

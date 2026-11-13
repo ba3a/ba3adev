@@ -137,7 +137,7 @@ before(async () => {
   for (const slug of Object.keys(files)) {
     const folder = join(dir, 'content', 'projects', slug);
     mkdirSync(folder, { recursive: true });
-    cpSync(join(root, 'content', 'ba3a.dev', 'projects', 'roto', 'card.png'), join(folder, 'card.png'));
+    cpSync(join(root, 'content', 'ba3a.dev', 'projects', 'faultory', 'card.png'), join(folder, 'card.png'));
     writeFileSync(
       join(folder, 'project.yaml'),
       [

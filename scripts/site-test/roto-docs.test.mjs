@@ -250,7 +250,7 @@ async function inFixtureSite(body) {
     writeFileSync(join(dir, 'coffer.yaml'), FIXTURE_CONFIG);
     writeFileSync(join(dir, 'content', 'home.md'), '---\ntitle: Demo\n---\n\nAbout.\n');
     // The card of the real project is a valid PNG.
-    cpSync(join(root, 'content', 'ba3a.dev', 'projects', 'roto', 'card.png'), join(dir, 'content', 'projects', 'roto', 'card.png'));
+    cpSync(join(root, 'content', 'ba3a.dev', 'projects', 'faultory', 'card.png'), join(dir, 'content', 'projects', 'roto', 'card.png'));
     writeFileSync(join(dir, 'content', 'projects', 'roto', 'index.md'), 'Text.\n');
     const real = declaration;
     const docs = {
