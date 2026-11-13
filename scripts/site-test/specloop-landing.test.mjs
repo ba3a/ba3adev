@@ -13,7 +13,6 @@ import { contrastRatio, readRules } from './lib/wcag.mjs';
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist', 'ba3a.dev');
 const themeDir = join(root, 'themes', 'ba3a');
-const projectDir = join(root, 'content', 'ba3a.dev', 'projects', 'specloop');
 
 /** @param {string} file Path inside the output of ba3a.dev. @returns {string} */
 function output(file) {
@@ -26,7 +25,10 @@ const SECTIONS = ['hero', 'problem', 'how-it-works', 'timeline', 'spec-example',
 
 const page = output('made/specloop/index.html');
 const css = readFileSync(join(themeDir, 'assets', 'landing.css'), 'utf8');
-const source = readFileSync(join(projectDir, 'index.md'), 'utf8');
+// The text of the page is the file of the specloop repository, in the checkout the docs are built from.
+const sourcePath = join(root, '.cache', 'repos', 'specloop', 'site', 'landing.md');
+assert.ok(existsSync(sourcePath), '.cache/repos/specloop/site/landing.md exists (run "npm run test:sites")');
+const source = readFileSync(sourcePath, 'utf8');
 
 // --- the page ------------------------------------------------------------------
 
@@ -112,14 +114,14 @@ test('no other page loads the landing stylesheet, the landing markup or its font
   }
 });
 
-test('the words of the page are in index.md, not in the layout', () => {
+test('the words of the page are in landing.md, not in the layout', () => {
   const layout = [
     readFileSync(join(themeDir, 'templates', 'partials', 'landing.njk'), 'utf8').replace(/\{#[\s\S]*?#\}/g, ''),
     readFileSync(join(themeDir, 'templates', 'project-tool.njk'), 'utf8').replace(/\{#[\s\S]*?#\}/g, ''),
     css.replace(/\/\*[\s\S]*?\*\//g, ''),
   ].join('\n');
   for (const phrase of ['Go make tea', 'Right now, you are the loop', 'Questions people ask', 'Stop typing', 'Does it cost extra', 'How it works', 'Quick start']) {
-    assert.ok(source.includes(phrase), `index.md has "${phrase}"`);
+    assert.ok(source.includes(phrase), `landing.md has "${phrase}"`);
     assert.ok(!layout.includes(phrase), `the layout does not repeat "${phrase}"`);
   }
 });
@@ -152,8 +154,8 @@ test('the final call to action has no <hr>, and its closing line stays as writte
   assert.ok(section.length > 0);
   assert.doesNotMatch(section, /<hr/);
   assert.doesNotMatch(page, /<hr/, 'no stray rule on the page: the dividers are borders of the sections');
-  assert.match(section, /<p>specloop · 0BSD · do anything with it\./, 'the Markdown text is the one in index.md');
-  assert.match(source, /\n---\n\nspecloop · 0BSD/, 'index.md still has its --- line');
+  assert.match(section, /<p>specloop · 0BSD · do anything with it\./, 'the Markdown text is the one in landing.md');
+  assert.match(source, /\n---\n\nspecloop · 0BSD/, 'landing.md still has its --- line');
 });
 
 test('the FAQ column has the standard width, and only the answer text is capped at a reading width', () => {

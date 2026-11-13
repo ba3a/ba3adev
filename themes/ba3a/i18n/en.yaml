@@ -2,9 +2,7 @@
 # Only the words the layout adds are here; the text of a landing page is in its
 # landing file. Everything else is coffer's English default. `default` holds the
 # words of a page that sets none of its own (its front matter has `layout.strings`);
-# the name in the top bar is the name of the project. The blocks under a slug
-# (coffer, specloop) are used only by a page whose front matter has no `layout`;
-# they are removed when the last project has moved.
+# the name in the top bar is the name of the project.
 landing:
   nav: Sections of this page
   github: "★ GitHub"
@@ -13,13 +11,3 @@ landing:
     hero_terminal: A terminal session in Claude Code, running a feature from a spec to reviewed commits.
     dogfood_terminal: The git log of a feature that specloop built, one commit per step.
     chat: A typical chat without specloop, in which the person keeps asking Claude to continue.
-  specloop:
-    terminal_title: "claude — my-project"
-    hero_terminal: A terminal session in Claude Code, running a feature from a spec to reviewed commits.
-    dogfood_terminal: The git log of a feature that specloop built, one commit per step.
-    chat: A typical chat without specloop, in which the person keeps asking Claude to continue.
-  coffer:
-    terminal_title: "coffer — example site"
-    hero_terminal: A terminal session that builds and checks the example site of coffer.
-    problem_terminal: A shell script of the tools a photo journal usually needs besides its site generator.
-    dogfood_terminal: The build-info.json that ba3a.dev serves, with the commit of every repository its documentation came from.

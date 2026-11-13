@@ -30,7 +30,7 @@ const SHOWCASE = ['specloop', 'roto', 'faultory', 'coffer'];
 const LANDING = ['specloop', 'coffer'];
 
 /** The landing pages whose text, brand pictures and card are fetched from the repository of the project (no index.md or card.png here). */
-const FROM_REPOSITORY = ['coffer'];
+const FROM_REPOSITORY = ['specloop', 'coffer'];
 
 /**
  * What the spec (section 14) says about each project, which the seed texts copy.
@@ -537,7 +537,7 @@ test('the placeholder art is found: every card, the Faultory pictures and the Ha
 test('the guard uses the engine glob matcher: a wide raster pattern would capture the pictures, a narrow one would not', () => {
   const artwork = placeholderArtwork();
   const png = artwork.filter((path) => path.endsWith('.png'));
-  assert.ok(png.length >= 5, `at least five raster pictures (the cards of specloop, roto and faultory, its logo and key art): ${png.length}`);
+  assert.ok(png.length >= 4, `at least four raster pictures (the cards of roto and faultory, and its logo and key art): ${png.length}`);
   // What step 52 must not write: any of these takes the project pictures out of git.
   for (const wide of ['content/**/*.png', '**/*.png', 'content/ba3a.dev/**/*.png', 'content/ba3a.dev/projects/**/*.png']) {
     assert.ok(png.every((path) => isOriginal([wide], path)), `${wide} would capture the project pictures`);

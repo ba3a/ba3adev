@@ -1,12 +1,12 @@
 // Assertions about where the landing layout (themes/ba3a/templates/partials/landing.njk) gets
 // its settings: the `layout` of the front matter of the landing file (`project.landing.layout`),
-// with a default for every setting, and, for a page that has none, the table that is kept until
-// the last project has moved.
+// with a default for every setting. The layout keeps no setting of its own per project: the slug
+// of a project gives nothing.
 //
-// The test builds a small site with the theme of ba3a.dev from a folder source (no network): four
+// The test builds a small site with the theme of ba3a.dev from a folder source (no network): five
 // projects whose landing files are in one folder: one with a full `layout`, one with a layout
-// whose settings are partly unknown, one without a layout, and one whose slug is in the table
-// but whose front matter differs from it.
+// whose settings are partly unknown, two without a layout (one of them named like a project that
+// used to have a table entry), and one with strings that are empty or not strings.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -89,9 +89,8 @@ const FULL_LAYOUT = [
 // A layout with values the layout does not know, and no strings.
 const PARTIAL_LAYOUT = ['layout:', '  dogfood: nonsense', '  when: never', '  brand: -3', '  visual: { hero: table }'].join('\n');
 
-// The slug of a project that the fallback table knows (coffer: dogfood plain, hero terminal, when span,
-// brand 0, problem pre), with a layout that differs from the table in every setting.
-const TABLE_SLUG_LAYOUT = [
+// A layout whose strings are empty or not strings.
+const STRINGS_LAYOUT = [
   'layout:',
   '  visual: { problem: blockquote }',
   '  dogfood: gitlog',
@@ -114,7 +113,7 @@ before(async () => {
   dir = mkdtempSync(join(tmpdir(), 'landing-layout-'));
   const repo = join(dir, 'repo');
   mkdirSync(join(repo, 'site'), { recursive: true });
-  const files = { alpha: FULL_LAYOUT, beta: PARTIAL_LAYOUT, gamma: null, coffer: TABLE_SLUG_LAYOUT };
+  const files = { alpha: FULL_LAYOUT, beta: PARTIAL_LAYOUT, gamma: null, coffer: null, delta: STRINGS_LAYOUT };
   for (const [slug, layout] of Object.entries(files)) {
     const front = layout === null ? '' : `---\n${layout}\n---\n\n`;
     writeFileSync(join(repo, 'site', `${slug}.md`), front + BODY);
@@ -216,38 +215,54 @@ test('a setting that is missing or unknown gives the default layout, with the de
   assert.match(page, /<span>beta<span class="lp-accent">tool<\/span><\/span>/);
 });
 
-test('a page without a layout in its front matter is laid out like specloop (the fallback table)', () => {
-  const page = pages.gamma;
-  assert.match(section(page, 'problem'), /lp-chat/);
-  assert.match(section(page, 'timeline'), /<li><time>9:00<\/time> Write the spec<\/li>/);
-  assert.match(page, /<span>gamm<span class="lp-accent">atool<\/span><\/span>/);
-  assert.match(section(page, 'hero'), /aria-label="A terminal session in Claude Code/);
+test('a page without a layout in its front matter is laid out with the defaults', () => {
+  for (const slug of ['gamma', 'coffer']) {
+    const page = pages[slug];
+    assert.match(section(page, 'problem'), /lp-chat/, slug);
+    assert.match(section(page, 'timeline'), /<li><time>9:00<\/time> Write the spec<\/li>/, slug);
+    assert.match(section(page, 'dogfood'), /<span class="lp-t-w">abcdef1<\/span>/, slug);
+    assert.match(section(page, 'hero'), /aria-label="A terminal session in Claude Code/, slug);
+    assert.match(section(page, 'hero'), /<b>claude — my-project<\/b>/, slug);
+  }
+  assert.match(pages.gamma, /<span>gamm<span class="lp-accent">atool<\/span><\/span>/);
 });
 
-test('the layout of the front matter wins over the table for a slug the table knows', () => {
+test('the slug of a project gives no setting: coffer without a layout is laid out like any other page', () => {
   const page = pages.coffer;
-  // The table would give: problem pre, hero terminal, dogfood plain, when span, brand 0.
-  assert.match(section(page, 'problem'), /<div class="lp-chat" role="group" aria-label="front matter chat words">/);
+  // The table of the layout used to give coffer: problem pre, hero terminal, dogfood plain, when span, brand 0.
   assert.doesNotMatch(section(page, 'problem'), /lp-term/);
-  assert.match(section(page, 'hero'), /<b>front matter title<\/b>/);
   assert.doesNotMatch(section(page, 'hero'), /<span class="lp-t-p">\$<\/span>/, 'a session, not a terminal');
-  assert.match(section(page, 'dogfood'), /<span class="lp-t-w">abcdef1<\/span>/, 'a git log, not plain');
-  assert.match(section(page, 'timeline'), /<li><time>9:00<\/time> Write the spec<\/li>/);
   assert.doesNotMatch(section(page, 'timeline'), /lp-when/);
-  assert.match(page, /<span>co<span class="lp-accent">ffertool<\/span><\/span>/);
-  assert.doesNotMatch(page, /coffer — example site|builds and checks the example site|build-info\.json/, 'none of the words of landing.coffer');
+  assert.match(page, /<span>coff<span class="lp-accent">ertool<\/span><\/span>/);
+  assert.doesNotMatch(page, /coffer — example site|builds and checks the example site|build-info\.json/, 'none of the words that were under landing.coffer');
+});
+
+test('the layout of the front matter sets the settings it names, and the rest are defaults', () => {
+  const page = pages.delta;
+  assert.match(section(page, 'problem'), /<div class="lp-chat" role="group" aria-label="front matter chat words">/);
+  assert.match(section(page, 'hero'), /<b>front matter title<\/b>/);
+  assert.match(section(page, 'timeline'), /<li><time>9:00<\/time> Write the spec<\/li>/);
+  assert.match(page, /<span>de<span class="lp-accent">ltatool<\/span><\/span>/);
 });
 
 test('an empty or non-string string of the front matter gives the default string', () => {
-  const page = pages.coffer;
+  const page = pages.delta;
   assert.match(section(page, 'hero'), /aria-label="A terminal session in Claude Code, running a feature from a spec to reviewed commits\."/);
   assert.match(section(page, 'dogfood'), /aria-label="The git log of a feature that specloop built, one commit per step\."/);
 });
 
-test('the layout keeps no setting of its own per project beyond the marked fallback', () => {
-  const layout = readFileSync(join(themeDir, 'templates', 'partials', 'landing.njk'), 'utf8');
-  assert.match(layout, /project\.landing\.layout/);
-  assert.match(layout, /REMOVE when the last project has moved/);
-  const defaults = readFileSync(join(themeDir, 'i18n', 'en.yaml'), 'utf8');
-  assert.match(defaults, /^ {2}default:\n( {4}\w+:.*\n)+/m, 'i18n/en.yaml has landing.default');
+test('the layout keeps no setting of its own per project: no table, no fallback, no strings under a slug', () => {
+  const layout = readFileSync(join(themeDir, 'templates', 'partials', 'landing.njk'), 'utf8').replace(/\r\n/g, '\n');
+  const code = layout.replace(/\{#[\s\S]*?#\}/g, '');
+  assert.match(code, /project\.landing\.layout/);
+  assert.doesNotMatch(code, /layouts|legacy/, 'the layout has no table and no fallback');
+  assert.doesNotMatch(layout, /REMOVE when the last project has moved/);
+  assert.doesNotMatch(layout, /index\.md|landing\.(coffer|specloop)/, 'the comments name no index.md and no strings of a project');
+  const strings = readFileSync(join(themeDir, 'i18n', 'en.yaml'), 'utf8');
+  assert.match(strings, /^ {2}default:\n( {4}\w+:.*\n)+/m, 'i18n/en.yaml has landing.default');
+  assert.deepEqual(
+    [...strings.matchAll(/^ {2}([a-z_]+):/gm)].map((match) => match[1]),
+    ['nav', 'github', 'default'],
+    'landing.nav, landing.github and landing.default are the only entries: none per slug',
+  );
 });

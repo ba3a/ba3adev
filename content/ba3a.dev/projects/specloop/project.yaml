@@ -1,11 +1,16 @@
-# The page of specloop is a landing page: index.md holds its text and the
-# section markers that the theme turns into the layout (see AUTHORING.md,
-# "A landing page"). The brand pictures are in themes/ba3a/assets/specloop/.
+# The page of specloop is a landing page whose text and layout settings are in
+# site/landing.md of the specloop repository; the brand pictures (site/brand/)
+# and the card (site/card.png) come from the same repository. The build fetches
+# them from main, so a push to specloop changes the site at the next build. The
+# theme turns the section markers of the file into the layout (see AUTHORING.md,
+# "A landing page").
 name: specloop
 pitch: A spec-driven plan → implement → review loop for Claude Code. Hand it a spec, walk away, come back to a reviewed branch with one commit per step.
 kind: tool
 status: released
-card: card.png
+landing: { file: site/landing.md }
+brand: { dir: site/brand }
+card: repo:site/card.png
 cardAlt: "The specloop logo, a snake biting its own tail, beside the name specloop and the line Write the spec. Go make tea. Come back to reviewed commits."
 featured: true
 order: 1

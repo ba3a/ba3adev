@@ -1,15 +1,18 @@
 {#
-  A landing page: the text of a project (index.md) laid out as the sections of
-  assets/landing.css. Included by project-tool.njk when the text has section
-  markers. See AUTHORING.md, "A landing page", for the two conventions.
+  A landing page: the text of a project (its landing file, fetched from the
+  repository of the project) laid out as the sections of assets/landing.css.
+  Included by project-tool.njk when the text has section markers. See
+  AUTHORING.md, "A landing page", for the two conventions.
 
   coffer has no hook between the Markdown and the template, and the Markdown
   renderer drops HTML comments, so the page is rebuilt here from the HTML of the
   text: the text is cut at the markers (`<div class="section-marker" id="name">`),
   and what Markdown made of each section (the table, the lists, the quote, the
   code blocks, the `###` questions) is reshaped with regular expressions, by the
-  name of the section. All the words on the page come from index.md; the strings
-  of this file are only the words the layout itself adds (i18n/en.yaml).
+  name of the section. All the words on the page come from the landing file; the
+  strings of this file are only the words the layout itself adds (i18n/en.yaml).
+  The layout has no setting of its own per project: what differs between pages is
+  in the front matter of the landing file (see the note below).
 #}
 
 {#- Code blocks. Shiki has coloured every token for the GitHub themes; the landing
@@ -58,23 +61,8 @@
 {% set kindsOfVisual = ['pre', 'blockquote', 'ul'] %}
 {% set kindsOfTerminal = ['terminal', 'session', 'gitlog', 'shell', 'markdown', 'plain'] %}
 
-{#- REMOVE when the last project has moved to its repository: the table below and the strings landing.coffer and
-    landing.specloop of i18n/en.yaml are the layout of the projects whose page still has no `layout` in its front
-    matter (an unknown slug is laid out like specloop). Only a page without `project.landing.layout` uses them. -#}
-{% set layouts = {
-  'specloop': { 'visual': { 'hero': 'pre', 'problem': 'blockquote', 'timeline': 'ul', 'spec-example': 'pre', 'quick-start': 'pre' }, 'dogfood': 'gitlog', 'hero': 'session', 'when': 'time', 'brand': 4 },
-  'coffer': { 'visual': { 'hero': 'pre', 'problem': 'pre', 'timeline': 'ul', 'spec-example': 'pre', 'quick-start': 'pre' }, 'dogfood': 'plain', 'hero': 'terminal', 'when': 'span', 'brand': 0 }
-} %}
-{% set fromFrontMatter = project.landing and project.landing.layout is mapping %}
-{% if fromFrontMatter %}
-{% set setting = project.landing.layout %}
+{% set setting = project.landing.layout if (project.landing and project.landing.layout is mapping) else {} %}
 {% set stringsOf = setting.strings if setting.strings is mapping else {} %}
-{% set legacyStrings = '' %}
-{% else %}
-{% set setting = layouts[project.slug] or layouts['specloop'] %}
-{% set stringsOf = {} %}
-{% set legacyStrings = 'landing.' + (project.slug if layouts[project.slug] else 'specloop') + '.' %}
-{% endif %}
 {% set given = setting.visual if setting.visual is mapping else {} %}
 {% set visualTag = {
   'hero': given.hero if given.hero in kindsOfVisual else 'pre',
@@ -89,10 +77,10 @@
 {% set brandLength = setting.brand if (setting.brand is number and setting.brand >= 0) else 4 %}
 {% set brandStart = project.name.slice(0, brandLength) if brandLength else project.name %}
 {% set brandEnd = project.name.slice(brandLength) if brandLength else '' %}
-{#- The words the layout adds: the front matter first, then the defaults (or, for a page without a layout, the
-    strings of its slug). An empty or non-string value is not a string of the layout. -#}
-{% macro words(key, own, legacy) -%}
-{{ own[key] if (own[key] is string and own[key]) else ((legacy + key) | t if legacy else ('landing.default.' + key) | t) }}
+{#- The words the layout adds: the front matter first, then the defaults of i18n/en.yaml. An empty or non-string
+    value is not a string of the layout. -#}
+{% macro words(key, own) -%}
+{{ own[key] if (own[key] is string and own[key]) else ('landing.default.' + key) | t }}
 {%- endmacro %}
 
 {#- The sections, as [marker, html, marker, html, ...] after a first empty piece. -#}
@@ -138,21 +126,21 @@
 {#- Each sentence of the headline on its own line, the second one in the accent colour. -#}
 {% set text = text | replace(r/<h1( [^>]*)?>([^<.]*\.) ([^<.]*\.) ([^<]*)<\/h1>/, '<h1$1><span class="lp-line">$2</span> <span class="lp-line lp-accent">$3</span> <span class="lp-line">$4</span></h1>') %}
 {% set visual %}
-<div class="lp-term" role="group" aria-label="{{ words('hero_terminal', stringsOf, legacyStrings) }}">
-<div class="lp-term-bar" aria-hidden="true"><i></i><i></i><i></i><b>{{ words('terminal_title', stringsOf, legacyStrings) }}</b></div>
+<div class="lp-term" role="group" aria-label="{{ words('hero_terminal', stringsOf) }}">
+<div class="lp-term-bar" aria-hidden="true"><i></i><i></i><i></i><b>{{ words('terminal_title', stringsOf) }}</b></div>
 {{ tokens(visual, heroKind) | replace('</code></pre>', '\n<span class="lp-cursor" aria-hidden="true"></span></code></pre>') | safe }}
 </div>
 {% endset %}
 
 {% elif name == 'problem' %}
 {% if visualTag.problem == 'blockquote' %}
-{% set chatLabel %}{{ words('chat', stringsOf, legacyStrings) }}{% endset %}
+{% set chatLabel %}{{ words('chat', stringsOf) }}{% endset %}
 {% set visual = visual | replace('<blockquote>', '<div class="lp-chat" role="group" aria-label="' + chatLabel + '">') | replace('</blockquote>', '</div>') %}
 {% set visual = visual | replace(r/<p><strong>You:<\/strong> /g, '<p class="lp-you"><strong class="lp-sr">You:</strong> ') %}
 {% set visual = visual | replace(r/<p><strong>Claude:<\/strong> /g, '<p class="lp-ai"><strong class="lp-sr">Claude:</strong> ') %}
 {% else %}
 {% set visual %}
-<div class="lp-term lp-term-plain" role="group" aria-label="{{ words('problem_terminal', stringsOf, legacyStrings) }}">{{ tokens(visual, 'shell') }}</div>
+<div class="lp-term lp-term-plain" role="group" aria-label="{{ words('problem_terminal', stringsOf) }}">{{ tokens(visual, 'shell') }}</div>
 {% endset %}
 {% endif %}
 
@@ -183,7 +171,7 @@
 {% set preAt = html.indexOf('<pre') %}
 {% set preEnd = html.indexOf('</pre>') + 6 %}
 {% set terminal %}
-<div class="lp-term lp-term-plain" role="group" aria-label="{{ words('dogfood_terminal', stringsOf, legacyStrings) }}">{{ tokens(html.slice(preAt, preEnd), dogfoodKind) }}</div>
+<div class="lp-term lp-term-plain" role="group" aria-label="{{ words('dogfood_terminal', stringsOf) }}">{{ tokens(html.slice(preAt, preEnd), dogfoodKind) }}</div>
 {% endset %}
 {% set html = html.slice(0, preAt) + terminal + html.slice(preEnd) %}
 
@@ -192,7 +180,7 @@
 
 {% elif name == 'final-cta' %}
 {#- The Markdown has a rule between the buttons and the closing line. The divider above the section is the page's
-    only rule of that kind, so this one is dropped (the text in index.md stays as written). -#}
+    only rule of that kind, so this one is dropped (the text in the landing file stays as written). -#}
 {% set html = html | replace(r/<hr\s*\/?>\s*/g, '') %}
 
 {% elif name == 'faq' %}
