@@ -5,6 +5,7 @@
   landing page". Every other tool page is rendered exactly as the engine does it.
 #}
 {% extends "coffer:project-tool.njk" %}
+{% from "partials/landing-accent.njk" import accentStyle %}
 
 {% set landing = 'class="section-marker"' in (page.content or '') %}
 
@@ -25,7 +26,8 @@
 
 {% block project_body %}
 {% if landing %}
-<div class="landing landing-{{ project.slug }}">
+{% set accent = accentStyle(project.landing) %}
+<div class="landing landing-{{ project.slug }}"{% if accent %} style="{{ accent }}"{% endif %}>
 {% include "partials/landing.njk" %}
 {# What every project page has, below the landing sections: facts, devlog posts. #}
 <div class="lp-section lp-extra">

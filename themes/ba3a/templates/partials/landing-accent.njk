@@ -1,0 +1,27 @@
+{#
+  The accent palette of a landing page: `accent: { light, dark }` in the front matter of its landing file
+  (`project.landing.accent`), as the inline style of the .landing wrapper. Each value becomes the custom property
+  --accent-light-<key> or --accent-dark-<key>, and assets/landing.css picks the pair of the active scheme.
+
+  The values come from another repository and go into a `style` attribute, so only the keys listed here are
+  emitted, and only when the value is a hex colour (`#rgb` or `#rrggbb`). Anything else is left out and the
+  default of landing.css applies; nothing else can reach the attribute. A landing without `accent` gets no style.
+
+  Keys: accent (buttons, large accent text), accent-text (small accent text), accent-soft (tinted surfaces),
+  term-accent (prompts and commands in the terminals), on-accent (text on the buttons).
+#}
+{% macro accentStyle(landing) -%}
+{%- set keys = ['accent', 'accent-text', 'accent-soft', 'term-accent', 'on-accent'] -%}
+{%- set accent = landing.accent if (landing and landing.accent is mapping) else {} -%}
+{%- set declarations = [] -%}
+{%- for scheme in ['light', 'dark'] -%}
+{%- set values = accent[scheme] if accent[scheme] is mapping else {} -%}
+{%- for key in keys -%}
+{%- set value = values[key] -%}
+{%- if value is string and value.match(r/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/) -%}
+{%- set _ = declarations.push('--accent-' + scheme + '-' + key + ':' + value) -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endfor -%}
+{{- declarations.join(';') -}}
+{%- endmacro %}

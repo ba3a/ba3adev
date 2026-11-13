@@ -9,6 +9,16 @@
    repeated under the system preference and under [data-theme="dark"], as the
    rest of the site does it.
 
+   The accent is the one thing a project sets: `accent: { light, dark }` in the
+   front matter of its landing file becomes --accent-light-<key> and
+   --accent-dark-<key> on the wrapper (partials/landing-accent.njk), and the
+   tokens below pick the pair of the active scheme, with the palette written
+   here as the fallback. A landing needs no CSS of its own for its colours. The
+   keys are accent, accent-text, accent-soft, term-accent and on-accent. In the
+   light scheme (no preference, or [data-theme="light"] against a dark system)
+   the --accent-light-* values apply; the dark rules exclude
+   [data-theme="light"].
+
    Contrast: every text colour below is checked for WCAG AA in both schemes by
    scripts/site-test/specloop-landing.test.mjs. Two tokens exist for that and are
    not in the style guide: --accent-text, a darker rust for small accent text on
@@ -44,17 +54,17 @@
   --fg: #1d1b18;
   --muted: #6b665d;
   --line: #e2ddd2;
-  --accent: #c2521c;
-  --accent-text: #ae4716;
-  --on-accent: #ffffff;
-  --accent-soft: #f6e3d6;
+  --accent: var(--accent-light-accent, #c2521c);
+  --accent-text: var(--accent-light-accent-text, #ae4716);
+  --on-accent: var(--accent-light-on-accent, #ffffff);
+  --accent-soft: var(--accent-light-accent-soft, #f6e3d6);
   --ok: #2f7d4f;
   --term-bg: #17161a;
   --term-fg: #e9e6df;
   --term-muted: #8a857b;
   --term-ok: #7fd19b;
   --term-warn: #f2b45c;
-  --term-accent: #f08a50;
+  --term-accent: var(--accent-light-term-accent, #f08a50);
   --radius: 14px;
 
   --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -80,10 +90,11 @@
     --fg: #ece9e2;
     --muted: #a19c92;
     --line: #2c2a30;
-    --accent: #f08a50;
-    --accent-text: #f08a50;
-    --on-accent: #121114;
-    --accent-soft: #2e1f17;
+    --accent: var(--accent-dark-accent, #f08a50);
+    --accent-text: var(--accent-dark-accent-text, #f08a50);
+    --on-accent: var(--accent-dark-on-accent, #121114);
+    --accent-soft: var(--accent-dark-accent-soft, #2e1f17);
+    --term-accent: var(--accent-dark-term-accent, #f08a50);
     --ok: #7fd19b;
     --term-bg: #0b0a0d;
   }
@@ -95,39 +106,13 @@
   --fg: #ece9e2;
   --muted: #a19c92;
   --line: #2c2a30;
-  --accent: #f08a50;
-  --accent-text: #f08a50;
-  --on-accent: #121114;
-  --accent-soft: #2e1f17;
+  --accent: var(--accent-dark-accent, #f08a50);
+  --accent-text: var(--accent-dark-accent-text, #f08a50);
+  --on-accent: var(--accent-dark-on-accent, #121114);
+  --accent-soft: var(--accent-dark-accent-soft, #2e1f17);
+  --term-accent: var(--accent-dark-term-accent, #f08a50);
   --ok: #7fd19b;
   --term-bg: #0b0a0d;
-}
-
-/* coffer: the same page in the gold of its logo (#9a6b1f on light, #d9a84e on
-   dark). Only the accent and what is tinted with it change; the rest of the
-   palette is the one above. These rules come after the dark ones of .landing,
-   with the same specificity, so they win. Contrast is checked for both schemes
-   by scripts/site-test/coffer-landing.test.mjs. */
-
-.landing-coffer {
-  --accent: #9a6b1f;
-  --accent-text: #7c5516;
-  --accent-soft: #f4e8cc;
-  --term-accent: #e0b25c;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .landing-coffer {
-    --accent: #d9a84e;
-    --accent-text: #d9a84e;
-    --accent-soft: #2b2214;
-  }
-}
-
-:root[data-theme="dark"] .landing-coffer {
-  --accent: #d9a84e;
-  --accent-text: #d9a84e;
-  --accent-soft: #2b2214;
 }
 
 /* The output of coffer's own commands is wide: give the hero terminal more room. */

@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { readFrontMatter, resolveAccent } from './lib/landing-palette.mjs';
 import { contrastRatio, readRules } from './lib/wcag.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -29,6 +30,7 @@ const css = readFileSync(join(themeDir, 'assets', 'landing.css'), 'utf8');
 const sourcePath = join(root, '.cache', 'repos', 'specloop', 'site', 'landing.md');
 assert.ok(existsSync(sourcePath), '.cache/repos/specloop/site/landing.md exists (run "npm run test:sites")');
 const source = readFileSync(sourcePath, 'utf8');
+const frontMatter = readFrontMatter(sourcePath);
 
 // --- the page ------------------------------------------------------------------
 
@@ -199,13 +201,34 @@ function tokens(media, selector) {
   return found[0].declarations;
 }
 
-const light = tokens(null, '.landing');
+// The accent of the palette is the `accent` of the fetched landing file; landing.css picks the pair of the scheme
+// and keeps the default palette as the fallback (a landing without `accent` shows it).
+const accent = frontMatter.accent;
+const baseTokens = tokens(null, '.landing');
 const darkOverrides = tokens('(prefers-color-scheme: dark)', ':root:not([data-theme="light"]) .landing');
 const darkChoiceOverrides = tokens(null, ':root[data-theme="dark"] .landing');
-const dark = { ...light, ...darkChoiceOverrides };
+const light = resolveAccent(baseTokens, accent, 'light');
+const dark = resolveAccent({ ...baseTokens, ...darkChoiceOverrides }, accent, 'dark');
+const defaultLight = resolveAccent(baseTokens, undefined, 'light');
+const defaultDark = resolveAccent({ ...baseTokens, ...darkChoiceOverrides }, undefined, 'dark');
 
 test('the dark scheme is the same under the system preference and under the switch', () => {
   assert.deepEqual(darkOverrides, darkChoiceOverrides);
+});
+
+test('landing.css has no palette of one project, and the page carries the accent of its file on the wrapper', () => {
+  assert.deepEqual(readRules(css).filter((rule) => /landing-[a-z]/.test(rule.selector) && Object.keys(rule.declarations).some((name) => name.startsWith('--'))), []);
+  const style = /<div class="landing landing-specloop" style="([^"]*)">/.exec(page)?.[1] ?? '';
+  for (const scheme of /** @type {const} */ (['light', 'dark'])) {
+    for (const [key, value] of Object.entries(accent[scheme])) assert.ok(style.includes(`--accent-${scheme}-${key}:${value}`), `the wrapper has --accent-${scheme}-${key}`);
+  }
+});
+
+test('the accent of the file is the default palette, so a landing without accent looks like this page', () => {
+  assert.deepEqual(light, defaultLight);
+  assert.deepEqual(dark, defaultDark);
+  assert.deepEqual([light['--accent'], light['--accent-text'], light['--accent-soft']], ['#c2521c', '#ae4716', '#f6e3d6']);
+  assert.deepEqual([dark['--accent'], dark['--accent-text'], dark['--accent-soft']], ['#f08a50', '#f08a50', '#2e1f17']);
 });
 
 test('the tokens are those of the style guide, plus --accent-text and --on-accent', () => {

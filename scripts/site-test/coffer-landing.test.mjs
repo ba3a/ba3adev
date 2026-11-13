@@ -1,7 +1,7 @@
 // Assertions about the landing page of coffer (/made/coffer/) and what it adds to
-// the layout of specloop's: the per-project settings in
-// themes/ba3a/templates/partials/landing.njk, the gold palette in
-// themes/ba3a/assets/landing.css and the brand pictures. `npm run test:sites`
+// the layout of specloop's: the per-project settings in the front matter of its
+// landing file, the gold palette (the `accent` of that front matter, laid out by
+// themes/ba3a/assets/landing.css) and the brand pictures. `npm run test:sites`
 // builds the sites into `.cache/test-dist` first; these tests read the theme
 // sources and that output. The layout in general is tested by
 // specloop-landing.test.mjs.
@@ -11,6 +11,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { readFrontMatter, resolveAccent } from './lib/landing-palette.mjs';
 import { contrastRatio, readRules } from './lib/wcag.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -32,6 +33,7 @@ const css = readFileSync(join(themeDir, 'assets', 'landing.css'), 'utf8');
 const sourcePath = join(root, '.cache', 'repos', 'coffer', 'site', 'landing.md');
 assert.ok(existsSync(sourcePath), '.cache/repos/coffer/site/landing.md exists (run "npm run test:sites")');
 const source = readFileSync(sourcePath, 'utf8');
+const frontMatter = readFrontMatter(sourcePath);
 
 /** @param {string} name @returns {string} The HTML of one section of the page. */
 function part(name) {
@@ -47,7 +49,7 @@ test('the page has the twelve sections, in order, each with its name as id, and 
 });
 
 test('the wrapper carries the slug, and the top bar has the name of the project, the logos and the links to its sections', () => {
-  assert.match(page, /<div class="landing landing-coffer">/);
+  assert.match(page, /<div class="landing landing-coffer" style="[^"]*">/);
   assert.match(page, /<a class="lp-brand" href="#hero">[\s\S]*?<span>coffer<\/span>/, 'the name, without an accented end');
   assert.doesNotMatch(/<a class="lp-brand"[\s\S]*?<\/a>/.exec(page)?.[0] ?? '', /lp-accent/);
   assert.match(page, /<img class="lp-logo lp-logo-light" src="\/assets\/coffer\/logo\.svg"/);
@@ -135,7 +137,7 @@ test('the head has the title, the description, the preview image, the stylesheet
 
 test('the page of specloop keeps its own words and its accented name', () => {
   const other = output('made/specloop/index.html');
-  assert.match(other, /<div class="landing landing-specloop">/);
+  assert.match(other, /<div class="landing landing-specloop" style="[^"]*">/);
   assert.match(other, /<span>spec<span class="lp-accent">loop<\/span><\/span>/);
   assert.match(other, /aria-label="A terminal session in Claude Code/);
   assert.doesNotMatch(other, /landing-coffer/);
@@ -178,6 +180,7 @@ test('the FAQ column is as wide as the other sections', () => {
 
 // --- the gold palette ----------------------------------------------------------
 
+// The palette is the `accent` of the fetched landing file; landing.css picks the pair of the scheme.
 const rules = readRules(css);
 /** @param {string | null} media @param {string} selector @returns {Record<string, string>} */
 function declarations(media, selector) {
@@ -187,24 +190,40 @@ function declarations(media, selector) {
   return found[0].declarations;
 }
 
+const accent = frontMatter.accent;
 const base = declarations(null, '.landing');
 const darkBase = { ...base, ...declarations(null, ':root[data-theme="dark"] .landing') };
-const lightGold = declarations(null, '.landing-coffer');
-const darkGold = declarations(null, ':root[data-theme="dark"] .landing-coffer');
-const light = { ...base, ...lightGold };
-const dark = { ...darkBase, ...darkGold };
+const light = resolveAccent(base, accent, 'light');
+const dark = resolveAccent(darkBase, accent, 'dark');
+const KEYS = ['accent', 'accent-text', 'accent-soft', 'term-accent'];
 
-test('the gold is the one of the logo, and the dark scheme is the same under the system preference and under the switch', () => {
-  assert.deepEqual(declarations('(prefers-color-scheme: dark)', ':root:not([data-theme="light"]) .landing-coffer'), darkGold);
+test('the gold is the accent of the fetched landing file, and landing.css keeps no palette of coffer', () => {
+  assert.deepEqual(rules.filter((rule) => /landing-coffer|landing-specloop/.test(rule.selector) && Object.keys(rule.declarations).some((name) => name.startsWith('--'))), []);
+  assert.doesNotMatch(css, /#9a6b1f|#d9a84e|#7c5516|#e0b25c/i, 'no colour of coffer in landing.css');
+  assert.deepEqual(Object.keys(accent.light).sort(), [...KEYS].sort());
+  assert.deepEqual(Object.keys(accent.dark).sort(), [...KEYS].sort());
+  // The wrapper of the page carries the pair, so the colours of the file are the ones the page shows.
+  const style = /<div class="landing landing-coffer" style="([^"]*)">/.exec(page)?.[1] ?? '';
+  for (const scheme of /** @type {const} */ (['light', 'dark'])) {
+    for (const key of KEYS) assert.ok(style.includes(`--accent-${scheme}-${key}:${accent[scheme][key]}`), `the wrapper has --accent-${scheme}-${key}`);
+  }
+});
+
+test('the dark scheme is the same under the system preference and under the switch', () => {
+  const preference = { ...base, ...declarations('(prefers-color-scheme: dark)', ':root:not([data-theme="light"]) .landing') };
+  assert.deepEqual(resolveAccent(preference, accent, 'dark'), dark);
+});
+
+test('the gold is the one of the logo', () => {
   const logoLight = readFileSync(join(dist, 'assets', 'coffer', 'logo.svg'), 'utf8').toLowerCase();
   const logoDark = readFileSync(join(dist, 'assets', 'coffer', 'logo-dark.svg'), 'utf8').toLowerCase();
   assert.equal(light['--accent'], '#9a6b1f');
   assert.ok(logoLight.includes(light['--accent']), 'the accent of the light scheme is the gold of the light logo');
   assert.equal(dark['--accent'], '#d9a84e');
   assert.ok(logoDark.includes(dark['--accent']), 'the accent of the dark scheme is the gold of the dark logo');
-  // Only the accent and what is tinted with it differ from the palette of the other landing page.
-  assert.deepEqual(Object.keys(lightGold).sort(), ['--accent', '--accent-soft', '--accent-text', '--term-accent']);
-  assert.deepEqual(Object.keys(darkGold).sort(), ['--accent', '--accent-soft', '--accent-text']);
+  // The colours the page showed before the palette moved into the file.
+  assert.deepEqual([light['--accent'], light['--accent-text'], light['--accent-soft'], light['--term-accent'], light['--on-accent']], ['#9a6b1f', '#7c5516', '#f4e8cc', '#e0b25c', '#ffffff']);
+  assert.deepEqual([dark['--accent'], dark['--accent-text'], dark['--accent-soft'], dark['--term-accent'], dark['--on-accent']], ['#d9a84e', '#d9a84e', '#2b2214', '#e0b25c', '#121114']);
 });
 
 for (const [scheme, t] of /** @type {const} */ ([['light', light], ['dark', dark]])) {
