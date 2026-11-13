@@ -1,10 +1,18 @@
 # UI strings of the landing layout (themes/ba3a/templates/partials/landing.njk).
 # Only the words the layout adds are here; the text of a landing page is in its
-# index.md. Everything else is coffer's English default. The strings of one page
-# are under its slug; the name in the top bar is the name of the project.
+# landing file. Everything else is coffer's English default. `default` holds the
+# words of a page that sets none of its own (its front matter has `layout.strings`);
+# the name in the top bar is the name of the project. The blocks under a slug
+# (coffer, specloop) are used only by a page whose front matter has no `layout`;
+# they are removed when the last project has moved.
 landing:
   nav: Sections of this page
   github: "★ GitHub"
+  default:
+    terminal_title: "claude — my-project"
+    hero_terminal: A terminal session in Claude Code, running a feature from a spec to reviewed commits.
+    dogfood_terminal: The git log of a feature that specloop built, one commit per step.
+    chat: A typical chat without specloop, in which the person keeps asking Claude to continue.
   specloop:
     terminal_title: "claude — my-project"
     hero_terminal: A terminal session in Claude Code, running a feature from a spec to reviewed commits.

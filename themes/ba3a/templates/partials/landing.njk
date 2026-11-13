@@ -44,20 +44,56 @@
 {{ h | safe }}
 {%- endmacro %}
 
-{#- What differs between the landing pages, by the slug of the project (an unknown slug is laid out like specloop):
-    `visual` says, for the sections with two columns, which element is the visual (the first element of this kind);
-    `dogfood` is the kind of the terminal of that section; `when` is the element of the label of a timeline step
-    (a time, or just a word); `brand` is how many letters of the name come before the accented ones (0: no accent).
-    The words the layout adds are in i18n/en.yaml, under landing.{slug}. -#}
+{#- What differs between the landing pages is the `layout` of the front matter of the landing file
+    (`project.landing.layout`), with a default for every setting:
+    `visual` says, for the sections with two columns, which element is the visual (the first element of this kind;
+    default: pre for hero, spec-example and quick-start, blockquote for problem, ul for timeline);
+    `dogfood` is the kind of the terminal of the dogfood section (default: gitlog);
+    `hero` is the kind of the terminal of the hero section (default: session);
+    `when` is the element of the label of a timeline step: `time` (a time) or `span` (just a word); default: time;
+    `brand` is how many letters of the name come before the accented ones (0: no accent; default: 4).
+    `strings` are the words the layout adds (terminal_title, hero_terminal, problem_terminal, dogfood_terminal, chat);
+    the ones it lacks are the defaults of i18n/en.yaml, under landing.default.
+    A setting that is missing or has a value the layout does not know gives the default. -#}
+{% set kindsOfVisual = ['pre', 'blockquote', 'ul'] %}
+{% set kindsOfTerminal = ['terminal', 'session', 'gitlog', 'shell', 'markdown', 'plain'] %}
+
+{#- REMOVE when the last project has moved to its repository: the table below and the strings landing.coffer and
+    landing.specloop of i18n/en.yaml are the layout of the projects whose page still has no `layout` in its front
+    matter (an unknown slug is laid out like specloop). Only a page without `project.landing.layout` uses them. -#}
 {% set layouts = {
-  'specloop': { 'visual': { 'hero': 'pre', 'problem': 'blockquote', 'timeline': 'ul', 'spec-example': 'pre', 'quick-start': 'pre' }, 'dogfood': 'gitlog', 'when': 'time', 'brand': 4 },
-  'coffer': { 'visual': { 'hero': 'pre', 'problem': 'pre', 'timeline': 'ul', 'spec-example': 'pre', 'quick-start': 'pre' }, 'dogfood': 'plain', 'when': 'span class="lp-when"', 'brand': 0 }
+  'specloop': { 'visual': { 'hero': 'pre', 'problem': 'blockquote', 'timeline': 'ul', 'spec-example': 'pre', 'quick-start': 'pre' }, 'dogfood': 'gitlog', 'hero': 'session', 'when': 'time', 'brand': 4 },
+  'coffer': { 'visual': { 'hero': 'pre', 'problem': 'pre', 'timeline': 'ul', 'spec-example': 'pre', 'quick-start': 'pre' }, 'dogfood': 'plain', 'hero': 'terminal', 'when': 'span', 'brand': 0 }
 } %}
-{% set layout = layouts[project.slug] or layouts['specloop'] %}
-{% set visualTag = layout.visual %}
-{% set strings = 'landing.' + (project.slug if layouts[project.slug] else 'specloop') + '.' %}
-{% set brandStart = project.name.slice(0, layout.brand) if layout.brand else project.name %}
-{% set brandEnd = project.name.slice(layout.brand) if layout.brand else '' %}
+{% set fromFrontMatter = project.landing and project.landing.layout is mapping %}
+{% if fromFrontMatter %}
+{% set setting = project.landing.layout %}
+{% set stringsOf = setting.strings if setting.strings is mapping else {} %}
+{% set legacyStrings = '' %}
+{% else %}
+{% set setting = layouts[project.slug] or layouts['specloop'] %}
+{% set stringsOf = {} %}
+{% set legacyStrings = 'landing.' + (project.slug if layouts[project.slug] else 'specloop') + '.' %}
+{% endif %}
+{% set given = setting.visual if setting.visual is mapping else {} %}
+{% set visualTag = {
+  'hero': given.hero if given.hero in kindsOfVisual else 'pre',
+  'problem': given.problem if given.problem in kindsOfVisual else 'blockquote',
+  'timeline': given.timeline if given.timeline in kindsOfVisual else 'ul',
+  'spec-example': given['spec-example'] if given['spec-example'] in kindsOfVisual else 'pre',
+  'quick-start': given['quick-start'] if given['quick-start'] in kindsOfVisual else 'pre'
+} %}
+{% set dogfoodKind = setting.dogfood if setting.dogfood in kindsOfTerminal else 'gitlog' %}
+{% set heroKind = setting.hero if setting.hero in kindsOfTerminal else 'session' %}
+{% set whenTag = 'span class="lp-when"' if setting.when in ['span', 'span class="lp-when"'] else 'time' %}
+{% set brandLength = setting.brand if (setting.brand is number and setting.brand >= 0) else 4 %}
+{% set brandStart = project.name.slice(0, brandLength) if brandLength else project.name %}
+{% set brandEnd = project.name.slice(brandLength) if brandLength else '' %}
+{#- The words the layout adds: the front matter first, then the defaults (or, for a page without a layout, the
+    strings of its slug). An empty or non-string value is not a string of the layout. -#}
+{% macro words(key, own, legacy) -%}
+{{ own[key] if (own[key] is string and own[key]) else ((legacy + key) | t if legacy else ('landing.default.' + key) | t) }}
+{%- endmacro %}
 
 {#- The sections, as [marker, html, marker, html, ...] after a first empty piece. -#}
 {% set parts = page.content.split(r/<div class="section-marker" id="([a-z0-9-]+)"><\/div>\n*/) %}
@@ -102,21 +138,21 @@
 {#- Each sentence of the headline on its own line, the second one in the accent colour. -#}
 {% set text = text | replace(r/<h1( [^>]*)?>([^<.]*\.) ([^<.]*\.) ([^<]*)<\/h1>/, '<h1$1><span class="lp-line">$2</span> <span class="lp-line lp-accent">$3</span> <span class="lp-line">$4</span></h1>') %}
 {% set visual %}
-<div class="lp-term" role="group" aria-label="{{ (strings + 'hero_terminal') | t }}">
-<div class="lp-term-bar" aria-hidden="true"><i></i><i></i><i></i><b>{{ (strings + 'terminal_title') | t }}</b></div>
-{{ tokens(visual, 'terminal' if project.slug == 'coffer' else 'session') | replace('</code></pre>', '\n<span class="lp-cursor" aria-hidden="true"></span></code></pre>') | safe }}
+<div class="lp-term" role="group" aria-label="{{ words('hero_terminal', stringsOf, legacyStrings) }}">
+<div class="lp-term-bar" aria-hidden="true"><i></i><i></i><i></i><b>{{ words('terminal_title', stringsOf, legacyStrings) }}</b></div>
+{{ tokens(visual, heroKind) | replace('</code></pre>', '\n<span class="lp-cursor" aria-hidden="true"></span></code></pre>') | safe }}
 </div>
 {% endset %}
 
 {% elif name == 'problem' %}
 {% if visualTag.problem == 'blockquote' %}
-{% set chatLabel %}{{ (strings + 'chat') | t }}{% endset %}
+{% set chatLabel %}{{ words('chat', stringsOf, legacyStrings) }}{% endset %}
 {% set visual = visual | replace('<blockquote>', '<div class="lp-chat" role="group" aria-label="' + chatLabel + '">') | replace('</blockquote>', '</div>') %}
 {% set visual = visual | replace(r/<p><strong>You:<\/strong> /g, '<p class="lp-you"><strong class="lp-sr">You:</strong> ') %}
 {% set visual = visual | replace(r/<p><strong>Claude:<\/strong> /g, '<p class="lp-ai"><strong class="lp-sr">Claude:</strong> ') %}
 {% else %}
 {% set visual %}
-<div class="lp-term lp-term-plain" role="group" aria-label="{{ (strings + 'problem_terminal') | t }}">{{ tokens(visual, 'shell') }}</div>
+<div class="lp-term lp-term-plain" role="group" aria-label="{{ words('problem_terminal', stringsOf, legacyStrings) }}">{{ tokens(visual, 'shell') }}</div>
 {% endset %}
 {% endif %}
 
@@ -129,9 +165,9 @@
 {% elif name == 'timeline' %}
 {#- A line of the timeline starts with a bold time. `*you*` after it marks a step of the person (filled dot) and is hidden. -#}
 {% set visual = visual | replace('<ul>', '<ul class="lp-timeline">') %}
-{% set whenClose = layout.when.split(' ')[0] %}
-{% set visual = visual | replace(r/<li><strong>([^<]*)<\/strong> · <em>you<\/em> · /g, '<li class="lp-you"><' + layout.when + '>$1</' + whenClose + '><em class="lp-sr">you</em> ') %}
-{% set visual = visual | replace(r/<li><strong>([^<]*)<\/strong> · /g, '<li><' + layout.when + '>$1</' + whenClose + '> ') %}
+{% set whenClose = whenTag.split(' ')[0] %}
+{% set visual = visual | replace(r/<li><strong>([^<]*)<\/strong> · <em>you<\/em> · /g, '<li class="lp-you"><' + whenTag + '>$1</' + whenClose + '><em class="lp-sr">you</em> ') %}
+{% set visual = visual | replace(r/<li><strong>([^<]*)<\/strong> · /g, '<li><' + whenTag + '>$1</' + whenClose + '> ') %}
 
 {% elif name == 'spec-example' %}
 {% set visual = tokens(visual, 'markdown') %}
@@ -147,7 +183,7 @@
 {% set preAt = html.indexOf('<pre') %}
 {% set preEnd = html.indexOf('</pre>') + 6 %}
 {% set terminal %}
-<div class="lp-term lp-term-plain" role="group" aria-label="{{ (strings + 'dogfood_terminal') | t }}">{{ tokens(html.slice(preAt, preEnd), layout.dogfood) }}</div>
+<div class="lp-term lp-term-plain" role="group" aria-label="{{ words('dogfood_terminal', stringsOf, legacyStrings) }}">{{ tokens(html.slice(preAt, preEnd), dogfoodKind) }}</div>
 {% endset %}
 {% set html = html.slice(0, preAt) + terminal + html.slice(preEnd) %}
 
