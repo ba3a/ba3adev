@@ -65,6 +65,25 @@ projects: [coffer]
 
 Only `title` and `date` are required. Dates are read in the site's time zone (Europe/Samara for both sites). The other keys are `location`, `camera`, `images`, `tracks` and `map` (see below), and unknown keys are ignored. Every key is described in [Posts](https://github.com/ba3a/coffer/blob/v0.1.0/docs/posts.md#front-matter).
 
+### Whole posts or summaries on the list pages
+
+Both blogs show whole posts on the blog index, the tag pages and the series pages: each post is its title, its meta line (date, reading time, tags) and its full body, as on the post page. That is `index: full` in `coffer.yaml`. The ba3a.dev home page is not a blog page and keeps its compact "Latest posts" list.
+
+A post can choose for itself with `index: summary` or `index: full`. The post's value wins over the blog's, on every list page:
+
+```markdown
+---
+title: Two weeks in the mountains
+date: 2026-12-01
+summary: Forty photos, three passes, one broken stove.
+index: summary
+---
+```
+
+This post is listed as its title, meta line and `summary`; the rest is on its own page. Without `summary:` it is listed as title and meta line only. Any other value, for example `index: short`, fails the build with the path of the post file and `index: must be "summary" or "full"`. Use `summary` for a long photo report, and leave `index` out for everything else.
+
+`summary:` is not only for the list. It is still the text of the link preview and of the page description, whatever `index` says.
+
 ## Images
 
 Put the originals next to the post and refer to them by file name, with alt text and an optional caption:

@@ -295,6 +295,42 @@ test('every front matter example parses with the engine and uses only documented
   assert.ok(examples >= 6, `only ${examples} front matter examples were checked`);
 });
 
+test('AUTHORING.md documents the per-post index override, as the engine and coffer.yaml behave', () => {
+  const section = authoring.slice(authoring.indexOf('### Whole posts or summaries'), authoring.indexOf('## Images'));
+  assert.ok(section.length > 0, 'AUTHORING.md lacks the section on whole posts and summaries, under "Front matter"');
+  // What the section says about the blogs and the home page.
+  const config = loadConfig({ configPath: join(root, 'coffer.yaml') });
+  const blogs = config.sites.flatMap((site) => site.blogs ?? []);
+  assert.equal(blogs.length, 2);
+  for (const blog of blogs) assert.equal(JSON.stringify(blog.index).includes('full'), true, `blog ${blog.id} is expected to set index: full`);
+  assert.match(section, /Both blogs/);
+  assert.match(section, /blog index, the tag pages and the series pages/);
+  assert.match(section, /`index: full`[^\n]*`coffer\.yaml`/);
+  assert.match(section, /ba3a\.dev home page[^\n]*compact/);
+  assert.match(section, /post's value wins/);
+  assert.match(section, /Without `summary:`[^\n]*title and meta line only/);
+  assert.match(section, /`summary:`[^\n]*link preview[^\n]*page description/);
+  assert.match(section, /fails the build/);
+  assert.match(section, /path of the post file/);
+
+  // The example is accepted and sets the override; a post without it follows the blog.
+  const example = fences(section).find((block) => block.body.startsWith('---\n'));
+  assert.ok(example, 'the section needs an example front matter');
+  assert.match(example.body, /^index: summary$/m);
+  const parse = (/** @type {string} */ front) =>
+    parsePostSource({ file: 'example/index.md', text: `${front}\n\nText.\n`, slug: 'example', kind: 'folder', dir: 'example' }, { timezone: 'Europe/Samara' });
+  assert.equal(parse(example.body).index, 'summary');
+  assert.equal(parse('---\ntitle: T\ndate: 2026-12-01\nindex: full\n---').index, 'full');
+  assert.equal(parse('---\ntitle: T\ndate: 2026-12-01\nsummary: S\n---').index, null);
+
+  // An invalid value fails, and the error names the post file and the message the document quotes.
+  assert.throws(
+    () => parse('---\ntitle: T\ndate: 2026-12-01\nindex: short\n---'),
+    (error) => /** @type {Error} */ (error).message.includes('example/index.md') && /\bindex: must be "summary" or "full"/.test(/** @type {Error} */ (error).message),
+  );
+  assert.ok(section.includes('index: must be "summary" or "full"'));
+});
+
 test('every YAML example parses, and project declarations use the keys of the real ones', () => {
   const seedKeys = new Set();
   const projectsDir = join(root, 'content', 'ba3a.dev', 'projects');
