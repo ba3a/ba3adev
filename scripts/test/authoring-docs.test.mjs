@@ -331,6 +331,92 @@ test('AUTHORING.md documents the per-post index override, as the engine and coff
   assert.ok(section.includes('index: must be "summary" or "full"'));
 });
 
+test('AUTHORING.md describes the landing page of the project repository, as the layout and the project files behave', () => {
+  const start = authoring.indexOf('## A landing page');
+  const section = authoring.slice(start, authoring.indexOf('## If the scheduled workflow stops'));
+  assert.ok(start >= 0 && section.length > 0, 'AUTHORING.md lacks "A landing page"');
+
+  // Where it lives, and the project.yaml keys.
+  for (const path of ['site/landing.md', 'site/brand/', 'site/card.png']) assert.ok(section.includes(`\`${path}\``), `the section names ${path}`);
+  for (const key of ['landing: { file: site/landing.md }', 'brand: { dir: site/brand }', 'card: repo:site/card.png']) {
+    assert.ok(section.includes(key), `the section shows ${key}`);
+  }
+  const projectsDir = join(root, 'content', 'ba3a.dev', 'projects');
+  for (const slug of ['coffer', 'specloop']) {
+    const data = YAML.parse(read(`content/ba3a.dev/projects/${slug}/project.yaml`));
+    assert.deepEqual(data.landing, { file: 'site/landing.md' });
+    assert.deepEqual(data.brand, { dir: 'site/brand' });
+    assert.equal(data.card, 'repo:site/card.png');
+    assert.ok(!existsSync(join(projectsDir, slug, 'index.md')), `${slug} has no local index.md`);
+  }
+  // roto has a landing and a card but no brand pictures; Faultory still has a local index.md.
+  const roto = YAML.parse(read('content/ba3a.dev/projects/roto/project.yaml'));
+  assert.deepEqual(roto.landing, { file: 'site/landing.md' });
+  assert.equal(roto.brand, undefined);
+  assert.match(section, /roto has no `brand`/);
+  assert.match(section, /Faultory[^\n]*local `index\.md`/);
+  assert.ok(existsSync(join(projectsDir, 'faultory', 'index.md')));
+
+  // Every setting the layout reads is documented, with its default.
+  const layout = read('themes/ba3a/templates/partials/landing.njk');
+  const layoutKeys = ['hero', 'visual', 'dogfood', 'when', 'brand', 'strings'];
+  for (const key of layoutKeys) {
+    assert.match(layout, new RegExp(`setting\\.${key}\\b`), `landing.njk reads layout.${key}`);
+    assert.ok(section.includes(`\`layout.${key}\``), `the section documents layout.${key}`);
+  }
+  for (const word of ['terminal_title', 'hero_terminal', 'problem_terminal', 'dogfood_terminal', 'chat']) {
+    assert.ok(section.includes(`\`${word}\``), `the section names the string ${word}`);
+    assert.ok(layout.includes(word), `landing.njk uses the string ${word}`);
+  }
+  const accentKeys = [...read('themes/ba3a/templates/partials/landing-accent.njk').matchAll(/set keys = \[([^\]]*)\]/g)][0][1].match(/[a-z-]+/g);
+  assert.equal(accentKeys.length, 5);
+  for (const key of accentKeys) assert.ok(section.includes(`\`${key}\``), `the section documents the accent key ${key}`);
+  assert.match(section, /\`#rgb\` or \`#rrggbb\`/);
+  assert.match(section, /\`light\` and a \`dark\` block/);
+
+  // The section names are the ones the specloop and coffer files use, plus the ones only the layout knows.
+  const names = ['hero', 'problem', 'audience', 'how-it-works', 'timeline', 'spec-example', 'features', 'compare', 'dogfood', 'quick-start', 'faq', 'final-cta'];
+  for (const name of names) assert.ok(section.includes(`| \`${name}\` |`), `the table of sections lists ${name}`);
+  const checkout = join(root, '.cache', 'repos');
+  for (const slug of ['coffer', 'specloop']) {
+    const file = join(checkout, slug, 'site', 'landing.md');
+    if (!existsSync(file)) continue; // the checkout is made by the build; the site tests need it anyway
+    for (const used of readFileSync(file, 'utf8').matchAll(/<div class="section-marker" id="([a-z0-9-]+)">/g)) {
+      assert.ok(names.includes(used[1]), `${slug} uses the section ${used[1]}, which AUTHORING.md does not list`);
+    }
+  }
+
+  // Preview, publishing.
+  assert.match(section, /\`docs\.source\`/);
+  assert.match(section, /\`path\` to a local checkout/);
+  assert.match(section, /follows \`main\`/);
+  assert.match(section, /in about 30 minutes \(within an hour when GitHub starts the run late/);
+  assert.doesNotMatch(section, /within about 15 minutes/);
+  assert.match(section, /`problem_terminal`, which has none: set it when `layout\.visual\.problem` is `pre`/);
+  assert.doesNotMatch(read('themes/ba3a/i18n/en.yaml'), /problem_terminal/, 'en.yaml has no default problem_terminal; update the strings row if it gets one');
+  assert.match(section, /\`coffer rebuild-needed\`/);
+  assert.match(section, /no commit in this repository/);
+  assert.match(section, /partials\/landing\.njk/);
+});
+
+test('no document names the layouts table, per-slug landing strings or theme assets of a project as the place of a landing page', () => {
+  const files = [
+    'AUTHORING.md', 'OPERATIONS.md', 'README.md', 'themes/ba3a/README.md', 'themes/my/README.md',
+    'themes/ba3a/templates/project-tool.njk', 'themes/ba3a/templates/partials/landing.njk', 'themes/ba3a/templates/partials/landing-accent.njk',
+    'themes/ba3a/templates/partials/landing-facts.njk', 'themes/ba3a/assets/landing.css', 'themes/ba3a/i18n/en.yaml',
+  ];
+  for (const file of files) {
+    const text = read(file);
+    assert.doesNotMatch(text, /\blayouts\b/, `${file} mentions a layouts table`);
+    assert.doesNotMatch(text, /landing\.(\{slug\}|coffer|specloop)/, `${file} mentions per-project landing strings`);
+    assert.doesNotMatch(text, /themes\/ba3a\/assets\/(\{slug\}|coffer|specloop)\b/, `${file} puts a landing in themes/ba3a/assets/<slug>`);
+    assert.doesNotMatch(text, /`landing-\{slug\}` palette/, `${file} asks for a landing-{slug} palette in landing.css`);
+  }
+  // The README of the theme sends the reader to the repository of the project for the files of a landing page.
+  assert.match(read('themes/ba3a/README.md'), /`site\/landing\.md` in the project repository/);
+  assert.doesNotMatch(read('themes/ba3a/README.md'), /both landing tests check|logo files and that the pairings/);
+});
+
 test('every YAML example parses, and project declarations use the keys of the real ones', () => {
   const seedKeys = new Set();
   const projectsDir = join(root, 'content', 'ba3a.dev', 'projects');

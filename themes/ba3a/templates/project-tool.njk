@@ -1,8 +1,9 @@
 {#
   The page of a tool. It is coffer's own, except when the text of the project
-  (index.md) holds section markers: then the text is a landing page and is laid
-  out by partials/landing.njk and assets/landing.css. See AUTHORING.md, "A
-  landing page". Every other tool page is rendered exactly as the engine does it.
+  (its landing file, fetched from the project repository) holds section
+  markers: then the text is a landing page and is laid out by
+  partials/landing.njk and assets/landing.css. See AUTHORING.md, "A landing
+  page". Every other tool page is rendered exactly as the engine does it.
 #}
 {% extends "coffer:project-tool.njk" %}
 {% from "partials/landing-accent.njk" import accentStyle %}

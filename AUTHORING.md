@@ -257,7 +257,7 @@ Where to read them: locally, `npm run build` prints each error as `file:line:col
 Use this checklist for a project with documentation pulled from its own repository, as roto and specloop do (see their `project.yaml` files).
 
 1. The project repository is public. No token, webhook or deploy key is added to it; this repository polls it anonymously.
-2. Create `content/ba3a.dev/projects/{slug}/` (the folder name is the slug) with `project.yaml`, `index.md` (text only, no front matter) and the card picture.
+2. Create `content/ba3a.dev/projects/{slug}/` (the folder name is the slug) with `project.yaml`, `index.md` (text only, no front matter) and the card picture. A project that has a landing page keeps all three in its own repository instead: see [A landing page](#a-landing-page).
 3. Declare the project:
 
    ```yaml
@@ -292,14 +292,66 @@ References: [Projects](https://github.com/ba3a/coffer/blob/v0.1.0/docs/projects.
 
 ## A landing page
 
-A tool can have a landing page instead of a README-style page. specloop and coffer do: the `index.md` of each is the text of its page, and the theme turns it into the designed sections. Every other tool page is unchanged.
+A tool can have a landing page instead of a README-style page. coffer, specloop and roto do; Faultory has no repository yet and keeps a local `index.md`. A landing page lives in the project's own repository, not here, so the people (and agents) who change the project keep it true. The theme turns its Markdown into the designed sections. Every other tool page is unchanged.
 
-The text is ordinary Markdown with two conventions:
+**Where it lives.** In the project repository, on `main`:
 
-- **Sections.** Each section starts with an empty marker, `<div class="section-marker" id="name"></div>`. The `id` is the name of the section and becomes the `id` of the section on the page, so `#name` links work. A page without markers is a normal tool page. The names the layout knows are `hero`, `problem`, `audience`, `how-it-works`, `timeline`, `spec-example`, `features`, `compare`, `dogfood`, `quick-start`, `faq` and `final-cta`; a page uses the ones it needs (specloop has ten, coffer twelve). The sections with two columns, and what their visual is, are set per project in the `layouts` table of `themes/ba3a/templates/partials/landing.njk`. (A comment such as `<!-- section: hero -->` would be dropped by the Markdown renderer, which is why the marker is an element.)
-- **Eyebrows.** A `######` heading right before the `##` heading of a section (before the `#` of the hero) is the small label above it. It is published as a paragraph, not as a heading.
+- `site/landing.md`: the text, with front matter (below).
+- `site/brand/`: `logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico` and `apple-touch-icon.png`, published unchanged at `/assets/{slug}/`.
+- `site/card.png`: the preview image of the page.
 
-How each part of the Markdown is shown (a table as three cards, a list as a timeline, a quote as a chat, `###` questions as an accordion, and so on) is in `themes/ba3a/templates/partials/landing.njk`. The look is `themes/ba3a/assets/landing.css`, loaded by landing pages only. All words on the page come from `index.md`; the few words the layout adds are in `themes/ba3a/i18n/en.yaml`, under `landing.{slug}`. A new landing page needs an entry in the `layouts` table, its strings, a `landing-{slug}` palette in `landing.css` if its accent differs, and its own test. The brand pictures of the project (`logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`) are in `themes/ba3a/assets/{slug}/`; the card picture is the preview image of the page.
+Here the project's `project.yaml` points at them. Name, pitch, status, order and tag stay in this repository; there is no local `index.md` or `card.png` (having both is a build error). roto has no `brand`, so its page uses no brand pictures.
+
+```yaml
+# The keys of a tool whose landing page is in its repository
+landing: { file: site/landing.md }
+brand: { dir: site/brand }
+card: repo:site/card.png
+docs:
+  source:
+    git: https://github.com/ba3a/lathe.git
+    ref: main
+```
+
+All three need a `docs.source`. A source that cannot be fetched, or that lacks the file, fails the build; there is no stale copy. A broken link or image in the file fails it too, with `{repo}:{path}:{line}:{column}`.
+
+**Front matter.** Every key is optional; a missing key or an unknown value gives the default. `layout` sets what differs between pages:
+
+| Key | Meaning | Default |
+| --- | --- | --- |
+| `layout.hero` | Kind of the hero window: `session`, `terminal`, `gitlog`, `shell`, `markdown` or `plain` (the colouring of the code block) | `session` |
+| `layout.visual` | For `hero`, `problem`, `timeline`, `spec-example` and `quick-start`: which element is the visual beside the text, `pre`, `blockquote` or `ul` (the first one of that kind) | `pre` for `hero`, `spec-example`, `quick-start`; `blockquote` for `problem`; `ul` for `timeline` |
+| `layout.dogfood` | Kind of the terminal of the `dogfood` section (same kinds as `hero`) | `gitlog` |
+| `layout.when` | Label of a timeline step: `time` (a time) or `span` (a word) | `time` |
+| `layout.brand` | How many letters of the name come before the accented ones in the top bar (`0`: no accent) | `4` |
+| `layout.strings` | The words the layout adds: `terminal_title`, `hero_terminal`, `problem_terminal`, `dogfood_terminal` (the labels for screen readers) and `chat` | `landing.default` in `themes/ba3a/i18n/en.yaml`, except `problem_terminal`, which has none: set it when `layout.visual.problem` is `pre` (a shell script), as coffer does |
+
+`accent` sets the palette, with a `light` and a `dark` block. The keys are `accent` (buttons, large text), `accent-text` (small accent text), `accent-soft` (tinted surfaces), `term-accent` (prompts in the terminals) and `on-accent` (text on the buttons). A value is `#rgb` or `#rrggbb`; anything else, and any other key, is ignored. What is missing is the default palette of `themes/ba3a/assets/landing.css` (the rust of specloop). The contrast tests in `scripts/site-test/` read the palette from the fetched file, so a palette that fails WCAG AA fails `npm test`.
+
+**Sections.** Each section starts with an empty marker, `<div class="section-marker" id="name"></div>`. The `id` becomes the `id` of the section, so `#name` links work. Without markers the file is a normal tool page. A page uses the names it needs:
+
+| Name | Shows |
+| --- | --- |
+| `hero` | Headline (`#`; each sentence on its own line, the second in the accent colour), text, buttons, and the first code block as a terminal window |
+| `problem` | Text, and a chat (a quote with `**You:**` and `**Claude:**` lines) or a shell script, by `layout.visual.problem` |
+| `audience` | A list as a grid of cards; a bold lead `emoji Title.` is the icon and title of a card |
+| `how-it-works` | A three-column table as three cards: phase, what happens, and the gate named by the third column's head |
+| `timeline` | A list of steps, each starting with a bold time; `· *you* ·` after it marks a step of the person |
+| `spec-example` | Text, and a code block shown as Markdown |
+| `features` | A list as a grid of cards, as in `audience` |
+| `compare` | A table |
+| `dogfood` | A list of `**value** · label` lines as number tiles, and the first code block as a terminal |
+| `quick-start` | Text, and the commands as a shell block |
+| `faq` | Every `###` question with its answer as a closed accordion |
+| `final-cta` | The closing call to action; a `---` in it is dropped |
+
+A `######` heading right before the `##` of a section (before the `#` of the hero) is the small label above it, published as a paragraph. The top bar links to `how-it-works`, `compare`, `dogfood` and `quick-start` when present, named after their labels, and shows the project's `repo` link. (A comment such as `<!-- section: hero -->` would be dropped by the Markdown renderer, which is why the marker is an element.)
+
+How each part of the Markdown is reshaped is in `themes/ba3a/templates/partials/landing.njk`; the look is `themes/ba3a/assets/landing.css`, loaded by landing pages only. All words on the page come from `landing.md`. A new landing page needs no change here beyond `project.yaml`: its settings and palette are in its own front matter.
+
+**Preview a change.** In `project.yaml`, replace `git` and `ref` of `docs.source` with `path` to a local checkout (a relative path is relative to the project folder), run `npm run dev`, and look at `/made/{slug}/`. Edit `site/landing.md` in the checkout and restart the preview to see it. Put `git` and `ref` back before you commit. See [Where a project's documentation comes from](https://github.com/ba3a/coffer/blob/v0.1.2/docs/docs-sources.md) and [The landing file as the page](https://github.com/ba3a/coffer/blob/v0.1.2/docs/projects.md#the-landing-file-as-the-page).
+
+**Publishing.** The page follows `main` of the project. A push there is noticed by the Refresh workflow (`coffer rebuild-needed` compares the commit of every git source, the landing file included), so the site is republished in about 30 minutes (within an hour when GitHub starts the run late, as in the list of limits above) with no commit in this repository. The project's `CLAUDE.md` carries the rules for keeping the page true.
 
 ## If the scheduled workflow stops
 
