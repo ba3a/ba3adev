@@ -29,6 +29,9 @@ const SHOWCASE = ['specloop', 'roto', 'faultory', 'coffer'];
 /** The tools whose text is a landing page, checked by their own test files (specloop-landing and coffer-landing). */
 const LANDING = ['specloop', 'coffer'];
 
+/** The landing pages whose text, brand pictures and card are fetched from the repository of the project (no index.md or card.png here). */
+const FROM_REPOSITORY = ['coffer'];
+
 /**
  * What the spec (section 14) says about each project, which the seed texts copy.
  *
@@ -156,7 +159,11 @@ test('there are exactly four project folders, each with a declaration and a text
   assert.deepEqual(folders, [...SHOWCASE].sort());
   for (const slug of SHOWCASE) {
     assert.ok(existsSync(join(projectsDir, slug, 'project.yaml')), `${slug}/project.yaml`);
-    assert.ok(existsSync(join(projectsDir, slug, 'index.md')), `${slug}/index.md`);
+    if (FROM_REPOSITORY.includes(slug)) {
+      assert.ok(!existsSync(join(projectsDir, slug, 'index.md')), `${slug}/index.md is fetched from the repository`);
+    } else {
+      assert.ok(existsSync(join(projectsDir, slug, 'index.md')), `${slug}/index.md`);
+    }
   }
 });
 
@@ -173,7 +180,12 @@ test('the declarations carry the facts of the spec: name, pitch, kind, tag, repo
     assert.equal(fields.featured, true, `${slug}: featured`);
     assert.ok(typeof fields.cardAlt === 'string' && fields.cardAlt.length > 10, `${slug}: the card has alt text`);
     assert.match(fields.card, /\.png$/, `${slug}: the card is a picture the engine accepts`);
-    assert.ok(existsSync(join(projectsDir, slug, fields.card)), `${slug}: the card file exists`);
+    if (FROM_REPOSITORY.includes(slug)) {
+      assert.equal(fields.card, 'repo:site/card.png', `${slug}: the card is a file of the repository`);
+      assert.ok(!existsSync(join(projectsDir, slug, 'card.png')), `${slug}: no local card`);
+    } else {
+      assert.ok(existsSync(join(projectsDir, slug, fields.card)), `${slug}: the card file exists`);
+    }
   }
 });
 
@@ -190,14 +202,14 @@ test('every seed text is marked "TODO: rewrite" in its source', () => {
     assert.ok(page.startsWith('<!-- TODO: rewrite -->'), `${slug}/index.md starts with the marker`);
     assert.match(readText(join(projectsDir, slug, 'project.yaml')), /^# TODO: rewrite\b/m, `${slug}/project.yaml has the marker`);
   }
-  for (const slug of LANDING) {
+  for (const slug of LANDING.filter((name) => !FROM_REPOSITORY.includes(name))) {
     assert.doesNotMatch(readText(join(projectsDir, slug, 'index.md')), /TODO/, `${slug}/index.md is final`);
   }
   assert.ok(declaration('faultory').pressKit.longDescription.includes('<!-- TODO: rewrite -->'), 'the press kit description');
 });
 
 test('the seed points are the spec\'s text, in the Markdown source (the features of a game, in its declaration)', () => {
-  for (const [slug, expected] of Object.entries(SPEC)) {
+  for (const [slug, expected] of Object.entries(SPEC).filter(([name]) => !FROM_REPOSITORY.includes(name))) {
     const source =
       slug === 'faultory'
         ? /** @type {string[]} */ (declaration(slug).features).join('\n')
@@ -509,6 +521,10 @@ function isOriginal(include, path) {
 test('the placeholder art is found: every card, the Faultory pictures and the Handjet font, as PNG, SVG and woff2', () => {
   const artwork = placeholderArtwork();
   for (const slug of SHOWCASE) {
+    if (FROM_REPOSITORY.includes(slug)) {
+      assert.ok(!artwork.some((path) => path.startsWith(`content/ba3a.dev/projects/${slug}/`)), `${slug} has no picture here`);
+      continue;
+    }
     for (const extension of LANDING.includes(slug) ? ['png'] : ['png', 'svg']) {
       assert.ok(artwork.includes(`content/ba3a.dev/projects/${slug}/card.${extension}`), `${slug}/card.${extension}`);
     }
@@ -521,7 +537,7 @@ test('the placeholder art is found: every card, the Faultory pictures and the Ha
 test('the guard uses the engine glob matcher: a wide raster pattern would capture the pictures, a narrow one would not', () => {
   const artwork = placeholderArtwork();
   const png = artwork.filter((path) => path.endsWith('.png'));
-  assert.ok(png.length >= 6);
+  assert.ok(png.length >= 5, `at least five raster pictures (the cards of specloop, roto and faultory, its logo and key art): ${png.length}`);
   // What step 52 must not write: any of these takes the project pictures out of git.
   for (const wide of ['content/**/*.png', '**/*.png', 'content/ba3a.dev/**/*.png', 'content/ba3a.dev/projects/**/*.png']) {
     assert.ok(png.every((path) => isOriginal([wide], path)), `${wide} would capture the project pictures`);

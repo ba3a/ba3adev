@@ -16,7 +16,6 @@ import { contrastRatio, readRules } from './lib/wcag.mjs';
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist', 'ba3a.dev');
 const themeDir = join(root, 'themes', 'ba3a');
-const projectDir = join(root, 'content', 'ba3a.dev', 'projects', 'coffer');
 
 /** @param {string} file Path inside the output of ba3a.dev. @returns {string} */
 function output(file) {
@@ -29,7 +28,10 @@ const SECTIONS = ['hero', 'problem', 'audience', 'how-it-works', 'timeline', 'sp
 
 const page = output('made/coffer/index.html');
 const css = readFileSync(join(themeDir, 'assets', 'landing.css'), 'utf8');
-const source = readFileSync(join(projectDir, 'index.md'), 'utf8');
+// The text of the page is the file of the coffer repository, in the checkout the docs are built from.
+const sourcePath = join(root, '.cache', 'repos', 'coffer', 'site', 'landing.md');
+assert.ok(existsSync(sourcePath), '.cache/repos/coffer/site/landing.md exists (run "npm run test:sites")');
+const source = readFileSync(sourcePath, 'utf8');
 
 /** @param {string} name @returns {string} The HTML of one section of the page. */
 function part(name) {
@@ -139,13 +141,13 @@ test('the page of specloop keeps its own words and its accented name', () => {
   assert.doesNotMatch(other, /landing-coffer/);
 });
 
-test('the words of the page are in index.md, not in the layout', () => {
+test('the words of the page are in landing.md, not in the layout', () => {
   const layout = [
     readFileSync(join(themeDir, 'templates', 'partials', 'landing.njk'), 'utf8').replace(/\{#[\s\S]*?#\}/g, ''),
     css.replace(/\/\*[\s\S]*?\*\//g, ''),
   ].join('\n');
   for (const phrase of ['Write the post', 'A photo journal grows a build script', 'Why not Hugo', 'Publishing is a push', 'Does it need a server']) {
-    assert.ok(source.includes(phrase), `index.md has "${phrase}"`);
+    assert.ok(source.includes(phrase), `landing.md has "${phrase}"`);
     assert.ok(!layout.includes(phrase), `the layout does not repeat "${phrase}"`);
   }
 });
@@ -162,8 +164,8 @@ test('the final call to action has no <hr>, and its closing line stays as writte
   const section = part('final-cta');
   assert.doesNotMatch(section, /<hr/);
   assert.doesNotMatch(page, /<hr/, 'no stray rule on the page: the dividers are borders of the sections');
-  assert.match(section, /<p>coffer · Apache-2\.0 · /, 'the Markdown text is the one in index.md');
-  assert.match(source, /\n---\n\ncoffer · Apache-2\.0 · /, 'index.md still has its --- line');
+  assert.match(section, /<p>coffer · Apache-2\.0 · /, 'the Markdown text is the one in landing.md');
+  assert.match(source, /\n---\n\ncoffer · Apache-2\.0 · /, 'landing.md still has its --- line');
 });
 
 test('the FAQ column is as wide as the other sections', () => {
@@ -194,8 +196,8 @@ const dark = { ...darkBase, ...darkGold };
 
 test('the gold is the one of the logo, and the dark scheme is the same under the system preference and under the switch', () => {
   assert.deepEqual(declarations('(prefers-color-scheme: dark)', ':root:not([data-theme="light"]) .landing-coffer'), darkGold);
-  const logoLight = readFileSync(join(themeDir, 'assets', 'coffer', 'logo.svg'), 'utf8').toLowerCase();
-  const logoDark = readFileSync(join(themeDir, 'assets', 'coffer', 'logo-dark.svg'), 'utf8').toLowerCase();
+  const logoLight = readFileSync(join(dist, 'assets', 'coffer', 'logo.svg'), 'utf8').toLowerCase();
+  const logoDark = readFileSync(join(dist, 'assets', 'coffer', 'logo-dark.svg'), 'utf8').toLowerCase();
   assert.equal(light['--accent'], '#9a6b1f');
   assert.ok(logoLight.includes(light['--accent']), 'the accent of the light scheme is the gold of the light logo');
   assert.equal(dark['--accent'], '#d9a84e');
