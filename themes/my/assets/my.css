@@ -432,6 +432,33 @@ main {
   border-bottom: 0;
 }
 
+/* A whole post on the blog index and the tag pages (index: full). The engine writes the
+   item as the title (h2), the meta line and then the same <div class="post-body"> the
+   post page has, so the body takes the post page's typography (Literata) with no font
+   setting here, and the title and meta line keep the engine's style. It adds no class
+   to the list, so these rules find a full post by its body; a compact item has none and
+   is not touched. The rule between posts is the .post-item one above, at the width of
+   the list; a full post has 2rem above and below it, equal on both sides. Wide content
+   (code, tables, carousels, figures) is at most as wide as the column and scrolls
+   inside its own box. ------------------------------------------------------------- */
+
+.post-item:has(> .post-body) {
+  padding: 2rem 0;
+}
+
+.post-item > .post-body {
+  min-width: 0;
+}
+
+.post-item > .post-body :is(pre, table, figure, .carousel-track) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.post-item > .post-body :is(img, video, iframe, svg, .carousel) {
+  max-width: 100%;
+}
+
 /* Print: the engine prints black on white whatever the reader chose, but this
    stylesheet comes later and would win with its own colours, so the print
    values are set again here. ---------------------------------------------- */
