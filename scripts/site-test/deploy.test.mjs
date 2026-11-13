@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig, startServer } from 'coffer';
 
 import { prepareDeploy } from '../prepare-deploy.mjs';
-import { SITES, main, readExpectedBuiltAt } from '../smoke-test.mjs';
+import { SITES, feedIconOf, main, readExpectedBuiltAt } from '../smoke-test.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const dist = join(root, '.cache', 'test-dist');
@@ -45,7 +45,7 @@ test('the smoke test passes against the built sites, served the way Cloudflare P
     const err = [];
     const code = await main(args, { out: (line) => out.push(line), err: (line) => err.push(line) });
     assert.equal(code, 0, `${err.join('\n')}\n${out.join('\n')}`);
-    assert.match(out.join('\n'), /all 8 checks passed/);
+    assert.match(out.join('\n'), /all 12 checks passed/);
   } finally {
     await Promise.all(servers.map((server) => server.close()));
   }
@@ -79,6 +79,71 @@ test('the smoke test fails when the served site is not the build of this run', a
     rmSync(copy, { recursive: true, force: true });
   }
 });
+
+test('the built sites answer /favicon.ico and carry an absolute feed icon that is served', async () => {
+  const servers = [];
+  try {
+    for (const site of SITES) {
+      const server = await startServer({ dir: join(dist, site.id), host: '127.0.0.1', port: 0 });
+      servers.push(server);
+      const favicon = await fetch(`${server.url}/favicon.ico`);
+      assert.equal(favicon.status, 200, `${site.id} /favicon.ico`);
+      assert.match(favicon.headers.get('content-type') ?? '', /^image\//, `${site.id} /favicon.ico is an image`);
+      const feed = await (await fetch(`${server.url}${site.feed}`)).text();
+      const icon = feedIconOf(feed);
+      assert.equal(icon, `${site.baseUrl}/assets/brand/icon-192.png`, `${site.id} feed icon`);
+      const served = await fetch(`${server.url}${new URL(icon).pathname}`);
+      assert.equal(served.status, 200, `${site.id} feed icon is served`);
+      assert.match(served.headers.get('content-type') ?? '', /^image\//);
+    }
+  } finally {
+    await Promise.all(servers.map((server) => server.close()));
+  }
+});
+
+test('the smoke test fails when /favicon.ico is missing or the feed has no absolute <icon>', async () => {
+  const site = SITES[0];
+  /** @type {[string, (directory: string) => void, RegExp][]} */
+  const cases = [
+    ['no favicon', (directory) => rmSync(join(directory, 'favicon.ico')), /favicon\.ico answered 404/],
+    ['no icon', (directory) => rewriteFeed(directory, site.feed, (feed) => feed.replace(/<icon>[^<]*<\/icon>/, '')), /has no <icon>/],
+    ['relative icon', (directory) => rewriteFeed(directory, site.feed, (feed) => feed.replace(/<icon>https:\/\/ba3a\.dev/, '<icon>')), /is not an absolute URL/],
+  ];
+  for (const [name, damage, message] of cases) {
+    const copy = mkdtempSync(join(tmpdir(), 'smoke-icons-'));
+    const servers = [];
+    try {
+      cpSync(join(dist, site.id), join(copy, site.id), { recursive: true });
+      damage(join(copy, site.id));
+      const server = await startServer({ dir: join(copy, site.id), host: '127.0.0.1', port: 0 });
+      servers.push(server);
+      /** @type {string[]} */
+      const err = [];
+      const code = await main(
+        ['--dist', dist, '--site', site.id, '--base', `${site.id}=${server.url}`, '--allow-insecure-loopback', '--timeout', '0'],
+        { out: () => {}, err: (line) => err.push(line) },
+      );
+      assert.equal(code, 1, name);
+      assert.match(err.join('\n'), message, name);
+    } finally {
+      await Promise.all(servers.map((server) => server.close()));
+      rmSync(copy, { recursive: true, force: true });
+    }
+  }
+});
+
+/**
+ * @param {string} directory The built site.
+ * @param {string} feedPath The address of the feed, with its leading slash.
+ * @param {(feed: string) => string} change
+ */
+function rewriteFeed(directory, feedPath, change) {
+  const file = join(directory, ...feedPath.split('/').filter(Boolean));
+  const before = readFileSync(file, 'utf8');
+  const after = change(before);
+  assert.notEqual(after, before, 'the feed was changed');
+  writeFileSync(file, after);
+}
 
 test('the build writes no _headers file of its own, so the deploy step can add it', () => {
   for (const site of config.sites) {

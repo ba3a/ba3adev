@@ -8,7 +8,12 @@
 //   3. an unknown address answers 404 with a page in the language of the site;
 //   4. build-info.json says it was built at the moment recorded in this run's own
 //      `{dist}/{site}/build-info.json`, which proves that the visitors see this deployment and
-//      not an older one.
+//      not an older one;
+//   5. /favicon.ico answers 200 with an image content type;
+//   6. the main feed answers 200 and has an <icon> element with an absolute URL on the address
+//      of the site, and that icon answers 200 with an image content type. The icon is asked from
+//      the address that is checked (--base), with the path of the URL in the feed, because the
+//      custom domains answer CI runners with 403.
 //
 // A Cloudflare deployment can take a moment to reach every edge, so each check is repeated, with
 // a growing pause, until it passes or the time given by --timeout (default 300 seconds, for the
@@ -28,7 +33,8 @@ import { pathToFileURL } from 'node:url';
 /**
  * What is checked on each site. The lines must agree with coffer.yaml (a test compares them).
  * `redirect` is a page whose canonical address ends in a slash: the blog index of ba3a.dev, and
- * the tag tree of my.ba3a.dev, whose blog sits at the root of the site.
+ * the tag tree of my.ba3a.dev, whose blog sits at the root of the site. `feed` is the address of
+ * the main feed: the devlog of ba3a.dev, and the root blog of my.ba3a.dev.
  */
 export const SITES = Object.freeze([
   Object.freeze({
@@ -36,12 +42,14 @@ export const SITES = Object.freeze([
     baseUrl: 'https://ba3a.dev',
     lang: 'en',
     redirect: Object.freeze({ from: '/devlog', to: '/devlog/' }),
+    feed: '/devlog/feed.xml',
   }),
   Object.freeze({
     id: 'my.ba3a.dev',
     baseUrl: 'https://my.ba3a.dev',
     lang: 'ru',
     redirect: Object.freeze({ from: '/tags', to: '/tags/' }),
+    feed: '/feed.xml',
   }),
 ]);
 
@@ -72,6 +80,8 @@ const CYRILLIC = /[А-яЁё]/;
  * @property {string} baseUrl The address of the site, `https://` and no trailing slash.
  * @property {string} lang The language of its pages and of its 404 page.
  * @property {{ from: string, to: string }} redirect
+ * @property {string} feed The address of the main feed, with its leading slash.
+ * @property {string} [publicOrigin] The address the feed icon must be on, when `baseUrl` is replaced (default `baseUrl`).
  */
 
 /**
@@ -280,6 +290,75 @@ async function checkBuildInfo(site, ctx, expectedBuiltAt) {
 }
 
 /**
+ * Whether a response says it carries an image.
+ *
+ * @param {{ headers: Headers }} answer
+ * @returns {boolean}
+ */
+function isImage(answer) {
+  return /^image\//i.test(answer.headers.get('content-type') ?? '');
+}
+
+/**
+ * The text of the `<icon>` element of an Atom feed. Only the part before the first entry is read,
+ * so that an `<icon>` inside a post cannot be taken for the one of the feed.
+ *
+ * @param {string} feed
+ * @returns {string | null}
+ */
+export function feedIconOf(feed) {
+  const entry = feed.search(/<entry[\s>]/i);
+  const head = entry === -1 ? feed : feed.slice(0, entry);
+  const match = /<icon>([\s\S]*?)<\/icon>/i.exec(head);
+  return match ? match[1].trim() : null;
+}
+
+/**
+ * Check 5: /favicon.ico is served, as an image.
+ *
+ * @param {Site} site
+ * @param {Context} ctx
+ * @returns {Promise<void>}
+ */
+async function checkFavicon(site, ctx) {
+  requireSecureBase(site.baseUrl, ctx);
+  const url = `${site.baseUrl}/favicon.ico`;
+  const answer = await request(ctx, url);
+  if (answer.status !== 200) throw new CheckFailure(`GET ${url} answered ${describeStatus(answer)}; expected 200`);
+  if (!isImage(answer)) throw new CheckFailure(`GET ${url} has content type ${answer.headers.get('content-type') ?? '(none)'}; expected an image`);
+}
+
+/**
+ * Check 6: the main feed has an absolute <icon> on the address of the site, and the icon is served.
+ *
+ * @param {Site} site
+ * @param {Context} ctx
+ * @returns {Promise<void>}
+ */
+async function checkFeedIcon(site, ctx) {
+  requireSecureBase(site.baseUrl, ctx);
+  const feedUrl = `${site.baseUrl}${site.feed}`;
+  const feed = await request(ctx, feedUrl);
+  if (feed.status !== 200) throw new CheckFailure(`GET ${feedUrl} answered ${describeStatus(feed)}; expected 200`);
+  const icon = feedIconOf(feed.body);
+  if (icon === null || icon === '') throw new CheckFailure(`the feed ${feedUrl} has no <icon>`);
+  /** @type {URL} */
+  let iconUrl;
+  try {
+    iconUrl = new URL(icon);
+  } catch {
+    throw new CheckFailure(`the <icon> of ${feedUrl} is not an absolute URL: ${icon}`);
+  }
+  if (iconUrl.protocol !== 'https:' && iconUrl.protocol !== 'http:') throw new CheckFailure(`the <icon> of ${feedUrl} is not an absolute http(s) URL: ${icon}`);
+  const origin = new URL(site.publicOrigin ?? site.baseUrl).origin;
+  if (iconUrl.origin !== origin) throw new CheckFailure(`the <icon> of ${feedUrl} is on ${iconUrl.origin}; expected ${origin}`);
+  const checked = `${site.baseUrl}${iconUrl.pathname}${iconUrl.search}`;
+  const answer = await request(ctx, checked);
+  if (answer.status !== 200) throw new CheckFailure(`GET ${checked} (the <icon> ${icon}) answered ${describeStatus(answer)}; expected 200`);
+  if (!isImage(answer)) throw new CheckFailure(`GET ${checked} (the <icon> ${icon}) has content type ${answer.headers.get('content-type') ?? '(none)'}; expected an image`);
+}
+
+/**
  * Runs `check` until it passes, with a growing pause, or until the deadline of the context.
  *
  * @param {Context} ctx
@@ -357,6 +436,8 @@ export async function runSmokeTests(options) {
             }
           : () => checkBuildInfo(site, ctx, expected),
       ],
+      ['/favicon.ico answers 200 as an image', () => checkFavicon(site, ctx)],
+      [`${site.feed} has an absolute <icon> that answers 200`, () => checkFeedIcon(site, ctx)],
     ];
     for (const [check, run] of checks) {
       const outcome = await retrying(ctx, run);
@@ -453,6 +534,7 @@ export async function main(args, io) {
   }
   const sites = SITES.filter((site) => options.siteIds.length === 0 || options.siteIds.includes(site.id)).map((site) => ({
     ...site,
+    publicOrigin: site.baseUrl,
     baseUrl: options.bases[site.id] ?? site.baseUrl,
   }));
   /** @type {Record<string, string>} */

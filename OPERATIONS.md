@@ -22,7 +22,7 @@ Conventions:
 | 6 | Deploy and check the live sites | `ba3a/ba3adev` |
 | 7 | Upgrade the engine later | this repository |
 
-After the steps: [things to know](#things-to-know), [replace the seed content](#replace-the-seed-content), [open questions](#open-questions-for-you), [a new tool project](#a-new-tool-project).
+After the steps: [after a deploy](#after-a-deploy), [things to know](#things-to-know), [replace the seed content](#replace-the-seed-content), [open questions](#open-questions-for-you), [a new tool project](#a-new-tool-project).
 
 ## 0. Before you start
 
@@ -273,7 +273,7 @@ The steps in order: originals pulled, build, `coffer check --w3c`, build report 
 
 ### 6.2 Check the smoke test (read only)
 
-The step "Smoke test the live sites" asks the `pages.dev` addresses (`ba3a-dev.pages.dev`, `my-ba3a-dev.pages.dev`), not the custom domains: Bot Fight Mode on the zone answers GitHub runners with 403 and cannot be skipped by a rule. So it proves the deployment, not the DNS or the custom domains; 6.3 covers those. It passes only when both deployments answer over HTTPS: the home page 200, `/devlog` redirecting to `/devlog/`, an unknown address 404 in the right language, and `build-info.json` carrying this run's build time.
+The step "Smoke test the live sites" asks the `pages.dev` addresses (`ba3a-dev.pages.dev`, `my-ba3a-dev.pages.dev`), not the custom domains: Bot Fight Mode on the zone answers GitHub runners with 403 and cannot be skipped by a rule. So it proves the deployment, not the DNS or the custom domains; 6.3 covers those. It passes only when both deployments answer over HTTPS: the home page 200, `/devlog` redirecting to `/devlog/`, an unknown address 404 in the right language, `build-info.json` carrying this run's build time, `/favicon.ico` 200 as an image, and the main feed (`/devlog/feed.xml`, `/feed.xml`) with an absolute `<icon>` on the site that itself answers 200 as an image.
 
 **User confirms before running.**
 
@@ -320,6 +320,22 @@ npm test
 ```
 
 Before 1.0.0 a minor version may need a change in a site; the changelog says so. Commit `package.json` and `package-lock.json` together. To release coffer itself: in the engine repository move the "Unreleased" entries under a new `## x.y.z - date` heading, set the version in `package.json`, tag `vx.y.z` and push the tag.
+
+## After a deploy
+
+The smoke test covers the deployment, not the content. After a deploy that touches the engine, a theme, the feeds or a project landing page, check by hand (read only):
+
+- `https://ba3a.dev/favicon.ico` and `https://my.ba3a.dev/favicon.ico` return 200.
+- Both feeds (`https://ba3a.dev/devlog/feed.xml`, `https://my.ba3a.dev/feed.xml`) contain `<icon>` and pass the W3C feed validator (https://validator.w3.org/feed/).
+- `/devlog/` of ba3a.dev and `/` of my.ba3a.dev show the full text of the posts.
+- `/made/coffer/`, `/made/specloop/` and `/made/roto/` show the text from the project repositories.
+- A trivial edit to `site/landing.md` in `ba3a/coffer` appears on `/made/coffer/` within 30 minutes (one hour when the run starts late, see [things to know](#things-to-know)), with no commit here. Revert the edit afterwards.
+- The geometry script passes on the deployed build. Build the deployed commit, then run it (it needs a Chromium-based browser, see the header of the script):
+
+```sh
+npx coffer build --out .cache/test-dist
+node scripts/geometry-check.mjs
+```
 
 ## Things to know
 
