@@ -58,9 +58,9 @@ test('the eyebrows are paragraphs, the headline is the only h1, and the question
   assert.equal(page.match(/<h1[ >]/g)?.length, 1);
   assert.match(page, /<h1 [^>]*><span class="lp-line">Write the spec\.<\/span> <span class="lp-line lp-accent">Go make tea\.<\/span> <span class="lp-line">Come back to reviewed commits\.<\/span><\/h1>/);
   const faq = /<section id="faq"[\s\S]*?<\/section>/.exec(page)?.[0] ?? '';
-  assert.equal(faq.match(/<details>/g)?.length, 6);
+  assert.equal(faq.match(/<details>/g)?.length, 8);
   assert.doesNotMatch(faq, /<details open/);
-  assert.equal(faq.match(/<summary>/g)?.length, 6);
+  assert.equal(faq.match(/<summary>/g)?.length, 8);
 });
 
 test('each part of the Markdown is rendered as the style guide says', () => {
@@ -72,7 +72,7 @@ test('each part of the Markdown is rendered as the style guide says', () => {
   assert.match(part('problem'), /<div class="lp-chat" role="group" aria-label="[^"]+">/);
   assert.equal(part('timeline').match(/<li class="lp-you">/g)?.length, 3, 'three steps are the person\'s');
   assert.equal(part('timeline').match(/<li>/g)?.length, 3);
-  assert.equal(part('features').match(/<li class="lp-card">/g)?.length, 8);
+  assert.equal(part('features').match(/<li class="lp-card">/g)?.length, 9);
   assert.match(part('features'), /<span class="lp-ico" aria-hidden="true">🚧<\/span><h3>Hard gates<\/h3>/);
   assert.equal(part('dogfood').match(/<li class="lp-stat">/g)?.length, 4);
   assert.match(part('dogfood'), /<li class="lp-stat"><b>12 → 14<\/b><span>/);

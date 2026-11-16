@@ -86,7 +86,7 @@ test('each part of the Markdown is rendered as the style guide says', () => {
   assert.equal(part('audience').match(/<li class="lp-card">/g)?.length, 4, 'four kinds of reader');
   assert.match(part('audience'), /<span class="lp-ico" aria-hidden="true">🔨<\/span><h3>Makers with a journal<\/h3>/);
   assert.match(part('audience'), /<\/ul>\s*<p><strong>Not for you<\/strong>/, 'the page says who it is not for');
-  assert.equal(part('features').match(/<li class="lp-card">/g)?.length, 8);
+  assert.equal(part('features').match(/<li class="lp-card">/g)?.length, 10);
   assert.equal(part('timeline').match(/<li class="lp-you">/g)?.length, 3, 'three steps are the person\'s');
   assert.equal(part('timeline').match(/<li>/g)?.length, 3);
   assert.match(part('timeline'), /<span class="lp-when">Write<\/span>/);
@@ -111,7 +111,7 @@ test('the comparison is a table with the engine\'s column, the other column, and
   assert.equal(section.match(/<tr>/g)?.length, 7, 'a head row and six rows');
   assert.match(section, /<th>coffer<\/th>\s*<th>With Hugo, typically<\/th>/);
   assert.match(section, /<h3[^>]*>What you give up<\/h3>/);
-  assert.match(section, /version 0\.1\.0 with one maintainer/);
+  assert.match(section, /version \d+\.\d+\.\d+ with one maintainer/);
 });
 
 test('the page keeps what every project page has: the facts, the feed link and the way back', () => {

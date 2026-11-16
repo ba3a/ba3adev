@@ -41,6 +41,7 @@ docs:
         - location-policy.md
         - carousels.md
         - viewer.md
+        - videos.md
         - maps.md
         - media.md
         - projects.md

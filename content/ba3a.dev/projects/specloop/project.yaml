@@ -45,6 +45,7 @@ docs:
         - size-warnings.md
         - multiple-chats.md
         - updates.md
+        - quality-gates.md
         - commands.md
         - configuration.md
         - phases.md
