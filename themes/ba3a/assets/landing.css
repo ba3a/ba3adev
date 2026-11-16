@@ -786,11 +786,16 @@ html:has(.landing) {
   font-size: 15.5px;
 }
 
+/* The head and the body are two tables so that the block scrolls as one on a
+   narrow screen. They are laid out on their own, so both use fixed columns
+   with the same widths (below); otherwise the head columns drift away from
+   the body columns. */
 .lp-s-compare thead,
 .lp-s-compare tbody {
   display: table;
   width: 100%;
   min-width: 640px;
+  table-layout: fixed;
 }
 
 .lp-s-compare th,
@@ -808,8 +813,19 @@ html:has(.landing) {
   text-transform: uppercase;
 }
 
+.lp-s-compare th:first-child,
 .lp-s-compare td:first-child {
   width: 18%;
+}
+
+.lp-s-compare th:nth-child(2),
+.lp-s-compare td:nth-child(2),
+.lp-s-compare th:nth-child(3),
+.lp-s-compare td:nth-child(3) {
+  width: 41%;
+}
+
+.lp-s-compare td:first-child {
   font-weight: 600;
 }
 

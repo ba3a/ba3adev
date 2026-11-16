@@ -185,6 +185,24 @@ test('the closing line of the final call to action is styled without the <hr>', 
   assert.equal(closing.declarations.margin, '56px 0 0');
 });
 
+test('the comparison table is two tables (head and body) with fixed columns of the same widths, so they line up', () => {
+  const all = readRules(css).filter((rule) => rule.media === null);
+  /** @param {string} part @returns {Record<string, string>} The declarations of the rules whose selector list holds `part`. */
+  const declared = (part) => Object.assign({}, ...all.filter((rule) => selectorParts(rule.selector).includes(part)).map((rule) => rule.declarations));
+  for (const part of ['.lp-s-compare thead', '.lp-s-compare tbody']) {
+    assert.equal(declared(part)['table-layout'], 'fixed', `${part} has fixed columns`);
+    assert.equal(declared(part).display, 'table', `${part} is laid out on its own`);
+  }
+  // Each column has one width for the head cell and the body cell.
+  for (const column of [':first-child', ':nth-child(2)', ':nth-child(3)']) {
+    const head = declared(`.lp-s-compare th${column}`).width;
+    assert.match(head ?? '', /^\d+%$/, `the head cell of column ${column} has a percentage width`);
+    assert.equal(declared(`.lp-s-compare td${column}`).width, head, `the body cell of column ${column} is as wide as its head cell`);
+  }
+  const total = [':first-child', ':nth-child(2)', ':nth-child(3)'].reduce((sum, column) => sum + Number.parseFloat(declared(`.lp-s-compare th${column}`).width), 0);
+  assert.equal(total, 100, 'the three columns add up to the whole table');
+});
+
 /** @param {string} selectors @returns {string[]} */
 function selectorParts(selectors) {
   return selectors.split(',').map((part) => part.trim());
