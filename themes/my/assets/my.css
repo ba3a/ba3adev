@@ -310,6 +310,11 @@ h6 {
    The :where() keeps the specificity of --frame low. The print rule at the end
    resets the frame. --------------------------------------------------------- */
 
+/* A bit wider than the engine's 68ch. html:root outranks the engine's :root. */
+html:root {
+  --coffer-measure: 76ch;
+}
+
 :where(body) {
   --frame: var(--coffer-measure);
 }
@@ -450,12 +455,35 @@ main {
   min-width: 0;
 }
 
-.post-item > .post-body :is(pre, table, figure, .carousel-track) {
+.post-item > .post-body :is(pre, figure, .carousel-track) {
   max-width: 100%;
   overflow-x: auto;
 }
 
 .post-item > .post-body :is(img, video, iframe, svg, .carousel) {
+  max-width: 100%;
+}
+
+/* Tables are the one wide content that may leave the column: a table takes the
+   width its content needs, at least the column and at most two thirds of the
+   screen, and is centred on the column. Beyond that it scrolls in its own box.
+   The page itself never scrolls sideways. ---------------------------------- */
+
+.post-body table {
+  position: relative;
+  left: 50%;
+  translate: -50% 0;
+  width: max-content;
+  min-width: 100%;
+  max-width: max(100%, min(67vw, 100vw - 2rem));
+  overflow-x: auto;
+}
+
+.docs-layout .post-body table {
+  position: static;
+  translate: none;
+  width: auto;
+  min-width: 0;
   max-width: 100%;
 }
 

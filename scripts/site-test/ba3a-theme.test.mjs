@@ -368,7 +368,7 @@ test('ba3a.dev: wide content of a full post scrolls inside its own box instead o
   assert.equal(body.declarations['min-width'], '0', 'the body may shrink below the width of its widest child');
   const contained = rules.find((rule) => rule.declarations['overflow-x'] === 'auto');
   assert.ok(contained, 'a rule gives wide content its own scroll box');
-  for (const element of ['pre', 'table', 'figure', '.carousel-track']) {
+  for (const element of ['pre', 'figure', '.carousel-track']) {
     assert.ok(contained.selector.includes(element), `${element} scrolls inside its own box`);
   }
   assert.equal(contained.declarations['max-width'], '100%');
@@ -376,6 +376,11 @@ test('ba3a.dev: wide content of a full post scrolls inside its own box instead o
   for (const element of ['img', 'video', 'iframe', 'svg']) {
     assert.ok(media?.selector.includes(element), `${element} is at most as wide as the column`);
   }
+  const table = readRules(stylesheet).find((rule) => rule.media === null && rule.selector === '.post-body table');
+  assert.ok(table, 'a table is at least as wide as the column');
+  assert.equal(table.declarations.width, 'max-content', 'a table takes the width its content needs');
+  assert.match(table.declarations['max-width'], /67vw/, 'a table is at most two thirds of the screen wide');
+  assert.equal(table.declarations['overflow-x'], 'auto', 'a wider table scrolls in its own box');
   assert.ok(!rules.some((rule) => rule.declarations['overflow-x'] === 'hidden' || rule.declarations.overflow === 'hidden'), 'nothing is clipped');
 });
 
