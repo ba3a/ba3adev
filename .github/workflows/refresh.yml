@@ -6,7 +6,8 @@
 #   Every 15 minutes the `decide` job asks `coffer rebuild-needed` about each site. The command
 #   fetches the build-info.json of the live site, reads the current HEAD of every git
 #   documentation source with `git ls-remote`, compares them with the commits the live build used,
-#   and checks whether a scheduled post is due. Only when one of the sites says "yes" does the
+#   and checks whether a scheduled post is due. It also compares the coffer release of each live
+#   site (engineVersion) with the newest release in the range of package.json. Only when one of the sites says "yes" does the
 #   `deploy` job call deploy.yml, which builds and publishes both sites. Nothing is stored between
 #   runs: the live build-info.json is the state.
 #
@@ -100,7 +101,14 @@ jobs:
           for site in ba3a.dev my.ba3a.dev; do
             npx coffer rebuild-needed --site "$site" --url "https://$site/build-info.json" --json > "$answers/$site.json"
           done
-          node scripts/refresh-decide.mjs "$answers/ba3a.dev.json" "$answers/my.ba3a.dev.json"
+          # A new coffer release in the range of package.json: the deploy takes it (npm update),
+          # and the engineVersion in the live build-info.json says which release a site has.
+          git ls-remote --tags https://github.com/ba3a/coffer.git > "$answers/tags.txt"
+          for site in ba3a.dev my.ba3a.dev; do
+            curl --fail --silent --show-error --location "https://$site/build-info.json" > "$answers/$site.build-info.json"
+          done
+          node scripts/engine-answer.mjs package.json "$answers/tags.txt" "$answers/ba3a.dev.build-info.json" "$answers/my.ba3a.dev.build-info.json" > "$answers/engine.json"
+          node scripts/refresh-decide.mjs "$answers/ba3a.dev.json" "$answers/my.ba3a.dev.json" "$answers/engine.json"
 
   # The called workflow guards itself (it publishes only from main). It may be skipped, for example
   # when this workflow is started by hand from another branch, which is fine. The caller grants

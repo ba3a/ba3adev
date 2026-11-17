@@ -319,7 +319,7 @@ npm install git+https://github.com/ba3a/coffer.git#semver:^0.3.0   # updates pac
 npm test
 ```
 
-Commit `package.json` and `package-lock.json` together. To release coffer itself: in the engine repository move the "Unreleased" entries under a new `## x.y.z - date` heading, set the version in `package.json`, tag `vx.y.z` and push the tag. A release reaches the sites with the next deploy.
+Commit `package.json` and `package-lock.json` together. To release coffer itself: in the engine repository move the "Unreleased" entries under a new `## x.y.z - date` heading, set the version in `package.json`, tag `vx.y.z` and push the tag. The refresh workflow compares the `engineVersion` of each live site with the newest release tag in the range, so a release is deployed within about half an hour.
 
 ## After a deploy
 
