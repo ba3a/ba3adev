@@ -9,6 +9,8 @@ summary: "Before the deep dive into how I build with AI, the raw numbers behind 
 
 Before starting the deep dive into my most important thought on AI development, I'd like to share some stats on the example I'll be using for this series: [Coffer, the site engine this blog uses](https://ba3a.dev/made/coffer/). It's the project I started as an exercise in AI development on a new scale. I decided that AI should be used as an independent developer who knows their craft, and that I should stop controlling their technical decisions. So, I wrote down my functional requirements, gave AI full freedom over the solution and fed the spec into [Specloop, my harness for Claude Code](https://ba3a.dev/made/specloop/). So, in this article I'll give you some of the statistics I found interesting from the first release's implementation.
 
+![_Fig. 1._ A part of my spec for the site engine.](stat-1.png "A part of my spec for the site engine.")
+
 ## Token totals
 
 |                 | API calls | Input (uncached) |    Output | Cache write |    Cache read |
