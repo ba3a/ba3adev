@@ -23,6 +23,6 @@
     "playwright-core": "1.64.1"
   },
   "dependencies": {
-    "coffer": "github:ba3a/coffer#semver:^0.2.1"
+    "coffer": "git+https://github.com/ba3a/coffer.git#semver:^0.2.1"
   }
 }

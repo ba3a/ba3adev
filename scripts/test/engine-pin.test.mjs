@@ -7,12 +7,12 @@ const read = (path) => readFileSync(new URL(path, root), 'utf8');
 const json = (path) => JSON.parse(read(path));
 
 test('package.json follows the coffer releases from 0.2.1 up to the next minor', () => {
-  assert.equal(json('package.json').dependencies.coffer, 'github:ba3a/coffer#semver:^0.2.1');
+  assert.equal(json('package.json').dependencies.coffer, 'git+https://github.com/ba3a/coffer.git#semver:^0.2.1');
 });
 
 test('package-lock.json resolves coffer to a release that satisfies the range', () => {
   const lock = json('package-lock.json');
-  assert.equal(lock.packages[''].dependencies.coffer, 'github:ba3a/coffer#semver:^0.2.1');
+  assert.equal(lock.packages[''].dependencies.coffer, 'git+https://github.com/ba3a/coffer.git#semver:^0.2.1');
   const entry = lock.packages['node_modules/coffer'];
   assert.match(entry.version, /^0\.2\.(?:[1-9]\d*)$/);
   assert.match(entry.resolved, /ba3a\/coffer\.git#[0-9a-f]{40}$/);

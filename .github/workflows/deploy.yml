@@ -133,6 +133,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # package.json lets coffer float within ^0.2.1; the lock file keeps the commit of the last
+      # update. This takes the newest release in the range for this build, and the later steps
+      # (the build and the check) run on it. The lock file in the repository is not changed.
+      - name: Take the newest coffer release in the range
+        run: npm update coffer --no-save
+
       - name: Fetch the photo originals from R2
         run: npx coffer media pull
         env:

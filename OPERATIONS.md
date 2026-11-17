@@ -308,18 +308,18 @@ Or: Actions tab, Refresh, "Enable workflow".
 
 ## 7. Upgrade coffer later
 
-The sites pin a tag and never follow a branch.
+`package.json` follows the releases of coffer in a range: `git+https://github.com/ba3a/coffer.git#semver:^0.2.1`, that is 0.2.1 up to, not including, 0.3.0. The deploy runs `npm update coffer --no-save` after `npm ci`, so each deploy builds on the newest release in the range. The lock file keeps the commit of the last local update; run `npm update coffer` and commit it now and then.
+
+A new minor version (0.3.0) is not in the range. Read its changelog ("Changed" and "Removed" first), then:
 
 **User confirms before running.**
 
 ```sh
-git ls-remote --tags https://github.com/ba3a/coffer.git        # the newest tag, for example v0.2.0
-# read https://github.com/ba3a/coffer/blob/v0.2.0/CHANGELOG.md, the sections "Changed" and "Removed" first
-npm install git+https://github.com/ba3a/coffer.git#v0.2.0                          # updates package.json and the lock file
+npm install git+https://github.com/ba3a/coffer.git#semver:^0.3.0   # updates package.json and the lock file
 npm test
 ```
 
-Before 1.0.0 a minor version may need a change in a site; the changelog says so. Commit `package.json` and `package-lock.json` together. To release coffer itself: in the engine repository move the "Unreleased" entries under a new `## x.y.z - date` heading, set the version in `package.json`, tag `vx.y.z` and push the tag.
+Commit `package.json` and `package-lock.json` together. To release coffer itself: in the engine repository move the "Unreleased" entries under a new `## x.y.z - date` heading, set the version in `package.json`, tag `vx.y.z` and push the tag. A release reaches the sites with the next deploy.
 
 ## After a deploy
 
