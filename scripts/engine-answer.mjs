@@ -25,21 +25,13 @@ function compare(a, b) {
 }
 
 /**
- * @param {string} dependency The coffer entry of package.json, ending in `#semver:^x.y.z`.
- * @returns {number[]} The lowest version of the caret range.
+ * @param {string} dependency The coffer entry of package.json, ending in `#semver:>=x.y.z`.
+ * @returns {number[]} The lowest version of the range.
  */
 function floorOf(dependency) {
-  const match = /#semver:\^(\d+\.\d+\.\d+)$/.exec(dependency);
-  if (!match) throw new Error(`the coffer dependency "${dependency}" has no #semver:^x.y.z range`);
+  const match = /#semver:>=(\d+\.\d+\.\d+)$/.exec(dependency);
+  if (!match) throw new Error(`the coffer dependency "${dependency}" has no #semver:>=x.y.z range`);
   return parse(match[1]);
-}
-
-/** @param {number[]} version @param {number[]} floor @returns {boolean} Inside the caret range of floor. */
-function inCaret(version, floor) {
-  if (compare(version, floor) < 0) return false;
-  if (floor[0] > 0) return version[0] === floor[0];
-  if (floor[1] > 0) return version[0] === 0 && version[1] === floor[1];
-  return version[0] === 0 && version[1] === 0 && version[2] === floor[2];
 }
 
 /**
@@ -50,7 +42,7 @@ function inCaret(version, floor) {
  */
 export function answer(packageJson, tags, sites) {
   const floor = floorOf(JSON.parse(packageJson).dependencies?.coffer ?? '');
-  const versions = [...tags.matchAll(/refs\/tags\/v(\d+\.\d+\.\d+)$/gm)].map((m) => parse(m[1])).filter((v) => inCaret(v, floor));
+  const versions = [...tags.matchAll(/refs\/tags\/v(\d+\.\d+\.\d+)$/gm)].map((m) => parse(m[1])).filter((v) => compare(v, floor) >= 0);
   if (versions.length === 0) throw new Error('no coffer release is in the range of package.json');
   const newest = versions.reduce((a, b) => (compare(a, b) >= 0 ? a : b));
   const reasons = [];

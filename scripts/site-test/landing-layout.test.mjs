@@ -156,7 +156,7 @@ before(async () => {
   }
   const config = loadConfig({ configPath: join(dir, 'coffer.yaml') });
   await buildSites(config, { out: join(dir, 'out'), now: new Date('2026-06-01T12:00:00Z') });
-  for (const slug of Object.keys(files)) pages[slug] = readFileSync(join(dir, 'out', 'demo', 'made', slug, 'index.html'), 'utf8');
+  for (const slug of Object.keys(files)) pages[slug] = readFileSync(join(dir, 'out', 'demo', 'made', slug, 'index.html'), 'utf8').replaceAll(' ', ' ');
 });
 
 after(() => {

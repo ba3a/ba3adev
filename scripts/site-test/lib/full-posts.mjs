@@ -6,6 +6,21 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
+ * Typography (coffer 0.3.0) changes quotes, dashes and spaces, and the case of headings. The tests
+ * compare the words, so both sides are folded to plain characters first.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function fold(text) {
+  return text
+    .replace(/[  ]/g, ' ')
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”„«»]/g, '"')
+    .replace(/[–—]/g, '-');
+}
+
+/**
  * @typedef {{ blog: string, slug: string, url: string, file: string, source: string, title: string, index: string }} ManifestPost
  * @typedef {{ url: string, file: string, type: string }} ManifestPage
  * @typedef {{ posts: ManifestPost[], pages: ManifestPage[], tags: { url: string, posts: string[] }[], series: { url: string, posts: string[] }[] }} Manifest
@@ -143,7 +158,7 @@ export function assertFullPosts(label, html, posts, sourceOf) {
   const start = main.indexOf('<ol class="post-list">');
   assert.ok(start >= 0, `${label}: has a post list`);
   // The part of the page that holds the posts; a tag page puts a list of subtags above it.
-  const list = main.slice(start);
+  const list = fold(main.slice(start));
 
   assert.equal((main.match(/<h1[\s>]/g) ?? []).length, 1, `${label}: one h1`);
   assert.equal((list.match(/<h2[\s>]/g) ?? []).length, posts.length, `${label}: one h2 per post and no other`);
@@ -157,13 +172,13 @@ export function assertFullPosts(label, html, posts, sourceOf) {
 
   for (const post of posts) {
     const { sentence, headings } = readPostSource(sourceOf(post));
-    assert.ok(list.includes(sentence), `${label}: the body of ${post.slug} is there ("${sentence}")`);
+    assert.ok(list.includes(fold(sentence)), `${label}: the body of ${post.slug} is there ("${sentence}")`);
     for (const { level, text } of headings) {
       if (level === 1) continue;
       const shifted = Math.min(level + 1, 6);
       assert.match(
         list,
-        new RegExp(`<h${shifted}(?: [^>]*)?>${escapeRegExp(text)}</h${shifted}>`),
+        new RegExp(`<h${shifted}(?: [^>]*)?>${escapeRegExp(fold(text))}</h${shifted}>`, 'i'),
         `${label}: heading "${text}" of ${post.slug} is an h${shifted} (source h${level})`,
       );
     }

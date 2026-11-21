@@ -124,7 +124,7 @@
 
 {% if name == 'hero' %}
 {#- Each sentence of the headline on its own line, the second one in the accent colour. -#}
-{% set text = text | replace(r/<h1( [^>]*)?>([^<.]*\.) ([^<.]*\.) ([^<]*)<\/h1>/, '<h1$1><span class="lp-line">$2</span> <span class="lp-line lp-accent">$3</span> <span class="lp-line">$4</span></h1>') %}
+{% set text = text | replace(r/<h1( [^>]*)?>([^<.]*\.)[  ]([^<.]*\.)[  ]([^<]*)<\/h1>/, '<h1$1><span class="lp-line">$2</span> <span class="lp-line lp-accent">$3</span> <span class="lp-line">$4</span></h1>') %}
 {% set visual %}
 <div class="lp-term" role="group" aria-label="{{ words('hero_terminal', stringsOf) }}">
 <div class="lp-term-bar" aria-hidden="true"><i></i><i></i><i></i><b>{{ words('terminal_title', stringsOf) }}</b></div>

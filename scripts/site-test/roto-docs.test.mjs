@@ -280,7 +280,7 @@ async function inFixtureSite(body) {
 
 test('a guide that mentions a roto-core type in inline code links to its reference page', async () => {
   await inFixtureSite(async (dir) => {
-    const overview = readFileSync(join(dir, 'out', 'demo', 'made', 'roto', 'docs', 'overview', 'index.html'), 'utf8');
+    const overview = readFileSync(join(dir, 'out', 'demo', 'made', 'roto', 'docs', 'overview', 'index.html'), 'utf8').replaceAll(' ', ' ');
     const base = '/made/roto/docs/reference/roto-core/com.roto.core.palette';
     // Inline code with a simple name and with a qualified name.
     assert.match(overview, new RegExp(`<a href="${base}/-project-palette/index\\.html"><code>ProjectPalette</code></a>`));

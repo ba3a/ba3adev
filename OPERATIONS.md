@@ -308,14 +308,14 @@ Or: Actions tab, Refresh, "Enable workflow".
 
 ## 7. Upgrade coffer later
 
-`package.json` follows the releases of coffer in a range: `git+https://github.com/ba3a/coffer.git#semver:^0.2.1`, that is 0.2.1 up to, not including, 0.3.0. The deploy runs `npm update coffer --no-save` after `npm ci`, so each deploy builds on the newest release in the range. The lock file keeps the commit of the last local update; run `npm update coffer` and commit it now and then.
+`package.json` follows the releases of coffer in a range: `git+https://github.com/ba3a/coffer.git#semver:>=0.2.1`, that is every release from 0.2.1 on, a new minor version included. The deploy runs `npm update coffer --no-save` after `npm ci`, so each deploy builds on the newest release in the range. The lock file keeps the commit of the last local update; run `npm update coffer` and commit it now and then.
 
-A new minor version (0.3.0) is not in the range. Read its changelog ("Changed" and "Removed" first), then:
+Every coffer release is used, a new minor version included. Before 1.0 a minor version may need a change in a site (the changelog says so under "Changed" and "Removed"). When a release breaks the build, the deploy fails and the live sites stay as they are. Fix the site, or hold the release back with a range such as `#semver:>=0.2.1 <0.4.0`.
 
-**User confirms before running.**
+To update the lock file and test a release locally:
 
 ```sh
-npm install git+https://github.com/ba3a/coffer.git#semver:^0.3.0   # updates package.json and the lock file
+npm update coffer
 npm test
 ```
 

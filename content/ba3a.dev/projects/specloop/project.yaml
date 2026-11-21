@@ -37,6 +37,7 @@ docs:
       order:
         - installation.md
         - how-it-works.md
+        - native-features.md
         - review-attempts.md
         - feature-mode.md
         - replanning.md

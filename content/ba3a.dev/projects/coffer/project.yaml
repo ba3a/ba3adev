@@ -34,6 +34,7 @@ docs:
         - posts.md
         - markdown.md
         - tags.md
+        - typography.md
         - series.md
         - links.md
         - sharing.md

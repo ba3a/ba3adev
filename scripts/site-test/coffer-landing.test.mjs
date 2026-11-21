@@ -22,7 +22,8 @@ const themeDir = join(root, 'themes', 'ba3a');
 function output(file) {
   const path = join(dist, ...file.split('/'));
   assert.ok(existsSync(path), `${file} exists in .cache/test-dist (run "npm run test:sites")`);
-  return readFileSync(path, 'utf8');
+  // Typography (coffer 0.3.0) joins words with no-break spaces; the tests compare the words.
+  return readFileSync(path, 'utf8').replaceAll(' ', ' ');
 }
 
 const SECTIONS = ['hero', 'problem', 'audience', 'how-it-works', 'timeline', 'spec-example', 'features', 'compare', 'dogfood', 'quick-start', 'faq', 'final-cta'];
@@ -55,7 +56,7 @@ test('the wrapper carries the slug, and the top bar has the name of the project,
   assert.match(page, /<img class="lp-logo lp-logo-light" src="\/assets\/coffer\/logo\.svg"/);
   assert.match(page, /<img class="lp-logo lp-logo-dark" src="\/assets\/coffer\/logo-dark\.svg"/);
   for (const name of ['how-it-works', 'compare', 'dogfood', 'quick-start']) assert.match(page, new RegExp(`class="lp-link" href="#${name}"`));
-  assert.match(page, /class="lp-link" href="#compare">Why not Hugo</);
+  assert.match(page, /class="lp-link" href="#compare">Why not Hugo</i);
   const ids = new Set([...page.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
   for (const [, target] of page.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.has(target), `#${target} exists`);
   const all = [...page.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
@@ -74,9 +75,9 @@ test('the eyebrows are paragraphs, the headline is the only h1 in three lines, a
   assert.doesNotMatch(page, /<h6/);
   assert.equal(page.match(/<p class="lp-eyebrow">/g)?.length, 11, 'eleven eyebrows: every section but the last');
   assert.equal(page.match(/<h1[ >]/g)?.length, 1);
-  assert.match(page, /<h1 [^>]*><span class="lp-line">Write the post\.<\/span> <span class="lp-line lp-accent">Drop in the photos\.<\/span> <span class="lp-line">Push\.<\/span><\/h1>/);
+  assert.match(page, /<h1 [^>]*><span class="lp-line">Write the post\.<\/span> <span class="lp-line lp-accent">Drop in the photos\.<\/span> <span class="lp-line">Push\.<\/span><\/h1>/i);
   const faq = part('faq');
-  assert.equal(faq.match(/<details>/g)?.length, 6);
+  assert.equal(faq.match(/<details>/g)?.length, 7);
   assert.doesNotMatch(faq, /<details open/);
 });
 
@@ -86,7 +87,7 @@ test('each part of the Markdown is rendered as the style guide says', () => {
   assert.equal(part('audience').match(/<li class="lp-card">/g)?.length, 4, 'four kinds of reader');
   assert.match(part('audience'), /<span class="lp-ico" aria-hidden="true">🔨<\/span><h3>Makers with a journal<\/h3>/);
   assert.match(part('audience'), /<\/ul>\s*<p><strong>Not for you<\/strong>/, 'the page says who it is not for');
-  assert.equal(part('features').match(/<li class="lp-card">/g)?.length, 10);
+  assert.equal(part('features').match(/<li class="lp-card">/g)?.length, 11);
   assert.equal(part('timeline').match(/<li class="lp-you">/g)?.length, 3, 'three steps are the person\'s');
   assert.equal(part('timeline').match(/<li>/g)?.length, 3);
   assert.match(part('timeline'), /<span class="lp-when">Write<\/span>/);
@@ -110,7 +111,7 @@ test('the comparison is a table with the engine\'s column, the other column, and
   const section = part('compare');
   assert.equal(section.match(/<tr>/g)?.length, 7, 'a head row and six rows');
   assert.match(section, /<th>coffer<\/th>\s*<th>With Hugo, typically<\/th>/);
-  assert.match(section, /<h3[^>]*>What you give up<\/h3>/);
+  assert.match(section, /<h3[^>]*>What you give up<\/h3>/i);
   assert.match(section, /version \d+\.\d+\.\d+ with one maintainer/);
 });
 

@@ -109,7 +109,8 @@ function readText(path) {
 function output(file) {
   const path = join(dist, ...file.split('/'));
   assert.ok(existsSync(path), `ba3a.dev/${file} exists in .cache/test-dist (run "npm run test:sites")`);
-  return readText(path);
+  // Typography (coffer 0.3.0) joins words with no-break spaces; the tests compare the words.
+  return readText(path).replaceAll(' ', ' ');
 }
 
 /** @param {string} slug @returns {Record<string, any>} */
@@ -144,7 +145,7 @@ function cardsOf(html) {
 
 /** @param {string} point A point as written in the Markdown source. @returns {string} The point as the build writes it in HTML. */
 function pointHtml(point) {
-  return escapeHtml(point).replace(/&quot;/g, '"').replace(/`([^`]+)`/g, '<code>$1</code>');
+  return escapeHtml(point).replace(/&quot;/g, '"').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/'/g, '’');
 }
 
 /** @param {string} text @returns {string} The text as it is in HTML. */
@@ -320,7 +321,7 @@ for (const slug of SHOWCASE.filter((name) => SPEC[name].kind === 'tool' && !LAND
     const expected = SPEC[slug];
     const html = output(`made/${slug}/index.html`);
     const page = mainOf(html);
-    assert.match(page, new RegExp(`<h1>${expected.name}</h1>`));
+    assert.match(page, new RegExp(`<h1>${expected.name}</h1>`, 'i'));
     assert.ok(page.includes(`<p class="project-pitch">${escapeHtml(expected.pitch)}</p>`));
     assert.match(page, /<span class="project-kind">Tool<\/span>/);
     assert.ok(
