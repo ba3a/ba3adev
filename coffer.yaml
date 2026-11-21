@@ -10,6 +10,7 @@ sites:
     contentDir: content/ba3a.dev
     theme: themes/ba3a
     contentLicense: All rights reserved
+    typography: { hangLines: true }
     links:
       # TODO: add the LinkedIn profile URL, for example:
       # - { label: LinkedIn, url: "https://www.linkedin.com/in/<profile>" }
@@ -36,6 +37,7 @@ sites:
     contentDir: content/my.ba3a.dev
     theme: themes/my
     contentLicense: Все права защищены
+    typography: { hangLines: true }
     # content/my.ba3a.dev is both the content directory and the directory of the
     # root blog, so only posts may be placed there. Pages, made/ and other
     # Markdown files would be read as posts.
