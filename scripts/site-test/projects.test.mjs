@@ -193,7 +193,7 @@ test('the declarations carry the facts of the spec: name, pitch, kind, tag, repo
     assert.equal(fields.featured, true, `${slug}: featured`);
     assert.ok(typeof fields.cardAlt === 'string' && fields.cardAlt.length > 10, `${slug}: the card has alt text`);
     assert.match(fields.card, /\.png$/, `${slug}: the card is a picture the engine accepts`);
-    if (FROM_REPOSITORY.includes(slug)) {
+    if (FROM_REPOSITORY.includes(slug) && slug !== 'roto') {
       assert.equal(fields.card, 'repo:site/card.png', `${slug}: the card is a file of the repository`);
       assert.ok(!existsSync(join(projectsDir, slug, 'card.png')), `${slug}: no local card`);
     } else {
@@ -282,12 +282,12 @@ test('the sitemap lists the projects page and every project page; each project h
   }
 });
 
-test('roto takes its page text and card from the roto repository, and /made/roto/ shows that text', () => {
+test('roto takes its page text from the roto repository, has its own card, and /made/roto/ shows that text', () => {
   const fields = declaration('roto');
   assert.deepEqual(fields.landing, { file: 'site/landing.md' });
-  assert.equal(fields.card, 'repo:site/card.png');
+  assert.equal(fields.card, 'card.png');
   assert.ok(!existsSync(join(projectsDir, 'roto', 'index.md')), 'no local index.md');
-  assert.ok(!existsSync(join(projectsDir, 'roto', 'card.png')), 'no local card.png');
+  assert.ok(existsSync(join(projectsDir, 'roto', 'card.png')), 'the local card.png');
   assert.ok(!existsSync(join(projectsDir, 'roto', 'card.svg')), 'no local card.svg');
   const main = mainOf(output('made/roto/index.html'));
   for (const point of SPEC.roto.points) assert.ok(main.includes(`<li>${pointHtml(point)}</li>`), `the page shows "${point}"`);
