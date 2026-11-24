@@ -28,6 +28,9 @@ import assert from 'node:assert/strict';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
+
+// The in-app help of roto (docs/help/), in the order of its index page.
+const HELP_ORDER = ['index', 'home', 'wizard', 'trim', 'still', 'clip-setup', 'draw', 'handoff'].map((name) => `help/${name}.md`);
 import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
@@ -57,7 +60,7 @@ const declaration = parseYaml(readFileSync(join(root, 'content', 'ba3a.dev', 'pr
 test('the docs of roto are configured to come from ba3a/roto on GitHub, with a Dokka reference of roto-core', () => {
   assert.equal(declaration.docs.source.git, 'https://github.com/ba3a/roto.git');
   assert.equal(declaration.docs.source.ref, 'main');
-  assert.deepEqual(declaration.docs.guides, [{ dir: 'docs', order: ['pipeline.md', 'filming-guide.md'] }]);
+  assert.deepEqual(declaration.docs.guides, [{ dir: 'docs', order: ['pipeline.md', 'filming-guide.md', ...HELP_ORDER] }]);
   const reference = declaration.docs.reference;
   assert.equal(reference.format, 'html');
   assert.equal(reference.output, 'roto-core/build/dokka/html');
@@ -97,12 +100,13 @@ test('ba3a.dev/made/roto/docs/ renders the guides of ba3a/roto', () => {
   assert.equal(project.docs.github, 'ba3a/roto');
   assert.match(project.docs.source.sha, /^[0-9a-f]{40}$/);
   assert.ok(existsSync(fileOf(docsUrl)), 'the docs index exists');
-  const sources = readdirSync(join(checkout, 'docs')).filter((name) => name.endsWith('.md'));
+  const sources = readdirSync(join(checkout, 'docs'), { recursive: true }).map((name) => String(name).replaceAll('\\', '/')).filter((name) => name.endsWith('.md'));
   const published = project.docs.pages.map((/** @type {{ source: string | null }} */ entry) => entry.source).filter(Boolean).sort();
   assert.deepEqual(published, sources.map((name) => `docs/${name}`).sort(), 'every guide of the repository is a page');
   // pipeline comes before filming-guide, as configured.
   const guides = project.docs.pages.filter((/** @type {{ source: string | null }} */ entry) => entry.source).map((/** @type {{ source: string }} */ entry) => entry.source);
   assert.deepEqual(guides.slice(0, 2), ['docs/pipeline.md', 'docs/filming-guide.md']);
+  assert.deepEqual(guides.slice(2, 2 + HELP_ORDER.length), HELP_ORDER.map((name) => `docs/${name}`), 'the help pages follow the guides, in order');
   for (const entry of project.docs.pages) {
     assert.ok(existsSync(join(dist, entry.file)), `${entry.url} was written`);
     assert.match(page(entry.file), /<h1[^>]*>[^<]+<\/h1>/, `${entry.url} has a title`);

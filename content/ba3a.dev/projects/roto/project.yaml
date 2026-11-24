@@ -46,6 +46,16 @@ docs:
       order:
         - pipeline.md
         - filming-guide.md
+        # The in-app help: docs/help/index.md is its first page. The pages follow
+        # the order of its index.
+        - help/index.md
+        - help/home.md
+        - help/wizard.md
+        - help/trim.md
+        - help/still.md
+        - help/clip-setup.md
+        - help/draw.md
+        - help/handoff.md
   reference:
     command:
       default:
