@@ -54,6 +54,7 @@
     `dogfood` is the kind of the terminal of the dogfood section (default: gitlog);
     `hero` is the kind of the terminal of the hero section (default: session);
     `when` is the element of the label of a timeline step: `time` (a time) or `span` (just a word); default: time;
+    `wordmark` (true) says the logo already shows the name, so the top bar has no name next to it; default: false;
     `brand` is how many letters of the name come before the accented ones (0: no accent; default: 4).
     `strings` are the words the layout adds (terminal_title, hero_terminal, problem_terminal, dogfood_terminal, chat);
     the ones it lacks are the defaults of i18n/en.yaml, under landing.default.
@@ -74,6 +75,7 @@
 {% set dogfoodKind = setting.dogfood if setting.dogfood in kindsOfTerminal else 'gitlog' %}
 {% set heroKind = setting.hero if setting.hero in kindsOfTerminal else 'session' %}
 {% set whenTag = 'span class="lp-when"' if setting.when in ['span', 'span class="lp-when"'] else 'time' %}
+{% set wordmark = setting.wordmark === true %}
 {% set brandLength = setting.brand if (setting.brand is number and setting.brand >= 0) else 4 %}
 {% set brandStart = project.name.slice(0, brandLength) if brandLength else project.name %}
 {% set brandEnd = project.name.slice(brandLength) if brandLength else '' %}
@@ -100,7 +102,7 @@
 <a class="lp-brand" href="#{{ parts[1] }}">
 <img class="lp-logo lp-logo-light" src="{{ ('/assets/' + project.slug + '/logo.svg') | url }}" width="32" height="32" alt="">
 <img class="lp-logo lp-logo-dark" src="{{ ('/assets/' + project.slug + '/logo-dark.svg') | url }}" width="32" height="32" alt="">
-<span>{{ brandStart }}{% if brandEnd %}<span class="lp-accent">{{ brandEnd }}</span>{% endif %}</span>
+{% if wordmark %}<span class="lp-sr">{{ project.name }}</span>{% else %}<span>{{ brandStart }}{% if brandEnd %}<span class="lp-accent">{{ brandEnd }}</span>{% endif %}</span>{% endif %}
 </a>
 <div class="lp-links">
 {% for item in navItems %}<a class="lp-link" href="#{{ item.id }}">{{ item.label }}</a>
@@ -114,23 +116,23 @@
 {% set name = parts[i] %}
 {#- The eyebrow is a label, not a heading: a paragraph, so it is not in the outline of the page. -#}
 {% set html = parts[i + 1] | replace(r/<h6 [^>]*>([\s\S]*?)<\/h6>/, '<p class="lp-eyebrow">$1</p>') %}
-{% set twoCol = name in visualTag %}
-
-{% if twoCol %}
-{% set at = html.indexOf('<' + visualTag[name]) %}
-{% set text = html.slice(0, at) %}
-{% set visual = html.slice(at) %}
-{% endif %}
+{#- A section with no element of its visual kind is one column: its text only. -#}
+{% set at = html.indexOf('<' + visualTag[name]) if name in visualTag else -1 %}
+{% set twoCol = at >= 0 %}
+{% set text = html.slice(0, at) if twoCol else html %}
+{% set visual = html.slice(at) if twoCol else '' %}
 
 {% if name == 'hero' %}
 {#- Each sentence of the headline on its own line, the second one in the accent colour. -#}
 {% set text = text | replace(r/<h1( [^>]*)?>([^<.]*\.)[  ]([^<.]*\.)[  ]([^<]*)<\/h1>/, '<h1$1><span class="lp-line">$2</span> <span class="lp-line lp-accent">$3</span> <span class="lp-line">$4</span></h1>') %}
+{% if twoCol %}
 {% set visual %}
 <div class="lp-term" role="group" aria-label="{{ words('hero_terminal', stringsOf) }}">
 <div class="lp-term-bar" aria-hidden="true"><i></i><i></i><i></i><b>{{ words('terminal_title', stringsOf) }}</b></div>
 {{ tokens(visual, heroKind) | replace('</code></pre>', '\n<span class="lp-cursor" aria-hidden="true"></span></code></pre>') | safe }}
 </div>
 {% endset %}
+{% endif %}
 
 {% elif name == 'problem' %}
 {% if visualTag.problem == 'blockquote' %}
@@ -198,7 +200,7 @@
 {{ visual | safe }}
 </div>
 {% else %}
-{{ html | safe }}
+{{ (text if name == 'hero' else html) | safe }}
 {% endif %}
 </div>
 </section>

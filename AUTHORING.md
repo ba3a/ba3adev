@@ -323,6 +323,7 @@ All three need a `docs.source`. A source that cannot be fetched, or that lacks t
 | `layout.visual` | For `hero`, `problem`, `timeline`, `spec-example` and `quick-start`: which element is the visual beside the text, `pre`, `blockquote` or `ul` (the first one of that kind) | `pre` for `hero`, `spec-example`, `quick-start`; `blockquote` for `problem`; `ul` for `timeline` |
 | `layout.dogfood` | Kind of the terminal of the `dogfood` section (same kinds as `hero`) | `gitlog` |
 | `layout.when` | Label of a timeline step: `time` (a time) or `span` (a word) | `time` |
+| `layout.wordmark` | `true` when the logo already shows the name: the top bar then has no name beside it | `false` |
 | `layout.brand` | How many letters of the name come before the accented ones in the top bar (`0`: no accent) | `4` |
 | `layout.strings` | The words the layout adds: `terminal_title`, `hero_terminal`, `problem_terminal`, `dogfood_terminal` (the labels for screen readers) and `chat` | `landing.default` in `themes/ba3a/i18n/en.yaml`, except `problem_terminal`, which has none: set it when `layout.visual.problem` is `pre` (a shell script), as coffer does |
 
@@ -332,7 +333,7 @@ All three need a `docs.source`. A source that cannot be fetched, or that lacks t
 
 | Name | Shows |
 | --- | --- |
-| `hero` | Headline (`#`; each sentence on its own line, the second in the accent colour), text, buttons, and the first code block as a terminal window |
+| `hero` | Headline (`#`; each sentence on its own line, the second in the accent colour), text, buttons, and the first code block as a terminal window (a hero with no code block is one column) |
 | `problem` | Text, and a chat (a quote with `**You:**` and `**Claude:**` lines) or a shell script, by `layout.visual.problem` |
 | `audience` | A list as a grid of cards; a bold lead `emoji Title.` is the icon and title of a card |
 | `how-it-works` | A three-column table as three cards: phase, what happens, and the gate named by the third column's head |

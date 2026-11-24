@@ -9,7 +9,12 @@
 {% block head %}
 {{ super() }}
 {# The favicons of the site. A landing page of a project (see project-tool.njk) links the brand pictures of its project instead, and two sets would leave the choice to the browser. The .ico (sizes="any") is listed first so that browsers which read SVG icons still pick the SVG, which follows the colour scheme of the browser. -#}
-{% if 'class="section-marker"' not in (page.content or '') %}
+{% if docs and project and project.landing %}
+{# The docs pages of a project with a landing page (it has brand files) carry them, as its landing page does. #}
+<link rel="icon" href="{{ ('/assets/' + project.slug + '/favicon.ico') | url }}" sizes="any">
+<link rel="icon" href="{{ ('/assets/' + project.slug + '/favicon.svg') | url }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ ('/assets/' + project.slug + '/apple-touch-icon.png') | url }}">
+{% elif 'class="section-marker"' not in (page.content or '') %}
 <link rel="icon" href="{{ '/assets/brand/favicon.ico' | url }}" sizes="any">
 <link rel="icon" href="{{ '/assets/brand/favicon.svg' | url }}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{{ '/assets/brand/apple-touch-icon.png' | url }}">
