@@ -100,8 +100,8 @@
 <nav class="lp-bar" aria-label="{{ 'landing.nav' | t }}">
 <div class="lp-wrap lp-bar-inner">
 <a class="lp-brand" href="#{{ parts[1] }}">
-<img class="lp-logo lp-logo-light" src="{{ ('/assets/' + project.slug + '/logo.svg') | url }}" width="32" height="32" alt="">
-<img class="lp-logo lp-logo-dark" src="{{ ('/assets/' + project.slug + '/logo-dark.svg') | url }}" width="32" height="32" alt="">
+<img class="lp-logo lp-logo-light{% if wordmark %} lp-logo-wide{% endif %}" src="{{ ('/assets/' + project.slug + '/logo.svg') | url }}"{% if not wordmark %} width="32" height="32"{% endif %} alt="">
+<img class="lp-logo lp-logo-dark{% if wordmark %} lp-logo-wide{% endif %}" src="{{ ('/assets/' + project.slug + '/logo-dark.svg') | url }}"{% if not wordmark %} width="32" height="32"{% endif %} alt="">
 {% if wordmark %}<span class="lp-sr">{{ project.name }}</span>{% else %}<span>{{ brandStart }}{% if brandEnd %}<span class="lp-accent">{{ brandEnd }}</span>{% endif %}</span>{% endif %}
 </a>
 <div class="lp-links">
@@ -125,6 +125,10 @@
 {% if name == 'hero' %}
 {#- Each sentence of the headline on its own line, the second one in the accent colour. -#}
 {% set text = text | replace(r/<h1( [^>]*)?>([^<.]*\.)[  ]([^<.]*\.)[  ]([^<]*)<\/h1>/, '<h1$1><span class="lp-line">$2</span> <span class="lp-line lp-accent">$3</span> <span class="lp-line">$4</span></h1>') %}
+{% if wordmark %}
+{#- The logo shows the name: it is the headline. The name stays in the h1 for screen readers. -#}
+{% set text = text | replace(r/<h1( [^>]*)?>[^<]*<\/h1>/, '<h1$1 class="lp-h1-logo"><span class="lp-sr">' + project.name + '</span><img class="lp-hero-logo lp-logo-light" src="' + (('/assets/' + project.slug + '/logo.svg') | url) + '" alt=""><img class="lp-hero-logo lp-logo-dark" src="' + (('/assets/' + project.slug + '/logo-dark.svg') | url) + '" alt=""></h1>') %}
+{% endif %}
 {% if twoCol %}
 {% set visual %}
 <div class="lp-term" role="group" aria-label="{{ words('hero_terminal', stringsOf) }}">

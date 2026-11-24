@@ -364,6 +364,26 @@ html:has(.landing) {
   display: none;
 }
 
+/* A logo that is a wordmark: wide, sized by its height. */
+.lp-logo.lp-logo-wide {
+  width: auto;
+  height: 36px;
+}
+
+.lp-h1-logo {
+  margin: 0 0 24px;
+}
+
+.lp-hero-logo {
+  display: block;
+  width: auto;
+  height: clamp(88px, 14vw, 150px);
+}
+
+.lp-hero-logo.lp-logo-dark {
+  display: none;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .lp-logo-light {
     display: none;
@@ -371,6 +391,10 @@ html:has(.landing) {
 
   :root:not([data-theme="light"]) .lp-logo-dark {
     display: inline;
+  }
+
+  :root:not([data-theme="light"]) .lp-hero-logo.lp-logo-dark {
+    display: block;
   }
 }
 
@@ -380,6 +404,10 @@ html:has(.landing) {
 
 :root[data-theme="dark"] .lp-logo-dark {
   display: inline;
+}
+
+:root[data-theme="dark"] .lp-hero-logo.lp-logo-dark {
+  display: block;
 }
 
 .lp-links {
