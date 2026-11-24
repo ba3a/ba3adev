@@ -342,18 +342,14 @@ test('AUTHORING.md describes the landing page of the project repository, as the 
     assert.ok(section.includes(key), `the section shows ${key}`);
   }
   const projectsDir = join(root, 'content', 'ba3a.dev', 'projects');
-  for (const slug of ['coffer', 'specloop']) {
+  for (const slug of ['coffer', 'specloop', 'roto']) {
     const data = YAML.parse(read(`content/ba3a.dev/projects/${slug}/project.yaml`));
     assert.deepEqual(data.landing, { file: 'site/landing.md' });
     assert.deepEqual(data.brand, { dir: 'site/brand' });
     assert.equal(data.card, 'repo:site/card.png');
     assert.ok(!existsSync(join(projectsDir, slug, 'index.md')), `${slug} has no local index.md`);
   }
-  // roto has a landing and a card but no brand pictures; Faultory still has a local index.md.
-  const roto = YAML.parse(read('content/ba3a.dev/projects/roto/project.yaml'));
-  assert.deepEqual(roto.landing, { file: 'site/landing.md' });
-  assert.equal(roto.brand, undefined);
-  assert.match(section, /roto has no `brand`/);
+  // Faultory still has a local index.md.
   assert.match(section, /Faultory[^\n]*local `index\.md`/);
   assert.ok(existsSync(join(projectsDir, 'faultory', 'index.md')));
 

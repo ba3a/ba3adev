@@ -300,7 +300,7 @@ A tool can have a landing page instead of a README-style page. coffer, specloop 
 - `site/brand/`: `logo.svg`, `logo-dark.svg`, `favicon.svg`, `favicon.ico` and `apple-touch-icon.png`, published unchanged at `/assets/{slug}/`.
 - `site/card.png`: the preview image of the page.
 
-Here the project's `project.yaml` points at them. Name, pitch, status, order and tag stay in this repository; there is no local `index.md` or `card.png` (having both is a build error). roto has no `brand`, so its page uses no brand pictures.
+Here the project's `project.yaml` points at them. Name, pitch, status, order and tag stay in this repository; there is no local `index.md` or `card.png` (having both is a build error).
 
 ```yaml
 # The keys of a tool whose landing page is in its repository
